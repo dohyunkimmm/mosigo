@@ -3,7 +3,6 @@
 자녀가 부모님의 병원 이용을 대신 준비하고, 병원 탐색부터 동행 매니저 매칭·동의/결제·실시간 동행·건강 리포트·재예약까지 이어지는 흐름을 검증하기 위한 인터랙티브 병원동행 서비스 프로토타입입니다.
 
 - **Live Demo:** https://mosigo-nine.vercel.app/
-- **Repository:** https://github.com/dohyunkimmm/mosigo
 
 ## 프로젝트 개요
 
