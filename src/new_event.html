@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모시고 | 황금낚시 이벤트</title>
+<meta name="description" content="모시고 앱에서 즐기는 황금낚시 리워드 이벤트 데모입니다.">
+<meta name="theme-color" content="#C8EB8F">
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="new_montage.css">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+:root {
+  --main:#1FB24A; --main-l:#E5F7EA; --main-d:#189440;
+  --bg-top:#FBFFE9; --bg-bottom:#C8EB8F;
+}
+
+html, body { height:100%; }
+body {
+  font-family:var(--mtg-font);
+  background:linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+  overflow:hidden;
+  position:relative;
+  display:flex; flex-direction:column;
+}
+
+.status-img {
+  display:block; width:100%; height:34px;
+  object-fit:cover; object-position:top;
+  flex-shrink:0; position:relative; z-index:3;
+}
+.home-img {
+  display:block; width:100%; height:24px;
+  object-fit:cover; object-position:center;
+  flex-shrink:0; position:relative; z-index:3;
+}
+/* index.html iframe 안에서는 부모가 status/home을 이미 그린다 */
+body.in-iframe .status-img,
+body.in-iframe .home-img { display:none; }
+
+.page-main {
+  flex:1; min-height:0;
+  position:relative;
+  display:flex; flex-direction:column;
+}
+
+.fish-art {
+  position:absolute; left:0; right:0; bottom:24px;
+  width:100%; pointer-events:none; user-select:none; z-index:0;
+}
+body.in-iframe .fish-art { bottom:0; }
+
+.fish-nav {
+  position:absolute; top:36px; left:0; right:0; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:4px 8px;
+}
+.fish-nav button {
+  width:44px; height:44px;
+  border:none; background:none; color:#1A1C22;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; padding:0;
+}
+.fish-nav svg { width:24px; height:24px; display:block; }
+.fish-nav button:active { opacity:.65; }
+
+.fish-wrap {
+  position:relative; z-index:1;
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:80px 20px 38px; text-align:center;
+}
+
+.fish-hello {
+  margin-top:8px;
+  font-size:18px; line-height:26px; letter-spacing:-0.002em;
+  font-weight:500; color:#1A1C22;
+}
+.fish-hello b { font-weight:700; color:#168035; }
+
+.fish-title {
+  margin-top:8px;
+  font-size:36px; line-height:48px; letter-spacing:-0.027em;
+  font-weight:600; color:#1A1C22;
+}
+
+.fish-chip {
+  margin-top:8px;
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:38px; padding:9px 18px;
+  background:rgba(255,255,255,.55);
+  border-radius:20px;
+  font-size:17px; line-height:26px; letter-spacing:0em;
+  font-weight:500; color:#1A1C22;
+  white-space:nowrap;
+  transition:opacity .32s ease;
+}
+.fish-chip.is-out { opacity:0; }
+.fish-chip b { font-weight:700; }
+
+.fish-spacer { flex:1; min-height:20px; }
+
+.fish-cta {
+  width:100%; flex-shrink:0;
+  height:54px; border:none; border-radius:14px;
+  background:var(--teal); color:#fff;
+  font-family:inherit;
+  font-size:18px; line-height:26px; letter-spacing:-0.002em;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(11,90,38,.22);
+  position:relative; z-index:2;
+  margin-bottom:8px;
+}
+.fish-cta:active { transform:translateY(1px); }
+</style>
+</head>
+<body>
+
+<img class="status-img" src="bar.png" alt="" aria-hidden="true" onerror="this.remove()">
+
+<div class="page-main">
+  <div class="fish-nav">
+    <button onclick="closeEvent()" aria-label="뒤로 가기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 12H4M11 5l-7 7 7 7"/>
+      </svg>
+    </button>
+    <button onclick="shareEvent()" aria-label="공유하기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+        <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>
+      </svg>
+    </button>
+  </div>
+
+  <img class="fish-art" src="bg.webp" alt="" aria-hidden="true" onerror="this.remove()">
+
+  <div class="fish-wrap">
+    <h2 class="fish-hello" id="fish-hello"></h2>
+    <p class="fish-title">
+      <svg width="228" height="80" viewBox="0 0 228 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M53.0508 0.0280463C55.7925 -0.265584 56.5761 1.79024 56.9678 4.14035C57.3595 6.49068 55.1071 9.82072 53.834 10.6042C52.8155 11.231 49.4923 11.9755 47.958 12.2693L46.6846 20.2019C47.2069 20.0387 48.6634 19.7116 50.3086 19.7116C52.365 19.7117 52.8549 20.7893 53.0508 22.3562C53.2466 23.923 53.1479 25.7834 51.5811 27.7419C50.3274 29.3088 41.9189 31.072 37.8711 31.7575V35.2595C42.1473 34.0843 51.6986 31.6367 55.6944 31.2448C60.6887 30.7552 60.3954 35.7491 60.1016 39.4704C59.8665 42.4475 55.8253 43.4531 53.834 43.5837C41.064 44.9156 23.8352 52.0516 16.4248 55.0876C12.671 57.0461 5.75426 62.2977 3.32521 61.9851C0.896642 61.6717 0.158156 55.0746 0.0927882 52.8874C-0.200983 51.0594 0.0347165 47.0312 3.32521 45.5427C6.61614 44.0541 19.6885 40.352 26.8047 38.6872V34.3034C25.564 34.5973 22.3392 35.4007 19.3623 36.2624C15.641 37.3397 12.8008 37.8289 11.4297 36.7517C10.0588 35.6741 10.7443 29.8964 12.1152 28.4275C13.2122 27.2523 17.4037 26.1756 19.3623 25.7839L20.3418 17.655C19.689 17.9488 17.9917 18.5367 16.4248 18.5368C14.4661 18.5368 11.7236 17.7529 12.8008 13.1501C13.6626 9.46845 16.881 7.24266 18.3828 6.58957C29.0246 4.50035 50.8571 0.263082 53.0508 0.0280463ZM31.334 15.6618L29.6465 23.7507L36.2569 21.8513L37.8047 14.5368L31.334 15.6618Z" fill="#168035"/>
+        <path d="M88.6713 18.8963C88.4733 16.9138 87.9292 16.0789 85.7005 15.3444C83.4718 14.61 70.5535 10.6696 63.8498 10.6696C58.3515 10.6696 57.655 20.2116 58.403 23.1626C59.1511 26.1135 62.8155 25.0255 63.8497 25.0863C63.2413 32.0621 60.3949 47.1701 60.3949 49.6035C60.3949 53.3701 63.6514 53.5336 66.6594 52.4402C70.7747 50.9442 78.1076 46.9307 82.058 44.9567C86.0084 42.9826 86.5462 42.2726 86.5462 37.6798C86.5462 35.1553 84.918 34.228 82.7281 34.8363C80.9762 35.323 74.9751 36.6659 72.866 37.6798L74.6296 25.0863C79.3972 25.0863 83.8042 26.5209 85.7005 25.5475C88.0708 24.3308 88.9188 21.3744 88.6713 18.8963Z" fill="#168035"/>
+        <path d="M88.4851 44.9575C88.8771 46.3016 90.5424 45.9929 91.3357 46.0845C92.9842 46.0845 97.6348 44.9575 100.396 40.6855C101.098 39.5997 101.159 39.0583 101.575 36.5091C101.575 36.5091 110.396 34.899 112.146 33.3206C113.896 31.7421 113.454 28.866 113.384 26.4341C113.314 24.0023 112.286 21.1786 109.626 21.3186C107.498 21.4306 104.399 22.4387 103.116 22.9287C103.466 20.4786 104.856 15.5526 105.024 14.6566C105.405 12.6217 103.116 8.9981 96.4653 7.94274C92.448 7.3052 92.7208 10.2911 92.4174 11.6212C91.7641 23.8248 88.0931 43.6135 88.4851 44.9575Z" fill="#168035"/>
+        <path d="M126.246 37.6798C126.246 37.6798 131.4 21.5479 128.713 19.6869C126.025 17.8259 118.542 12.1959 117.984 18.585C117.427 24.9742 113.775 47.1701 113.775 49.6035C113.775 53.3701 117.032 53.5336 120.04 52.4402C124.155 50.9442 131.488 46.9307 135.438 44.9567C139.389 42.9826 139.926 42.2726 139.926 37.6798C139.926 35.1553 138.298 34.228 136.108 34.8363C134.356 35.323 128.355 36.6659 126.246 37.6798Z" fill="#168035"/>
+        <path d="M141.865 46.9394C142.257 48.2834 143.923 47.9748 144.716 48.0664C146.364 48.0664 151.015 46.9394 153.777 42.6674C154.479 41.5816 154.539 39.0583 154.956 36.5091C154.956 36.5091 163.776 34.899 165.526 33.3206C167.276 31.7421 166.834 28.866 166.764 26.4341C166.694 24.0023 165.666 21.1786 163.006 21.3186C160.878 21.4306 157.779 22.4387 156.496 22.9287C156.846 20.4786 158.236 15.5526 158.404 14.6566C158.785 12.6217 156.496 8.9981 149.846 7.94274C145.828 7.3052 146.101 10.2911 145.798 11.6212C145.144 23.8248 141.473 45.5954 141.865 46.9394Z" fill="#168035"/>
+        <path d="M30.8271 50.2187C41.2328 46.304 52.0311 48.904 54.9462 56.0261C57.8612 63.1484 51.7889 72.0962 41.383 76.0109C30.9772 79.9256 20.1788 77.3248 17.2638 70.2025C14.3489 63.0803 20.4213 54.1334 30.8271 50.2187ZM44.0972 60.1084C42.956 57.3201 38.4522 56.4055 34.0385 58.0659C29.6252 59.7264 26.9727 63.3328 28.1139 66.1211C29.2551 68.9094 33.758 69.824 38.1716 68.1637C42.585 66.5033 45.2381 62.8967 44.0972 60.1084Z" fill="#168035"/>
+        <path d="M80.3218 49.2278C90.7276 45.3132 101.526 47.9131 104.441 55.0352C107.356 62.1575 101.284 71.1053 90.8778 75.0201C80.472 78.9348 69.6735 76.3339 66.7586 69.2117C63.8436 62.0894 69.916 53.1426 80.3218 49.2278ZM93.592 59.1176C92.4508 56.3292 87.9469 55.4146 83.5333 57.0751C79.1199 58.7356 76.4675 62.342 77.6087 65.1302C78.7499 67.9185 83.2528 68.8332 87.6663 67.1728C92.0798 65.5125 94.7329 61.9059 93.592 59.1176Z" fill="#168035"/>
+        <path d="M115.025 62.8493C115.112 61.4075 117.026 55.2758 117.396 54.2176C117.766 53.1594 133.936 51.6979 134.433 51.7275C134.931 51.7572 130.764 73.9261 129.198 75.2029C127.632 76.4797 118.459 76.9661 118.478 76.305C118.493 75.7837 120.123 67.576 120.813 64.1276C120.956 63.4114 120.34 62.8218 119.637 62.9742C117.816 63.3688 114.966 63.8319 115.025 62.8493Z" fill="#168035"/>
+        <path d="M134.281 60.3142C134.368 58.8724 135.512 52.9382 135.882 51.88C136.252 50.8218 152.422 49.3603 152.919 49.39C153.417 49.4197 149.25 71.5886 147.684 72.8654C146.118 74.1422 136.942 74.7501 136.964 73.9675C136.981 73.3515 138.605 65.2279 139.295 61.7962C139.439 61.0785 138.821 60.4858 138.115 60.6291C136.522 60.9526 134.224 61.258 134.281 60.3142Z" fill="#168035"/>
+        <path d="M194.615 13.0705C192.485 13.0705 182.342 12.3569 179.209 16.5523C176.076 20.7477 152.368 68.7104 154.945 69.4382C157.522 70.166 165.193 68.9778 167.418 67.4564C169.643 65.9349 177.346 49.893 177.346 49.893C177.346 49.893 183.518 63.857 185.64 64.8209C187.763 65.7847 194.829 63.5681 195.683 62.7135C196.538 61.8589 184.771 37.4717 184.771 37.4717C184.771 37.4717 196.744 13.0705 194.615 13.0705Z" fill="#168035"/>
+        <path d="M220.562 11.0835C219.498 11.0836 207.393 11.6119 206.558 13.8453C205.723 16.0788 201.277 36.8409 201.277 36.8409C199.158 48.4915 196.768 63.0336 196.322 68.8793C196.936 69.6796 202.056 68.901 206.558 65.9958C211.06 63.0906 213.444 51.7989 213.986 48.4915C213.986 48.4915 221.626 11.0835 220.562 11.0835Z" fill="#168035"/>
+        </svg>
+        
+      </p>
+
+    <p class="fish-chip" id="fish-chip" aria-hidden="true"><b>정*진님</b>&nbsp;아메리카노 당첨!</p>
+    <p class="mtg-sr-only">다른 참여자들이 아메리카노, 편의점 상품권, 아이스크림 등 다양한 선물 쿠폰에 당첨되고 있습니다.</p>
+
+    <div class="fish-spacer"></div>
+    <button class="fish-cta" onclick="goNext()">지금 바로 확인하기</button>
+  </div>
+</div>
+
+<img class="home-img" src="bottom.png" alt="" aria-hidden="true" onerror="this.remove()">
+
+<script>
+if(window.parent !== window) document.body.classList.add('in-iframe');
+
+const NEXT_PAGE = 'game';
+
+const WINNERS = [
+  { name:'정*진', prize:'아메리카노' },
+  { name:'김*수', prize:'CU 바나나 우유' },
+  { name:'이*연', prize:'스프라이트 제로' },
+  { name:'박*호', prize:'GS25 모바일 상품권' },
+  { name:'최*영', prize:'배민클럽 3개월 무료' },
+  { name:'윤*아', prize:'카카오 이모티콘 1개월' },
+  { name:'장*민', prize:'초코에몽' },
+  { name:'한*희', prize:'배민클럽 1개월 무료' },
+  { name:'오*준', prize:'하겐다즈 아이스크림' },
+  { name:'서*빈', prize:'맘스터치 싸이버거' },
+];
+const CHIP_INTERVAL = 2400;
+let chipTimer = null;
+let chipLast = -1;
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+  ));
+}
+
+function applyName(){
+  const q = new URLSearchParams(location.search).get('name');
+  const name = (q && q.trim()) || '지현';
+  document.getElementById('fish-hello').innerHTML = '<b>'+esc(name)+'님!</b> 낚시로<br>행운을 잡아보세요!';
+}
+
+function rollChip(){
+  const chip = document.getElementById('fish-chip');
+  if(!chip) return;
+  let i;
+  do { i = Math.floor(Math.random()*WINNERS.length); }
+  while(WINNERS.length > 1 && i === chipLast);
+  chipLast = i;
+  const w = WINNERS[i];
+  chip.innerHTML = '<b>'+esc(w.name)+'님</b>&nbsp;'+esc(w.prize)+' 당첨!';
+}
+
+function startChipAuto(){
+  clearTimeout(chipTimer);
+  chipTimer = setTimeout(()=>{
+    const chip = document.getElementById('fish-chip');
+    if(!chip) return;
+    chip.classList.add('is-out');
+    setTimeout(()=>{ rollChip(); chip.classList.remove('is-out'); }, 320);
+    startChipAuto();
+  }, CHIP_INTERVAL);
+}
+
+function notifyParent(action, data){
+  if(window.parent === window) return false;
+  window.parent.postMessage(Object.assign({ source:'ext-page', action }, data||{}), '*');
+  return true;
+}
+
+function closeEvent(){
+  clearTimeout(chipTimer);
+  notifyParent('close');
+}
+
+function shareEvent(){
+  const url = (document.referrer || location.href);
+  if(navigator.share){
+    navigator.share({ title:'황금낚시 이벤트', text:'낚시로 행운을 잡아보세요!', url }).catch(()=>{});
+    return;
+  }
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).catch(()=>{});
+  }
+}
+
+function goNext(){
+  notifyParent('next', { next: NEXT_PAGE });
+}
+
+applyName();
+rollChip();
+if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches) startChipAuto();
+</script>
+</body>
+</html>
