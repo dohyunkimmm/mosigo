@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모시고 | 황금낚시</title>
+<meta name="description" content="낚시 애니메이션으로 리워드 결과를 확인하는 모시고 이벤트 데모입니다.">
+<meta name="theme-color" content="#C8EB8F">
+<link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="new_montage.css">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+:root {
+  --main:#1FB24A; --main-l:#E5F7EA; --main-d:#189440;
+  --bg-top:#FBFFE9; --bg-bottom:#C8EB8F;
+}
+
+html, body { height:100%; }
+body {
+  font-family:var(--mtg-font);
+  background:linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+  overflow:hidden;
+  position:relative;
+  display:flex; flex-direction:column;
+}
+
+.status-img {
+  display:block; width:100%; height:34px;
+  object-fit:cover; object-position:top;
+  flex-shrink:0; position:relative; z-index:4;
+}
+.home-img {
+  display:block; width:100%; height:24px;
+  object-fit:cover; object-position:center;
+  flex-shrink:0; position:relative; z-index:4;
+}
+body.in-iframe .status-img,
+body.in-iframe .home-img { display:none; }
+
+.page-main {
+  flex:1; min-height:0;
+  position:relative;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+
+.g-stage {
+  position:absolute; inset:0; z-index:0; overflow:hidden;
+  background:linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+}
+.g-layer {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover; object-position:center bottom;
+  opacity:0;
+  transition:opacity .45s ease;
+  pointer-events:none;
+}
+.g-layer.is-on   { opacity:1; }
+.g-layer.is-prev { opacity:1; transition:none; }
+
+.g-back {
+  position:absolute; top:4px; left:8px; z-index:3;
+  width:44px; height:44px; border:none; background:none;
+  color:#1A1C22; font-size:20px;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+
+.g-head {
+  position:relative; z-index:2;
+  padding:44px 20px 0; text-align:center;
+  transition:opacity .4s ease;
+}
+.g-head.is-veiled { opacity:0; }
+.g-cast.is-veiled { opacity:0; pointer-events:none; }
+
+.g-title {
+  font-size:24px; line-height:32px; letter-spacing:-0.023em;
+  font-weight:700; color:#1A1C22;
+}
+.g-sub {
+  margin-top:8px;
+  font-size:14px; line-height:20px; letter-spacing:0.0145em;
+  font-weight:500; color:#4A5568;
+}
+
+.g-spacer { flex:1; }
+
+.g-foot {
+  position:relative; z-index:2;
+  display:flex; justify-content:center;
+  padding-bottom:28px;
+  min-height:120px;
+  align-items:center;
+}
+.g-cast {
+  width:92px; height:92px; flex-shrink:0;
+  border:none; border-radius:50%;
+  background:var(--main); color:#fff;
+  font-family:inherit;
+  font-size:20px; line-height:28px; letter-spacing:-0.012em;
+  font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  box-shadow:0 8px 20px rgba(11,90,38,.30);
+  transition:transform .12s ease, opacity .3s ease;
+}
+.g-cast:active { transform:scale(.94); }
+.g-cast[hidden] { display:none; }
+
+.g-title.is-rolling { animation:gShake .5s ease-in-out infinite; }
+@keyframes gShake {
+  0%,100% { transform:translateX(0); }
+  25%     { transform:translateX(-3px); }
+  75%     { transform:translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-title.is-rolling { animation:none; }
+}
+
+.g-result {
+  position:absolute; inset:0; z-index:5;
+  display:flex; flex-direction:column;
+  background:#fff;
+  animation:gFade .3s ease both;
+}
+.g-result[hidden] { display:none; }
+.g-result.is-win {
+  background:linear-gradient(180deg, #fff 0%, #fff 50%, #EDF9DE 72%, #14311D 100%);
+}
+
+.g-result-nav {
+    top: 36px;
+    position: relative;
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:4px 8px;
+}
+.g-result-nav button {
+  width:44px; height:44px; border:none; background:none;
+  color:#1A1C22; display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.g-result-nav svg { width:24px; height:24px; display:block; }
+.g-result-logo {
+  width:28px; height:28px; border-radius:6px;
+  background:#1A1C22; color:#fff;
+  font-size:11px; font-weight:800; letter-spacing:-.3px;
+  display:none;
+  align-items:center; justify-content:center;
+}
+
+.g-result-card {
+  flex:1; min-height:0;
+  display:flex; flex-direction:column;
+  padding:8px 20px 12px;
+  text-align:center;
+  animation:gRise .34s cubic-bezier(.2,.8,.3,1) both;
+}
+.g-result.is-win .g-result-card { padding-top:22px; }
+.g-result-body { flex:1; min-height:0; overflow-y:auto; }
+.g-result-body::-webkit-scrollbar { display:none; }
+
+.g-result-kicker {
+  margin-top: 28px;
+  margin-bottom:6px;
+  font-size:16px; line-height:24px;
+  font-weight:600; color:#6A7789;
+}
+.g-result-title {
+  font-size:32px; line-height:42px; letter-spacing:-0.028em;
+  font-weight:700; color:#1A1C22;
+}
+.g-result-title em { font-style:normal; color:var(--main); }
+.g-result-sub {
+  margin-top:10px;
+  font-size:16px; line-height:24px; letter-spacing:0.0057em;
+  font-weight:500; color:#6A7789;
+}
+.g-result-sub em { font-style:normal; color:var(--main); font-weight:700; }
+.g-result-points {
+  margin-top:8px;
+  font-size:17px; line-height:26px;
+  font-weight:600; color:#8A94A6;
+}
+.g-result-points b {
+  color:var(--teal);
+  font-weight:800;
+}
+
+.g-result-art {
+  display:block; margin:0px auto 4px;
+  width:240px; max-width:100%;
+  height:440px; object-fit:contain;
+}
+
+.g-coupon-card {
+  position:relative;
+  margin:28px auto 0;
+  width:100%; max-width:292px;
+  border-radius:18px; overflow:hidden;
+  box-shadow:0 14px 34px rgba(0,0,0,.14);
+  text-align:left;
+  transform-origin:center;
+}
+.g-result.is-win .g-coupon-card {
+  animation:gCardFloat 2.6s ease-in-out infinite;
+}
+.g-coupon-card::before,
+.g-coupon-card::after {
+  content:'';
+  position:absolute;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:0;
+}
+.g-result.is-win .g-coupon-card::before {
+  width:180px; height:180px;
+  top:-60px; right:-56px;
+  background:radial-gradient(circle, rgba(112,239,143,.42) 0%, rgba(112,239,143,0) 72%);
+  opacity:1;
+  animation:gPulse 2.2s ease-in-out infinite;
+}
+.g-result.is-win .g-coupon-card::after {
+  width:120px; height:120px;
+  left:-34px; bottom:64px;
+  background:radial-gradient(circle, rgba(124,220,255,.30) 0%, rgba(124,220,255,0) 74%);
+  opacity:1;
+  animation:gPulse 2.8s ease-in-out infinite .35s;
+}
+@keyframes gCardFloat {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-7px); }
+}
+@keyframes gPulse {
+  0%,100% { transform:scale(.94); opacity:.72; }
+  50% { transform:scale(1.08); opacity:1; }
+}
+.g-coupon-top {
+  position:relative;
+  padding:16px 16px 10px;
+  background:linear-gradient(180deg, #79FF65 0%, #3AE15D 100%);
+  min-height:214px;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.g-result.is-win .g-coupon-top::before,
+.g-result.is-win .g-coupon-top::after {
+  content:'';
+  position:absolute;
+  inset:auto;
+  pointer-events:none;
+}
+.g-result.is-win .g-coupon-top::before {
+  width:170px; height:170px;
+  right:-44px; top:-50px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.40) 0%, rgba(255,255,255,0) 70%);
+}
+.g-result.is-win .g-coupon-top::after {
+  left:-18px; right:-18px; bottom:10px; height:64px;
+  background:linear-gradient(135deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.28) 48%, rgba(255,255,255,.08) 100%);
+  transform:skewY(-10deg);
+}
+.g-coupon-badge {
+  display:inline-flex; align-self:flex-start;
+  padding:5px 10px; border-radius:20px;
+  background:#1A1C22; color:#fff;
+  font-size:11px; line-height:16px; font-weight:600;
+  position:relative; z-index:1;
+}
+.g-coupon-product {
+  display:block; margin:6px auto 0;
+  width:176px; height:176px; object-fit:contain;
+  position:relative; z-index:1;
+  filter:drop-shadow(0 14px 22px rgba(22,74,24,.20));
+  transform-origin:center bottom;
+}
+.g-result.is-win .g-coupon-product {
+  animation:gProductPop 2.2s ease-in-out infinite;
+}
+@keyframes gProductPop {
+  0%,100% { transform:translateY(0) scale(1); }
+  50% { transform:translateY(-4px) scale(1.04); }
+}
+.g-coupon-bottom {
+  padding:16px;
+  background:linear-gradient(180deg, #1F5A32 0%, #0F2E18 100%);
+}
+.g-coupon-name {
+  font-size:17px; line-height:26px; font-weight:700; color:#fff;
+}
+.g-coupon-expiry {
+  margin-top:4px;
+  font-size:13px; line-height:18px; font-weight:500; color:rgba(255,255,255,.72);
+}
+
+.g-result-actions {
+  flex-shrink:0; 
+  display:flex; flex-direction:column; gap:4px;
+}
+.g-rbtn {
+  width:100%;
+  min-height:54px; padding:10px 12px;
+  border:none; border-radius:14px;
+  background:var(--teal); color:#fff;
+  font-family:inherit;
+  font-size:17px; line-height:26px; letter-spacing:-0.002em;
+  font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  box-shadow:0 6px 18px rgba(11,90,38,.24);
+  transition:transform .12s ease;
+}
+.g-rbtn:active { transform:scale(.98); }
+.g-rbtn--text {
+  margin-bottom: 20px;
+  min-height:48px;
+  background:transparent; color:#1A1C22;
+  box-shadow:none; font-weight:600; font-size:15px;
+}
+.is-win .g-rbtn { min-height:60px; font-size:18px; box-shadow:0 10px 24px rgba(11,90,38,.28); }
+.is-win .g-rbtn--text { color:#fff; }
+
+@keyframes gFade { from { opacity:0; } to { opacity:1; } }
+@keyframes gRise {
+  from { opacity:0; transform:translateY(18px) scale(.97); }
+  to   { opacity:1; transform:none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-result, .g-result-card, .g-coupon-card, .g-coupon-product { animation:none; }
+}
+
+.g-toast {
+  position:absolute; left:50%; bottom:36px; z-index:6;
+  transform:translateX(-50%);
+  max-width:88%; padding:11px 18px;
+  background:rgba(24,32,42,.92); color:#fff; border-radius:22px;
+  font-size:14px; line-height:20px; letter-spacing:0.0145em;
+  font-weight:500; white-space:nowrap;
+  opacity:0; transition:opacity .25s ease;
+  pointer-events:none;
+}
+.g-toast.is-on { opacity:1; }
+</style>
+</head>
+<body>
+
+<img class="status-img" src="bar.png" alt="" aria-hidden="true" onerror="this.remove()">
+
+<div class="page-main">
+  <div class="g-stage" aria-hidden="true">
+    <img   class="g-layer is-on" id="g-bg1" src="game1.webp" alt="">
+    <video class="g-layer"       id="g-bg2" src="game2.mp4" muted playsinline preload="auto"></video>
+    <video class="g-layer"       id="g-bg3" src="game3.mp4" muted playsinline preload="auto"></video>
+    <video class="g-layer"       id="g-bg4" src="game4.mp4" muted playsinline preload="auto"></video>
+  </div>
+
+  <button class="g-back" onclick="goBackPage()" aria-label="이전 화면으로 돌아가기">
+    <i class="fi fi-rr-angle-left" aria-hidden="true"></i>
+  </button>
+
+  <div class="g-head" role="status" aria-live="polite">
+    <h1 class="g-title" id="g-title">무엇이 잡힐까요?</h1>
+    <p class="g-sub" id="g-sub">버튼을 눌러 낚시대를 던져보세요!</p>
+  </div>
+
+  <div class="g-spacer"></div>
+
+  <div class="g-foot">
+    <button class="g-cast" id="g-cast" onclick="onCast()" aria-label="낚시대 던지기">클릭</button>
+  </div>
+
+  <div class="g-result" id="g-result" hidden>
+    <div class="g-result-nav">
+      <button onclick="hideResult(); goBackPage()" aria-label="뒤로 가기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 12H4M11 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <span class="g-result-logo" aria-hidden="true"></span>
+      <span style="width:44px" aria-hidden="true"></span>
+    </div>
+
+    <div class="g-result-card" id="g-card" role="status" aria-live="polite">
+      <div class="g-result-body">
+        <div id="g-lose">
+          <p class="g-result-kicker">아쉽네요</p>
+          <h2 class="g-result-title">이번엔 꽝이에요.</h2>
+          <p class="g-result-points">그래도 <b>5P</b>를 획득했어요!</p>
+          <video class="g-result-art" src="0810(4).mp4"
+                 autoplay muted loop playsinline aria-hidden="true"
+                 onerror="this.remove()"></video>
+        </div>
+
+        <div id="g-win" hidden>
+          <h2 class="g-result-title">행운의 낚시 성공!<br>아메리카노 당첨!</h2>
+          <p class="g-result-sub">쿠폰함에 쏙 넣어드렸어요</p>
+          <div class="g-coupon-card">
+            <div class="g-coupon-top">
+              <span class="g-coupon-badge">N 지금배달 상품 쿠폰</span>
+              <img class="g-coupon-product" src="game_img1.webp" alt="" aria-hidden="true" onerror="this.remove()">
+            </div>
+            <div class="g-coupon-bottom">
+              <p class="g-coupon-name">스타벅스 아이스 아메리카노</p>
+              <p class="g-coupon-expiry" id="g-coupon-expiry">발급일로부터 30일간 사용 가능</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="g-result-actions" id="g-result-actions">
+        <button class="g-rbtn" id="g-rbtn-primary" onclick="onResultPrimary()">친구 초대하고 도전하기</button>
+        <button class="g-rbtn g-rbtn--text" id="g-rbtn-secondary" onclick="onResultSecondary()">내 물고기 자랑하기 ›</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="g-toast" id="g-toast" role="status" aria-live="polite"></div>
+</div>
+
+<img class="home-img" src="bottom.png" alt="" aria-hidden="true" onerror="this.remove()">
+
+<script>
+if(window.parent !== window) document.body.classList.add('in-iframe');
+
+const ROLL_FALLBACK   = 4500;
+const CATCH_FALLBACK  = 4500;
+const FINISH_FALLBACK = 5500;
+
+const WIN_RATE = 0.5;
+let isWin = false;
+
+function drawResult(){
+  const q = new URLSearchParams(location.search).get('win');
+  if(q === '1' || q === 'true')  { isWin = true;  return; }
+  if(q === '0' || q === 'false') { isWin = false; return; }
+  isWin = Math.random() < WIN_RATE;
+}
+
+const STEPS = {
+  1: { title:'무엇이 잡힐까요?', sub:'버튼을 눌러 낚시대를 던져보세요!',
+       layer:'g-bg1', btn:'클릭', btnLabel:'낚시대 던지기' },
+  2: { title:'두구두구두구…',    sub:'과연 무엇이 잡혔을까요?',
+       layer:'g-bg2', btn:null },
+  3: { title:'오! 잡았다!',      sub:'과연 무엇일까요?',
+       layer:'g-bg2', btn:'잡기', btnLabel:'잡은 것 확인하기' },
+  4: { title:'오! 잡았다!',      sub:'과연 무엇일까요?',
+       layer:'g-bg3', btn:null },
+  5: { title:'오! 잡았다!',      sub:'과연 무엇일까요?',
+       layer:'g-bg4', btn:null },
+};
+
+let step = 1;
+let rollTimer   = null;
+let catchTimer  = null;
+let finishTimer = null;
+
+const LAYERS = ['g-bg1','g-bg2','g-bg3','g-bg4'];
+const FINISH_LAYER = () => 'g-bg4';
+const $ = id => document.getElementById(id);
+let layerTimer = null;
+
+function showLayer(id){
+  clearTimeout(layerTimer);
+  const prev = LAYERS.filter(k => k !== id && $(k).classList.contains('is-on'));
+  prev.forEach(k => { $(k).classList.remove('is-on'); $(k).classList.add('is-prev'); });
+  const next = $(id);
+  next.style.zIndex = 2;
+  prev.forEach(k => { $(k).style.zIndex = 1; });
+  next.classList.remove('is-prev');
+  void next.offsetWidth;
+  next.classList.add('is-on');
+  layerTimer = setTimeout(()=>{
+    prev.forEach(k => { $(k).classList.remove('is-prev'); $(k).style.zIndex = 0; });
+  }, 500);
+}
+
+function playLayer(id){
+  const v = $(id);
+  if(!v || !v.play) return false;
+  try { v.currentTime = 0; } catch(e) {}
+  const p = v.play();
+  if(p && p.catch) p.catch(()=>{});
+  return true;
+}
+
+function goStep(n){
+  step = n;
+  const s = STEPS[n];
+  const title = $('g-title'), sub = $('g-sub'), btn = $('g-cast');
+  title.textContent = s.title;
+  sub.textContent   = s.sub;
+  title.classList.toggle('is-rolling', n === 2);
+  showLayer(n === 5 ? FINISH_LAYER() : s.layer);
+  if(s.btn){
+    btn.hidden = false;
+    btn.textContent = s.btn;
+    btn.setAttribute('aria-label', s.btnLabel);
+  } else {
+    btn.hidden = true;
+  }
+  clearAllTimers();
+  if(n === 2){
+    veil(false);
+    playLayer('g-bg2');
+    rollTimer = setTimeout(()=>{ if(step === 2) goStep(3); }, videoWait('g-bg2', ROLL_FALLBACK));
+  }
+  else if(n === 4){
+    veil(true);
+    drawResult();
+    playLayer('g-bg3');
+    catchTimer = setTimeout(()=>{ if(step === 4) goStep(5); }, videoWait('g-bg3', CATCH_FALLBACK));
+  }
+  else if(n === 5){
+    veil(true);
+    const fin = FINISH_LAYER();
+    playLayer(fin);
+    finishTimer = setTimeout(()=>{ if(step === 5) showResult(); }, videoWait(fin, FINISH_FALLBACK));
+  }
+  else {
+    veil(false);
+  }
+}
+
+function clearAllTimers(){
+  clearTimeout(rollTimer);
+  clearTimeout(catchTimer);
+  clearTimeout(finishTimer);
+}
+
+function videoWait(id, fallback){
+  const v = $(id);
+  return (v && v.duration && isFinite(v.duration)) ? v.duration * 1000 + 300 : fallback;
+}
+
+function veil(on){
+  document.querySelector('.g-head').classList.toggle('is-veiled', on);
+  $('g-cast').classList.toggle('is-veiled', on);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate()+30);
+  const expiryEl = $('g-coupon-expiry');
+  if(expiryEl){
+    const mm=String(expiry.getMonth()+1).padStart(2,'0');
+    const dd=String(expiry.getDate()).padStart(2,'0');
+    expiryEl.textContent=`${expiry.getFullYear()}.${mm}.${dd}까지 사용 가능`;
+  }
+  $('g-bg2').addEventListener('ended', ()=>{ if(step === 2) goStep(3); });
+  $('g-bg3').addEventListener('ended', ()=>{ if(step === 4) goStep(5); });
+  $('g-bg4').addEventListener('ended', ()=>{ if(step === 5) showResult(); });
+});
+
+function onCast(){
+  if(step === 1) goStep(2);
+  else if(step === 3) goStep(4);
+}
+
+function updateResultActions(){
+  const primary = $('g-rbtn-primary');
+  const secondary = $('g-rbtn-secondary');
+  if(isWin){
+    primary.textContent = '쿠폰 확인하기';
+    secondary.textContent = '다시 도전하기 ›';
+  } else {
+    primary.textContent = '다시 도전하기';
+    secondary.textContent = '이벤트 나가기 ›';
+  }
+}
+
+function showResult(){
+  clearAllTimers();
+  veil(true);
+  $('g-lose').hidden = isWin;
+  $('g-win').hidden  = !isWin;
+  $('g-result').classList.toggle('is-win', isWin);
+  updateResultActions();
+
+  const box = $('g-result');
+  box.hidden = false;
+
+  const art = box.querySelector('video.g-result-art');
+  if(art){
+    try { art.currentTime = 0; } catch(e) {}
+    const p = art.play();
+    if(p && p.catch) p.catch(()=>{});
+  }
+
+  const first = box.querySelector('.g-rbtn');
+  if(first) first.focus({ preventScroll:true });
+}
+
+function hideResult(){
+  $('g-result').hidden = true;
+  $('g-result').classList.remove('is-win');
+}
+
+function onRetry(){
+  hideResult();
+  ['g-bg2','g-bg3','g-bg4'].forEach(id => {
+    const v = $(id);
+    if(!v) return;
+    v.pause();
+    try { v.currentTime = 0; } catch(e) {}
+  });
+  goStep(1);
+}
+
+function onResultPrimary(){
+  if(isWin){
+    if(!notifyParent('navigate', { target:'s-mypage' })) location.href='index.html';
+  } else {
+    onRetry();
+  }
+}
+
+function onResultSecondary(){
+  if(isWin){
+    onRetry();
+  } else {
+    if(!notifyParent('close')) location.href='index.html';
+  }
+}
+
+let toastTimer = null;
+function showToast(msg){
+  const t = $('g-toast');
+  t.textContent = msg;
+  t.classList.add('is-on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ t.classList.remove('is-on'); }, 1800);
+}
+
+function notifyParent(action, data){
+  if(window.parent === window) return false;
+  window.parent.postMessage(Object.assign({ source:'ext-page', action }, data||{}), '*');
+  return true;
+}
+
+function goBackPage(){
+  clearAllTimers();
+  notifyParent('back');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,563 @@
+/* ══════════════════════════════════════════════════════════════════════
+   new_montage.css
+   원티드 몽타주(Montage) 디자인 시스템 적용 — 타이포그래피 + 아바타 + 접근성
+
+   ▸ 기준 문서
+     · 타이포그래피 : montage.wanted.co.kr/docs/foundations/base-material/typography
+     · 아바타       : montage.wanted.co.kr/docs/components/contents/avatar/design
+     · 접근성       : developer.android.com/guide/topics/ui/accessibility/apps
+
+   ▸ 색상은 원본을 유지하되, 명도 대비 기준에 미달하는 6개 값만
+     색조를 그대로 둔 채 명도를 최소한으로 낮췄다. 자세한 내역은 5번 항목.
+
+   ▸ 원본 모시고.html은 건드리지 않는다. new_모시고.html이 이 파일을
+     인라인 <style> 다음에 불러가 같은 명시도에서 뒤에 와 덮어쓴다.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ────────────────────────────────────────────────────────────
+   1. 타이포그래피 토큰
+   몽타주 표의 size / line-height / letter-spacing 값을 그대로 옮겼다.
+   본문 서체는 Pretendard JP(몽타주 지정). 원본이 이미 불러오는
+   Pretendard Variable을 폴백으로 두어 로드 실패 시에도 깨지지 않는다.
+   ──────────────────────────────────────────────────────────── */
+:root {
+  --mtg-font:'Pretendard JP','Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Noto Sans KR',-apple-system,sans-serif;
+
+  /* Display */
+  --mtg-display1: 56px/72px;   --mtg-display1-ls: -0.0319em;
+  --mtg-display2: 40px/52px;   --mtg-display2-ls: -0.0282em;
+  --mtg-display3: 36px/48px;   --mtg-display3-ls: -0.027em;
+  /* Title */
+  --mtg-title1:   32px/44px;   --mtg-title1-ls:   -0.0253em;
+  --mtg-title2:   28px/38px;   --mtg-title2-ls:   -0.0236em;
+  --mtg-title3:   24px/32px;   --mtg-title3-ls:   -0.023em;
+  /* Heading */
+  --mtg-heading1: 22px/30px;   --mtg-heading1-ls: -0.0194em;
+  --mtg-heading2: 20px/28px;   --mtg-heading2-ls: -0.012em;
+  /* Headline */
+  --mtg-headline1:18px/26px;   --mtg-headline1-ls:-0.002em;
+  --mtg-headline2:17px/26px;   --mtg-headline2-ls: 0em;
+  /* Body */
+  --mtg-body1:    16px/24px;   --mtg-body1-ls:     0.0057em;
+  --mtg-body1r:   16px/26px;   /* Reading */
+  --mtg-body2:    15px/22px;   --mtg-body2-ls:     0.0096em;
+  --mtg-body2r:   15px/24px;   /* Reading */
+  /* Label */
+  --mtg-label1:   14px/20px;   --mtg-label1-ls:    0.0145em;
+  --mtg-label1r:  14px/22px;   /* Reading */
+  --mtg-label2:   13px/18px;   --mtg-label2-ls:    0.0194em;
+  /* Caption */
+  --mtg-caption1: 12px/16px;   --mtg-caption1-ls:  0.0252em;
+  --mtg-caption2: 11px/14px;   --mtg-caption2-ls:  0.0311em;
+}
+
+body { font-family:var(--mtg-font); }
+
+/* 토큰 유틸리티 클래스 — 새로 만드는 마크업에서 바로 쓴다 */
+.mtg-display1 { font:var(--mtg-display1) var(--mtg-font); letter-spacing:var(--mtg-display1-ls); }
+.mtg-display2 { font:var(--mtg-display2) var(--mtg-font); letter-spacing:var(--mtg-display2-ls); }
+.mtg-display3 { font:var(--mtg-display3) var(--mtg-font); letter-spacing:var(--mtg-display3-ls); }
+.mtg-title1   { font:var(--mtg-title1)   var(--mtg-font); letter-spacing:var(--mtg-title1-ls); }
+.mtg-title2   { font:var(--mtg-title2)   var(--mtg-font); letter-spacing:var(--mtg-title2-ls); }
+.mtg-title3   { font:var(--mtg-title3)   var(--mtg-font); letter-spacing:var(--mtg-title3-ls); }
+.mtg-heading1 { font:var(--mtg-heading1) var(--mtg-font); letter-spacing:var(--mtg-heading1-ls); }
+.mtg-heading2 { font:var(--mtg-heading2) var(--mtg-font); letter-spacing:var(--mtg-heading2-ls); }
+.mtg-headline1{ font:var(--mtg-headline1)var(--mtg-font); letter-spacing:var(--mtg-headline1-ls); }
+.mtg-headline2{ font:var(--mtg-headline2)var(--mtg-font); letter-spacing:var(--mtg-headline2-ls); }
+.mtg-body1    { font:var(--mtg-body1)    var(--mtg-font); letter-spacing:var(--mtg-body1-ls); }
+.mtg-body1r   { font:var(--mtg-body1r)   var(--mtg-font); letter-spacing:var(--mtg-body1-ls); }
+.mtg-body2    { font:var(--mtg-body2)    var(--mtg-font); letter-spacing:var(--mtg-body2-ls); }
+.mtg-body2r   { font:var(--mtg-body2r)   var(--mtg-font); letter-spacing:var(--mtg-body2-ls); }
+.mtg-label1   { font:var(--mtg-label1)   var(--mtg-font); letter-spacing:var(--mtg-label1-ls); }
+.mtg-label1r  { font:var(--mtg-label1r)  var(--mtg-font); letter-spacing:var(--mtg-label1-ls); }
+.mtg-label2   { font:var(--mtg-label2)   var(--mtg-font); letter-spacing:var(--mtg-label2-ls); }
+.mtg-caption1 { font:var(--mtg-caption1) var(--mtg-font); letter-spacing:var(--mtg-caption1-ls); }
+.mtg-caption2 { font:var(--mtg-caption2) var(--mtg-font); letter-spacing:var(--mtg-caption2-ls); }
+
+/* ────────────────────────────────────────────────────────────
+   2. 아바타 (Montage Avatar)
+
+   가이드 규칙
+     · Variant에 없는 사이즈는 4배수로 만든다
+     · 모서리 둥글기 = 사이즈 × 0.25, 홀수면 짝수로 올림
+     · 임의로 모양·둥글기를 바꾸지 않는다 → 원형(50%)은 쓰지 않는다
+     · 이미지는 잘리는 부분을 최소화하며 영역을 채운다
+     · borderColor / borderWeight / size 를 조절할 수 있다
+     · 배지 크기: 36px 이하 XSmall / 37~52px Small / 53px 이상 Medium
+
+   원본 .mgr-avatar 는 42px 원형이었다. 42는 4배수가 아니라 44px로 올리고
+   둥글기는 44 × 0.25 = 11 → 짝수 올림 12px 을 쓴다.
+   ──────────────────────────────────────────────────────────── */
+:root {
+  --mtg-avatar-border-w: 0px;                 /* borderWeight */
+  --mtg-avatar-border-c: var(--border);       /* borderColor — 원본 색 사용 */
+}
+
+.mgr-avatar,
+.mtg-avatar {
+  /* size: 4배수 */
+  width:44px; height:44px;
+  /* radius = size × 0.25 → 11 → 짝수 올림 12 */
+  border-radius:12px;
+  border:var(--mtg-avatar-border-w) solid var(--mtg-avatar-border-c);
+  background:var(--g200);                     /* 원본 색 유지 */
+  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  /* 폴백(이모지·이니셜)은 사이즈의 약 0.45배 */
+  font-size:20px; line-height:1;
+  overflow:hidden;
+  position:relative;
+}
+/* 이미지는 영역을 채우되 잘림을 최소화 */
+.mgr-avatar img,
+.mtg-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* 사이즈 변형 — 전부 4배수, radius = size × 0.25(짝수 올림) */
+.mtg-avatar--xs { width:24px; height:24px; border-radius:6px;  font-size:11px; }
+.mtg-avatar--sm { width:32px; height:32px; border-radius:8px;  font-size:14px; }
+.mtg-avatar--md { width:44px; height:44px; border-radius:12px; font-size:20px; }
+.mtg-avatar--lg { width:56px; height:56px; border-radius:14px; font-size:24px; }
+.mtg-avatar--xl { width:72px; height:72px; border-radius:18px; font-size:32px; }
+
+/* 배지 — 아바타 크기에 따라 XSmall / Small / Medium */
+.mtg-avatar-badge {
+  position:absolute; right:-2px; bottom:-2px;
+  border-radius:50%;
+  border:2px solid var(--white);
+  background:var(--teal);                     /* 원본 색 유지 */
+}
+.mtg-avatar-badge--xsmall { width:10px; height:10px; }  /* 아바타 ≤36px */
+.mtg-avatar-badge--small  { width:12px; height:12px; }  /* 아바타 37~52px */
+.mtg-avatar-badge--medium { width:16px; height:16px; }  /* 아바타 ≥53px */
+
+/* 아바타를 버튼으로 쓸 때 */
+button.mtg-avatar { padding:0; cursor:pointer; }
+
+/* ────────────────────────────────────────────────────────────
+   3. 접근성 (Android 접근성 가이드)
+
+   · 터치 영역 최소 48dp × 48dp
+   · 아이콘만 있는 컨트롤에는 목적을 설명하는 라벨(aria-label)
+   · 장식용 요소는 접근성 트리에서 숨긴다(aria-hidden)
+   · 포커스가 보이게 한다
+   ──────────────────────────────────────────────────────────── */
+
+/* 48px 최소 터치 영역.
+   버튼을 실제로 키우면 레이아웃이 틀어지므로, 보이는 크기는 그대로 두고
+   가운데 정렬된 투명 히트 영역만 48×48로 넓힌다. */
+.back-btn, .icon-right, .home-ic, .fish-close, .g-back, .mtg-tap48 { position:relative; }
+.back-btn::after, .icon-right::after, .home-ic::after,
+.fish-close::after, .g-back::after, .mtg-tap48::after {
+  content:'';
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:48px; height:48px;
+  /* 시각적으로는 보이지 않고 터치만 받는다 */
+}
+
+/* 낱개로 떨어져 있는 아이콘 버튼도 같은 방식으로 넓힌다 */
+.nv-heart, .si-clear, .si-x, .star, .rep-promo-x, .map-ctrl, .rt-btn,
+.search-sheet-handle, .home-name, .big-toggle,
+.bk, .agree-view { position:relative; }
+.nv-heart::after, .si-clear::after, .si-x::after, .star::after,
+.rep-promo-x::after, .map-ctrl::after, .rt-btn::after,
+.search-sheet-handle::after, .home-name::after, .big-toggle::after,
+.bk::after, .agree-view::after {
+  content:'';
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:48px; height:48px;
+}
+
+/* 가로로 촘촘히 놓인 칩·필·탭은 48×48로 키우면 옆 항목과 히트 영역이 겹쳐
+   오히려 잘못 눌린다. 그래서 세로 방향으로만 48px까지 넓히고
+   가로는 보이는 너비를 그대로 쓴다. */
+.chip, .filter-pill, .tab-item, .mgr-tab, .nv-date-part, .nv-pt-part,
+.ob-link, .agree-item,
+.btn, .cost-row, .rt-add-chip, .sheet-sec-sort { position:relative; }
+.chip::after, .filter-pill::after, .tab-item::after, .mgr-tab::after,
+.nv-date-part::after, .nv-pt-part::after,
+.ob-link::after, .agree-item::after,
+.btn::after, .cost-row::after,
+.rt-add-chip::after, .sheet-sec-sort::after {
+  content:'';
+  position:absolute; top:50%; left:0;
+  transform:translateY(-50%);
+  width:100%; height:48px;
+}
+
+/* 리포트 차트의 SVG 라벨은 font-size 속성으로 9~10px이 박혀 있어
+   CSS 규칙으로 잡히지 않는다. caption 크기(12px)로 올린다. */
+svg text { font-size:12px; letter-spacing:0.0252em; }
+
+/* 스크린리더 전용 텍스트 */
+.mtg-sr-only {
+  position:absolute; width:1px; height:1px;
+  padding:0; margin:-1px; overflow:hidden;
+  clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0;
+}
+
+/* 키보드 포커스 표시 — 색은 원본 --teal 사용 */
+a:focus-visible, button:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+  outline:2px solid var(--teal);
+  outline-offset:2px;
+  border-radius:4px;
+}
+/* 마우스 클릭 때는 링을 띄우지 않는다 */
+:focus:not(:focus-visible) { outline:none; }
+
+/* 움직임을 줄이도록 설정한 사용자 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   4. 역할별 타이포그래피 스케일
+
+   지정하신 역할 스케일을 몽타주 토큰에 맞춰 확정했다.
+   몽타주에 없는 값(34px)과 최솟값 미만(10px)은 아래처럼 정리했다.
+
+     역할        지정        확정        몽타주 토큰
+     ─────────────────────────────────────────────────
+     큰제목      34px    →   32px        Title 1
+     제목        28px        28px        Title 2
+     소제목      18~22px     18/20/22px  Headline 1 / Heading 2 / Heading 1
+     본문        17px        17px        Headline 2   (16~18 조절 가능)
+     본문 (중)   15px        15px        Body 2
+     본문 (소)   14px        14px        Label 1
+     foot        13px        13px        Label 2
+     caption     10~12px →   12px        Caption 1    (2의 배수)
+
+   따라서 앱에서 쓰는 글자 크기는 다음 10개로 제한된다.
+     12 / 13 / 14 / 15 / 17 / 18 / 20 / 22 / 28 / 32
+
+   14·15가 본문에 함께 있어야 하는 이유
+     원본은 목록 항목·버튼처럼 자주 읽는 텍스트에 14~15px을 쓰고 있었다.
+     본문을 17px 하나로 묶으면 이것들이 13px(foot)로 밀려 내려가
+     각주와 같은 크기가 된다. 그래서 14·15를 본문 단계로 남겨 둔다.
+
+   caption은 "없어도 뜻이 통하는" 것에만 쓴다.
+     숫자로만 스냅하면 원본의 9~12px 다섯 단계가 전부 12px로 눌려
+     버튼과 약관 각주가 같은 크기가 된다. 이 배정은 사람이 판단해야 해서
+     new_roles.css 에서 따로 바로잡는다.
+   ──────────────────────────────────────────────────────────── */
+:root {
+  --role-title-lg: 32px; --role-title-lg-lh: 44px; --role-title-lg-ls: -0.0253em;
+  --role-title:    28px; --role-title-lh:    38px; --role-title-ls:    -0.0236em;
+  --role-subtitle: 22px; --role-subtitle-lh: 30px; --role-subtitle-ls: -0.0194em;
+  --role-subtitle-sm: 18px; --role-subtitle-sm-lh: 26px; --role-subtitle-sm-ls: -0.002em;
+  /* 본문은 16~18 사이에서 조절 가능하다. 이 값만 바꾸면 본문 전체가 따라간다.
+     18px로 올리면 Android 기준상 대비 요구치가 4.5:1에서 3:1로 낮아진다. */
+  --role-body:     17px; --role-body-lh:     26px; --role-body-ls:      0em;
+  --role-body-m:   15px; --role-body-m-lh:   22px; --role-body-m-ls:    0.0096em;
+  --role-body-s:   14px; --role-body-s-lh:   20px; --role-body-s-ls:    0.0145em;
+  --role-foot:     13px; --role-foot-lh:     18px; --role-foot-ls:      0.0194em;
+  --role-caption:  12px; --role-caption-lh:  16px; --role-caption-ls:   0.0252em;
+}
+
+.role-title-lg { font-size:var(--role-title-lg); line-height:var(--role-title-lg-lh); letter-spacing:var(--role-title-lg-ls); }
+.role-title    { font-size:var(--role-title);    line-height:var(--role-title-lh);    letter-spacing:var(--role-title-ls); }
+.role-subtitle { font-size:var(--role-subtitle); line-height:var(--role-subtitle-lh); letter-spacing:var(--role-subtitle-ls); }
+.role-body     { font-size:var(--role-body);     line-height:var(--role-body-lh);     letter-spacing:var(--role-body-ls); }
+.role-body-m   { font-size:var(--role-body-m);   line-height:var(--role-body-m-lh);   letter-spacing:var(--role-body-m-ls); }
+.role-body-s   { font-size:var(--role-body-s);   line-height:var(--role-body-s-lh);   letter-spacing:var(--role-body-s-ls); }
+.role-foot     { font-size:var(--role-foot);     line-height:var(--role-foot-lh);     letter-spacing:var(--role-foot-ls); }
+.role-caption  { font-size:var(--role-caption);  line-height:var(--role-caption-lh);  letter-spacing:var(--role-caption-ls); }
+
+/* ────────────────────────────────────────────────────────────
+   5. 명도 대비 보정 (Android 접근성 가이드)
+
+   기준: 18px 미만 텍스트 4.5:1, 18px 이상 3:1
+   색조(Hue)와 채도(Saturation)는 그대로 두고 명도(Lightness)만
+   기준을 갓 넘길 때까지 낮췄다. 원본 대비 바뀐 값은 아래가 전부다.
+
+     변수        원본       보정후     결과
+     ────────────────────────────────────────────────────────
+     --teal      #1FB24A → #168035    흰글자 5.03:1 / 흰바탕 5.06:1 / 연녹바탕 4.53:1
+     --g600      #6B7280 → #646B78    흰바탕 5.39:1 / #F4F5F7 4.94:1 / #E9EBF0 4.52:1
+     --g400      #A9AEBB → #687084    흰바탕 4.94:1 / #F4F5F7 4.52:1
+     --coral     #E11D48 → #D31B44    흰바탕 5.22:1 / 연분홍바탕 4.53:1
+     --yellow-d  #B58A00 → #947100    흰바탕 4.53:1
+     파랑 배지   #2563EB → #1D5DEA    연파랑바탕 4.52:1 / 흰바탕 5.52:1
+
+   --amber(#8A6D00)는 원본 그대로 기준을 통과해 손대지 않았다.
+   배경색(--teal-l, --g100, --g200, --bg 등)도 전부 원본 그대로다.
+   ──────────────────────────────────────────────────────────── */
+:root {
+  --teal:    #168035;
+  --g600:    #646A77;
+  --g400:    #636A7D;
+  --amber:   #876B00;
+  --coral:   #D31B44;
+  --yellow-d:#947100;
+}
+/* 변수가 아니라 값으로 박혀 있는 색들 — 실제 화면에서 미달로 잡힌 것만 보정 */
+.badge-req, .badge.blue, .chip.blue { color:#1D5DEA; }   /* #2563EB, 연파랑 배지 위 4.52:1 */
+.star.on            { color:#CD8408; }                    /* #F59E0B, 32px ★ → 3.05:1 */
+/* 빈 별은 조작 가능한 컨트롤의 상태 표시라 그래픽 대비 3:1을 맞춘다 */
+.star:not(.on)      { color:#949494; }                    /* #E9EBF0 → 3.15:1 */
+.ci.badge.live,
+.ci.badge.today     { color:#767676; }                    /* #D1D1D1 → 4.56:1 */
+.banner-ph          { color:#616161; }                    /* 이미지 로드 실패 시 대체 문구 */
+
+/* 리포트 앱바는 히어로 이미지 위에 흰 글자로 얹혀 있어, 사진이 밝으면 대비가 무너진다.
+   글자색은 그대로 두고 뒤에 어두운 스크림만 깔아 어떤 사진에서도 읽히게 한다. */
+#s-report .app-bar {
+  background-image:linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 100%);
+}
+
+/* ────────────────────────────────────────────────────────────
+   6. 타이포그래피 스케일 적용 (자동 생성 구간)
+   원본 크기를 역할 스케일 8개 값 중 가장 가까운 값으로 스냅한다.
+   거리가 같으면 큰 쪽을 택해 가독성을 우선한다.
+   ──────────────────────────────────────────────────────────── */
+
+.proto-header { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.proto-header strong { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+.status-bar { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.app-bar-title { font-size:17px; line-height:26px; letter-spacing:0em; }
+.app-bar-sub { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.back-btn { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.icon-right { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+/* 토스풍: 자잘한 대문자 라벨 대신 크고 또렷한 섹션 제목 */
+.label { font-size:17px; line-height:26px; letter-spacing:0em; }
+.step-info { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.card-title { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.card-sub { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.pt-title { font-size:17px; line-height:26px; letter-spacing:0em; }
+.pt-edit { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.pt-note { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.pt-label { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.pt-auto-tag { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.pt-grid span { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.pt-grid b { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.rt-dot { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rt-txt { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.rt-txt em { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rt-btn { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.rt-add-chip { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+/* 지도 위 경유지 번호 핀 */
+.stop-pin { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.unit-input input { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.unit-input span { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.body-note { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.check-row .check-txt { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.dur-note { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.rep-promo-x { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.rep-promo-eyebrow { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.rep-promo-title { font-size:17px; line-height:26px; letter-spacing:0em; }
+/* 버튼 */
+.btn { font-size:17px; line-height:26px; letter-spacing:0em; }
+.btn.secondary { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.btn.ghost { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+/* 입력 */
+.input { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.chip { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+/* 배지 */
+.badge { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+/* AI 칩 */
+.ai-chip { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.mgr-avatar { font-size:20px; line-height:28px; letter-spacing:-0.012em; }
+.mgr-name { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.mgr-meta { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.mgr-star { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.map-pin { font-size:32px; line-height:44px; letter-spacing:-0.0253em; }
+.map-pin-sm { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.map-badge { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.map-label { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.tl-dot { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.tl-title { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.tl-sub { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+/* 토스트 */
+.toast { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.modal-title { font-size:17px; line-height:26px; letter-spacing:0em; }
+.modal-sub { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.tab-item { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.tab-icon { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.agree-check { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.agree-text { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.agree-text small { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.agree-req { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.agree-all-check { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.agree-all-text { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.agree-item-check { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.agree-item-title { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.agree-item-sub { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.badge-req { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.badge-opt { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.agree-item-arrow { font-size:17px; line-height:26px; letter-spacing:0em; }
+.agree-view { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.terms-h { font-size:17px; line-height:26px; letter-spacing:0em; }
+.terms-date { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.terms-p { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.terms-sub { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.terms-table { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.terms-note { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+/* 단계별 입력 (progressive) */
+.book-q { font-size:17px; line-height:26px; letter-spacing:0em; }
+.hi-date { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.hi-title { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.hi-meta { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+/* 비용표 */
+.cost-row { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.cost-total { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.report-label { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.report-val { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+/* 별점 */
+.stars { font-size:32px; line-height:44px; letter-spacing:-0.0253em; }
+.live-step-icon { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+.live-step-label { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.home-name { font-size:20px; line-height:28px; letter-spacing:-0.012em; }
+.home-name .caret { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.big-toggle { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.home-ic { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+/* 대시보드 알림 pill */
+.dash-pill { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.dash-pill .b { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.search-big .txt { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.search-big .mic { font-size:17px; line-height:26px; letter-spacing:0em; }
+.locate-btn { font-size:20px; line-height:28px; letter-spacing:-0.012em; }
+.promo-badge { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.promo-txt { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.promo-big { font-size:32px; line-height:44px; letter-spacing:-0.0253em; }
+.promo-big small { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.promo-dots { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+/* 이미지가 아직 없을 때 보이는 자리표시자 (img가 로드되면 위를 덮는다) */
+.banner-ph { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.banner-count { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.seg-title { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.seg-chip { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.cat .ci { font-size:28px; line-height:38px; letter-spacing:-0.0236em; }
+.cat .cl { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+/* 텍스트 배지형(지금 진료중·당일 예약) — 라벨 없이 블롭 안에 문구가 들어간다 */
+.cat .ci.badge { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.srch-field .fi { font-size:17px; line-height:26px; letter-spacing:0em; }
+.srch-field input { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.route-t { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.route-v { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.filter-pill { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.filter-pill .cv { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.filter-pill .num { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.nv-search .bk { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+.nv-search .q { font-size:17px; line-height:26px; letter-spacing:0em; }
+.nv-search .ic { font-size:17px; line-height:26px; letter-spacing:0em; }
+.nv-datebar { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.sheet-sec-title { font-size:17px; line-height:26px; letter-spacing:0em; }
+.sheet-sec-sort { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.sheet-sec-sort .fi { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.nv-heart { font-size:17px; line-height:26px; letter-spacing:0em; }
+.nv-ava { font-size:28px; line-height:38px; letter-spacing:-0.0236em; }
+.nv-card-nm { font-size:17px; line-height:26px; letter-spacing:0em; }
+/* 거리를 먼저 읽히게 — 레퍼런스의 "74m · 주소" 위계 */
+.nv-card-meta { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.nv-card-stars .fi { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.nv-card-rt { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.nv-card-cnt { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+/* 2행: 한 줄 소개 */
+.nv-card-intro { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.nv-hash { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.nv-price-label { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.nv-price-label .fi { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.nv-price { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.search-sheet-count { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.search-sheet-count .fi { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.mdate .d { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.mdate .d span { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.mdate .s { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rp-head-t { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.rp-hero-ic { font-size:28px; line-height:38px; letter-spacing:-0.0236em; }
+.rp-hero-tt { font-size:17px; line-height:26px; letter-spacing:0em; }
+.rp-hero-sub { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rp-goal-labels div { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rp-goal-labels div b { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rp-cnt { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rp-cnt b { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+.rp-cnt .ic { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.metric .m-ic { font-size:17px; line-height:26px; letter-spacing:0em; }
+.metric .m-nm { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.metric .m-sub { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.m-badge { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.metric .chev { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.rp-pred-tt { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+.rp-orb { font-size:32px; line-height:44px; letter-spacing:-0.0253em; }
+.rp-pred-sub { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rp-stat-l { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rp-stat-v { font-size:20px; line-height:28px; letter-spacing:-0.012em; }
+.rp-prob-l { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.rp-prob-v { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+.rd-nm { font-size:17px; line-height:26px; letter-spacing:0em; }
+.rd-val { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.rd-legend { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.map-ctrl { font-size:17px; line-height:26px; letter-spacing:0em; }
+.map-home { font-size:20px; line-height:28px; letter-spacing:-0.012em; }
+/* 축약형 겹침 병합 배지 — 매니저 수 확장 대비 훅(더미 3명으로는 실제 병합 미발생) */
+/* 겹친 핀 묶음: 레퍼런스의 "+N" 배지 */
+.map-mgr-merge { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.hbadge { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.hcard-nm { font-size:17px; line-height:26px; letter-spacing:0em; }
+.hcard-meta { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.hcard-tag { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.hcard-wait { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+/* 검색 입력 화면 */
+.si-head { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.si-clear { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.si-item .ic { font-size:17px; line-height:26px; letter-spacing:0em; }
+.si-loading, .si-empty { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.si-nm { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.si-sub { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.si-x { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.target-av { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.target-nm { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.target-sub { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.target-ck { font-size:17px; line-height:26px; letter-spacing:0em; }
+/* 매니저 프로필 (이미지2) */
+.mgr-badge { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.mgr-photo { font-size:32px; line-height:44px; letter-spacing:-0.0253em; }
+.mgr-hero-nm { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.mgr-hero-cred { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.mgr-hero-intro { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.mgr-tab { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.mgr-block-t { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.cert { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.cert .fi { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
+.exp-item { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.mgr-para { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.ob-title { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+.ob-sect { font-size:17px; line-height:26px; letter-spacing:0em; }
+.perm-row .ic { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.perm-row .tt { font-size:17px; line-height:26px; letter-spacing:0em; }
+.perm-row .ds { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.ob-info li { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.ob-btn { font-size:17px; line-height:26px; letter-spacing:0em; }
+.ob-link { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.ob-alert .ai { font-size:28px; line-height:38px; letter-spacing:-0.0236em; }
+.ob-alert .msg { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+.ob-alert .b { font-size:15px; line-height:22px; letter-spacing:0.0096em; }
+/* 카카오 */
+.kk-logo { font-size:28px; line-height:38px; letter-spacing:-0.0236em; }
+.kk-ic { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.kk-nm { font-size:17px; line-height:26px; letter-spacing:0em; }
+.kk-co { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.kk-mail { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.kk-intro { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.kk-grp-t { font-size:17px; line-height:26px; letter-spacing:0em; }
+.kk-grp-d { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.kk-crow .ck { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.kk-crow .cx { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.kk-crow .cx .ar { font-size:17px; line-height:26px; letter-spacing:0em; }
+.kk-csub { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.kk-small { font-size:14px; line-height:20px; letter-spacing:0.0145em; }
+.kk-small .ck { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+/* 랜딩 화면은 지마켓 산스 Bold(800)를 그대로 유지한다 — 웨이트 상한 적용 대상 아님 */
+.land-wrap h1 { font-size:22px; line-height:30px; letter-spacing:-0.0194em; }
+.rp-banner-label { font-size:13px; line-height:18px; letter-spacing:0.0194em; }
+.rp-banner-ic { font-size:28px; line-height:38px; letter-spacing:-0.0236em; }
+.rp-banner-v { font-size:32px; line-height:44px; letter-spacing:-0.0253em; }
+.rp-banner-u { font-size:18px; line-height:26px; letter-spacing:-0.002em; }
+.rp-banner-tag { font-size:12px; line-height:16px; letter-spacing:0.0252em; }
