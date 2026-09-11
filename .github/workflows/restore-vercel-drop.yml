@@ -1,0 +1,162 @@
+name: Restore Mosigo Vercel Drop
+
+on:
+  push:
+    branches:
+      - recovery/bootstrap
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out bootstrap branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore exact source from Vercel Drop
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOYMENT_ID: dpl_HiwGaYsHZfrx9HdET6nHk9FKLjAj
+          TEAM_ID: team_UKIfvGHoYZXtomQSqEztbBDr
+          EXPECTED_COUNT: "46"
+          EXPECTED_BYTES: "26703616"
+          EXPECTED_FINGERPRINT: 93b51d43ebd7d8d725bdefe03b1770c158842270d6608e613fde7dc76c6d77b9
+        run: |
+          set -euo pipefail
+          test -n "${VERCEL_TOKEN:-}"
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import shutil
+          import urllib.parse
+          import urllib.request
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+
+          token = os.environ["VERCEL_TOKEN"]
+          deployment = os.environ["DEPLOYMENT_ID"]
+          team = os.environ["TEAM_ID"]
+          expected_count = int(os.environ["EXPECTED_COUNT"])
+          expected_bytes = int(os.environ["EXPECTED_BYTES"])
+          expected_fingerprint = os.environ["EXPECTED_FINGERPRINT"]
+          api = "https://api.vercel.com"
+          out = pathlib.Path(os.environ["RUNNER_TEMP"]) / "mosigo-source"
+          shutil.rmtree(out, ignore_errors=True)
+          out.mkdir(parents=True, exist_ok=True)
+
+          def api_get(url):
+              req = urllib.request.Request(
+                  url,
+                  headers={
+                      "Authorization": f"Bearer {token}",
+                      "Accept": "application/json, */*",
+                      "User-Agent": "mosigo-github-restore/1.0",
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=90) as resp:
+                  return resp.read()
+
+          def safe_rel(parts):
+              clean = []
+              for part in parts:
+                  if not part or part in (".", "..") or "/" in part or "\\" in part:
+                      raise RuntimeError(f"unsafe path component: {part!r}")
+                  clean.append(part)
+              return pathlib.PurePosixPath(*clean).as_posix()
+
+          def flatten(nodes, parent=()):
+              files = []
+              for node in nodes:
+                  if not isinstance(node, dict) or not isinstance(node.get("name"), str):
+                      continue
+                  cur = parent + (node["name"],)
+                  children = node.get("children") or []
+                  typ = str(node.get("type") or "").lower()
+                  uid = node.get("uid")
+                  if children or typ in ("directory", "dir", "folder"):
+                      files.extend(flatten(children, cur))
+                  elif uid:
+                      files.append({"path": safe_rel(cur), "uid": str(uid)})
+              return files
+
+          q = urllib.parse.urlencode({"teamId": team})
+          tree = json.loads(api_get(f"{api}/v6/deployments/{deployment}/files?{q}").decode("utf-8"))
+          files = flatten(tree)
+          if len(files) != expected_count:
+              raise RuntimeError(f"file count mismatch: {len(files)} != {expected_count}")
+
+          def fetch(item):
+              uid = urllib.parse.quote(item["uid"], safe="")
+              raw = api_get(f"{api}/v8/deployments/{deployment}/files/{uid}?{q}")
+              text = raw.decode("utf-8")
+              try:
+                  parsed = json.loads(text)
+                  if isinstance(parsed, str):
+                      payload = parsed
+                  elif isinstance(parsed, dict):
+                      payload = next((parsed[k] for k in ("data", "content", "body", "file", "value") if isinstance(parsed.get(k), str)), None)
+                  else:
+                      payload = None
+              except json.JSONDecodeError:
+                  payload = text.strip()
+              if not payload:
+                  raise RuntimeError(f"missing payload for {item['path']}")
+              payload += "=" * ((4 - len(payload) % 4) % 4)
+              data = base64.b64decode(payload)
+              target = out / pathlib.PurePosixPath(item["path"])
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
+              return item["path"], len(data)
+
+          total = 0
+          with ThreadPoolExecutor(max_workers=6) as pool:
+              futures = {pool.submit(fetch, item): item for item in files}
+              for fut in as_completed(futures):
+                  path, size = fut.result()
+                  total += size
+                  print(f"restored {path} ({size} bytes)")
+
+          paths = sorted(p for p in out.rglob("*") if p.is_file())
+          if len(paths) != expected_count:
+              raise RuntimeError(f"restored file count mismatch: {len(paths)}")
+          if total != expected_bytes:
+              raise RuntimeError(f"byte count mismatch: {total} != {expected_bytes}")
+
+          h = hashlib.sha256()
+          for path in paths:
+              rel = path.relative_to(out).as_posix().encode()
+              data = path.read_bytes()
+              h.update(len(rel).to_bytes(4, "big"))
+              h.update(rel)
+              h.update(len(data).to_bytes(8, "big"))
+              h.update(data)
+          fingerprint = h.hexdigest()
+          if fingerprint != expected_fingerprint:
+              raise RuntimeError(f"fingerprint mismatch: {fingerprint} != {expected_fingerprint}")
+
+          required = ["src/index.html", "src/api/hospitals.js", "src/vercel.json"]
+          missing = [p for p in required if not (out / p).is_file()]
+          if missing:
+              raise RuntimeError(f"missing required files: {missing}")
+
+          print(f"VERIFIED {len(paths)} files / {total} bytes / {fingerprint}")
+          PY
+
+      - name: Commit verified source to recovery branch
+        run: |
+          set -euo pipefail
+          git config user.name "mosigo-restore-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -B recovery/vercel-drop
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$RUNNER_TEMP/mosigo-source/." .
+          git add -A
+          git commit -m "Restore exact Mosigo source from Vercel Drop"
+          git push --force origin HEAD:refs/heads/recovery/vercel-drop
+          echo "RECOVERY_COMMIT=$(git rev-parse HEAD)"
