@@ -22,7 +22,6 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           DEPLOYMENT_ID: dpl_HiwGaYsHZfrx9HdET6nHk9FKLjAj
           TEAM_ID: team_UKIfvGHoYZXtomQSqEztbBDr
-          EXPECTED_COUNT: "46"
           EXPECTED_BYTES: "26703616"
           EXPECTED_FINGERPRINT: 93b51d43ebd7d8d725bdefe03b1770c158842270d6608e613fde7dc76c6d77b9
         run: |
@@ -39,10 +38,22 @@ jobs:
           import urllib.request
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
+          expected_paths = {
+              "src/0810(4).mp4", "src/12.png", "src/13.png", "src/14.png", "src/Group 7385.png",
+              "src/api/hospitals.js", "src/bar.png", "src/bg.webp", "src/bottom.png", "src/car.png",
+              "src/cat-icons/baby.webp", "src/cat-icons/bone.webp", "src/cat-icons/ear.webp", "src/cat-icons/eye.webp",
+              "src/cat-icons/heart.webp", "src/cat-icons/lotion.webp", "src/cat-icons/mind.webp", "src/cat-icons/pill.webp",
+              "src/clinic-logo.png", "src/day.png", "src/finish.png", "src/game1.webp", "src/game2.mp4", "src/game3.mp4",
+              "src/game4.mp4", "src/game_img1.webp", "src/gyeote_report_hero.png", "src/index.html", "src/location.png",
+              "src/mgr/1.webp", "src/mgr/10.webp", "src/mgr/11.webp", "src/mgr/2.webp", "src/mgr/3.webp",
+              "src/mgr/4.webp", "src/mgr/5.webp", "src/mgr/6.webp", "src/mgr/7.webp", "src/mgr/8.webp", "src/mgr/9.webp",
+              "src/new_event.html", "src/new_ext-pages.js", "src/new_game.html", "src/new_montage.css", "src/new_roles.css",
+              "src/vercel.json"
+          }
+
           token = os.environ["VERCEL_TOKEN"]
           deployment = os.environ["DEPLOYMENT_ID"]
           team = os.environ["TEAM_ID"]
-          expected_count = int(os.environ["EXPECTED_COUNT"])
           expected_bytes = int(os.environ["EXPECTED_BYTES"])
           expected_fingerprint = os.environ["EXPECTED_FINGERPRINT"]
           api = "https://api.vercel.com"
@@ -56,7 +67,7 @@ jobs:
                   headers={
                       "Authorization": f"Bearer {token}",
                       "Accept": "application/json, */*",
-                      "User-Agent": "mosigo-github-restore/1.0",
+                      "User-Agent": "mosigo-github-restore/1.1",
                   },
               )
               with urllib.request.urlopen(req, timeout=90) as resp:
@@ -87,9 +98,16 @@ jobs:
 
           q = urllib.parse.urlencode({"teamId": team})
           tree = json.loads(api_get(f"{api}/v6/deployments/{deployment}/files?{q}").decode("utf-8"))
-          files = flatten(tree)
-          if len(files) != expected_count:
-              raise RuntimeError(f"file count mismatch: {len(files)} != {expected_count}")
+          all_files = flatten(tree)
+          by_path = {item["path"]: item for item in all_files}
+          missing = sorted(expected_paths - set(by_path))
+          if missing:
+              raise RuntimeError(f"expected Vercel source paths missing: {missing}")
+          selected = [by_path[path] for path in sorted(expected_paths)]
+          extra = sorted(set(by_path) - expected_paths)
+          print(f"Vercel returned {len(all_files)} files; restoring the approved {len(selected)} paths only.")
+          if extra:
+              print("Ignored extra paths: " + ", ".join(extra))
 
           def fetch(item):
               uid = urllib.parse.quote(item["uid"], safe="")
@@ -116,15 +134,15 @@ jobs:
 
           total = 0
           with ThreadPoolExecutor(max_workers=6) as pool:
-              futures = {pool.submit(fetch, item): item for item in files}
+              futures = {pool.submit(fetch, item): item for item in selected}
               for fut in as_completed(futures):
                   path, size = fut.result()
                   total += size
                   print(f"restored {path} ({size} bytes)")
 
           paths = sorted(p for p in out.rglob("*") if p.is_file())
-          if len(paths) != expected_count:
-              raise RuntimeError(f"restored file count mismatch: {len(paths)}")
+          if len(paths) != 46:
+              raise RuntimeError(f"restored file count mismatch: {len(paths)} != 46")
           if total != expected_bytes:
               raise RuntimeError(f"byte count mismatch: {total} != {expected_bytes}")
 
@@ -139,11 +157,6 @@ jobs:
           fingerprint = h.hexdigest()
           if fingerprint != expected_fingerprint:
               raise RuntimeError(f"fingerprint mismatch: {fingerprint} != {expected_fingerprint}")
-
-          required = ["src/index.html", "src/api/hospitals.js", "src/vercel.json"]
-          missing = [p for p in required if not (out / p).is_file()]
-          if missing:
-              raise RuntimeError(f"missing required files: {missing}")
 
           print(f"VERIFIED {len(paths)} files / {total} bytes / {fingerprint}")
           PY
