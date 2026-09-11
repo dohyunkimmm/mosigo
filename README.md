@@ -70,5 +70,6 @@ python -m http.server 8000
 - Vercel Drop 기준 소스 복원 완료
 - GitHub `main` 동기화 완료
 - Git 기반 Production 재배포 및 동작 검증 완료
+- GitHub README와 Notion 프로젝트 문서 동기화 완료
 
 마지막 문서 동기화: 2026-09-12
