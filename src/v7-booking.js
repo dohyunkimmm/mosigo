@@ -134,6 +134,15 @@
     }else{
       publish('empty');
     }
+
+    // v8 adds validated lifecycle history on top of the recoverable v7 booking resource.
+    if(!document.querySelector('script[data-mosigo-v8-booking]')){
+      const v8=document.createElement('script');
+      v8.src='v8-booking.js';
+      v8.async=false;
+      v8.dataset.mosigoV8Booking='1';
+      document.head.appendChild(v8);
+    }
   }
 
   initV7BookingRecovery();
