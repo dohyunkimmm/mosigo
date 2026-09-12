@@ -95,8 +95,10 @@ test('required application entrypoints, modules, and config exist', () => {
     ...CSS_FILES,
     ...JS_FILES,
     'api/hospitals.js',
+    'api/bookings.js',
     'data/hospitals.js',
     'lib/hospital-query.js',
+    'lib/booking-service.js',
     'vercel.json'
   ]) {
     assert.ok(fs.existsSync(path.join(SRC, file)), `Missing required file: src/${file}`);
