@@ -10,6 +10,7 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 - Kept the public `/api/hospitals` response contract and cache headers unchanged while reducing handler responsibilities.
 - Added focused unit coverage for the hospital query module and retained API contract tests.
 - Generalized structural QA and the Release workflow so the same quality/release path can be reused beyond v2.
+- Added an automated `src/index.html` source-structure audit to measure inline CSS/JavaScript before splitting the monolithic entrypoint.
 
 ## v2.0.0 — 2026-09-12
 
