@@ -21,15 +21,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
 
       - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
-      - name: Wait for matching Vercel Production and smoke-test it
+      - name: Decide whether Production must match this commit
+        id: deployment
+        shell: bash
+        run: |
+          if git diff --quiet HEAD^ HEAD -- src/; then
+            echo "expected_commit=" >> "$GITHUB_OUTPUT"
+            echo "No src/ changes; smoke-testing the current Production deployment."
+          else
+            echo "expected_commit=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+            echo "src/ changed; waiting for Production to match this main commit."
+          fi
+
+      - name: Wait for Production and smoke-test it
         env:
-          EXPECTED_COMMIT: ${{ github.event.workflow_run.head_sha }}
+          EXPECTED_COMMIT: ${{ steps.deployment.outputs.expected_commit }}
           SMOKE_ATTEMPTS: '18'
           SMOKE_RETRY_MS: '10000'
         run: npm run smoke:production
