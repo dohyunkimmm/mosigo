@@ -2,6 +2,30 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v7.0.0 — 2026-09-13
+
+### Recoverable booking beta
+- Advanced `/api/bookings` from the v6 command-only surface to a v7 recoverable booking-resource contract while preserving server-authoritative lifecycle transition validation.
+- Added `PUT /api/bookings` to revalidate an existing booking snapshot without resetting its booking ID, lifecycle phase, or timestamps.
+- Changed newly generated booking IDs to M7 format while preserving compatibility with existing M4, M6, and M7 booking IDs.
+- Added `src/v7-booking.js` to persist canonical booking snapshots in `localStorage` by booking ID and automatically recover the latest same-device booking when a new browser session starts.
+- Exposed explicit booking hydration from the stable v4 runtime and booking-state events/hydration from the v6 sync layer so a validated recovered snapshot can restore the existing booking UI without replacing the proven flow.
+- Kept the recovery boundary explicit: the API reports `persistence: client-local`, `recoveryScope: same-device`, and `durableServerPersistence: false`; v7 does not claim database-backed server persistence.
+- Extended booking API tests for v7 capability discovery, M4/M6/M7 compatibility, snapshot recovery, invalid recovery input, and the expanded `GET, POST, PUT, PATCH` method contract.
+- Extended structural QA to require `v7-booking.js`, localStorage recovery, v6→v7 extension loading, booking sync events, and runtime hydration wiring.
+- Extended Production Smoke to create an M7 booking, recover it through `PUT /api/bookings`, verify the booking ID/phase are preserved, and require the deployed `v7-booking.js` asset.
+
+### Final QA
+- Passed PR #27 Quality run #49 and merged the v7 recovery implementation through GitHub server-side squash merge.
+- Verified `main` Quality run #50 succeeded on GitHub-verified commit `01fda01e4efac0a33488a0a19331ff286c7de2b5`.
+- Verified Vercel Production deployment `dpl_EH4uGnWCcJ5dWRqTLSykQ3Zeuek6` is `READY` from that exact verified `main` commit.
+- Confirmed `/api/health` reports commit `01fda01e4efac0a33488a0a19331ff286c7de2b5`, `/api/bookings` exposes the v7 recoverable-resource capability, and `/v7-booking.js` is served successfully.
+- Confirmed automated Production Smoke run #21 completed successfully, including live booking capability, create, and recovery checks.
+- Confirmed the v7 Production smoke path returned `POST /api/bookings` 201 and `PUT /api/bookings` 200. The only runtime warning observed was the previously known Node 24 `url.parse()` deprecation warning on the hospital API path, with no v7 booking request failures.
+
+### Scope
+v7 advances Mosigo from a Pilot-ready Beta to a **Recoverable Booking Beta** by making an active booking resumable across new tabs/browser sessions on the same device and revalidating the recovered state through the server API. Durable database persistence, cross-device/account recovery, authentication, and real operational booking storage remain outside this release.
+
 ## v6.0.0 — 2026-09-13
 
 ### Pilot-ready beta
