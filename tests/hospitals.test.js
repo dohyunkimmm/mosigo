@@ -33,6 +33,7 @@ test('GET returns prototype hospital data', () => {
   assert.ok(Array.isArray(res.body.items));
   assert.ok(res.body.items.length > 0);
   assert.equal(res.headers['x-mosigo-data'], 'prototype');
+  assert.equal(res.headers['cache-control'], 'public, s-maxage=300, stale-while-revalidate=600');
 });
 
 test('department code filters hospitals', () => {

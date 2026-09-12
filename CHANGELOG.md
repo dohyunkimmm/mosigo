@@ -2,6 +2,15 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## Unreleased — v3
+
+### Maintainability
+- Separated prototype hospital data from the Vercel API handler into `src/data/hospitals.js`.
+- Moved hospital search, department-code resolution, query normalization, and result limiting into `src/lib/hospital-query.js`.
+- Kept the public `/api/hospitals` response contract and cache headers unchanged while reducing handler responsibilities.
+- Added focused unit coverage for the hospital query module and retained API contract tests.
+- Generalized structural QA and the Release workflow so the same quality/release path can be reused beyond v2.
+
 ## v2.0.0 — 2026-09-12
 
 ### Baseline

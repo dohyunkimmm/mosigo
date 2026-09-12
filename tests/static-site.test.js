@@ -55,8 +55,15 @@ function assertInsideSrc(resolved, ownerFile, ref) {
   );
 }
 
-test('required v2 entrypoints and config exist', () => {
-  for (const file of [...HTML_FILES, ...CSS_FILES, 'api/hospitals.js', 'vercel.json']) {
+test('required application entrypoints, modules, and config exist', () => {
+  for (const file of [
+    ...HTML_FILES,
+    ...CSS_FILES,
+    'api/hospitals.js',
+    'data/hospitals.js',
+    'lib/hospital-query.js',
+    'vercel.json'
+  ]) {
     assert.ok(fs.existsSync(path.join(SRC, file)), `Missing required file: src/${file}`);
   }
 });
