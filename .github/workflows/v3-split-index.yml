@@ -30,8 +30,10 @@ jobs:
       - name: Split index assets
         run: node scripts/split-index-assets.js
 
-      - name: Verify generated diff
-        run: git diff --check
+      - name: Verify generated JavaScript syntax
+        run: |
+          node --check src/index-core.js
+          node --check src/index-post.js
 
       - name: Commit generated assets
         shell: bash
