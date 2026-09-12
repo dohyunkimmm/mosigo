@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html'];
 const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css'];
-const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'v4-functional.js', 'booking-state.js', 'v4-booking.js'];
+const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'v4-functional.js', 'booking-state.js', 'v4-booking.js', 'v6-booking.js'];
 
 function readSrc(file) {
   return fs.readFileSync(path.join(SRC, file), 'utf8');
@@ -135,13 +135,17 @@ test('main page keeps CSS and classic JavaScript externalized in execution order
   assert.ok(Buffer.byteLength(html) < 200_000, 'index.html should remain below the v3 structural size guard');
 });
 
-test('v4 functional layer is loaded by the post-runtime extension point', () => {
+test('v4 functional layer and v6 booking sync load through stable runtime extension points', () => {
   const post = readSrc('index-post.js');
   const functional = readSrc('v4-functional.js');
+  const booking = readSrc('v4-booking.js');
+  const v6 = readSrc('v6-booking.js');
   assert.match(post, /script\.src=['"]v4-functional\.js['"]/, 'index-post.js should load v4-functional.js');
   assert.match(functional, /v4SearchHospitals/, 'v4 functional search layer should expose its search implementation');
   assert.match(functional, /model\.src=['"]booking-state\.js['"]/, 'v4 functional layer should bootstrap the shared booking state model');
   assert.match(functional, /runtime\.src=['"]v4-booking\.js['"]/, 'v4 functional layer should load the booking runtime adapter');
+  assert.match(booking, /v6\.src=['"]v6-booking\.js['"]/, 'v4 booking runtime should load the v6 booking sync layer');
+  assert.match(v6, /const API=['"]\/api\/bookings['"]/, 'v6 booking sync should target the booking API');
 });
 
 test('local HTML asset and page references resolve to existing files', () => {

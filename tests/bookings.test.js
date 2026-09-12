@@ -59,6 +59,19 @@ test('POST creates a canonical requesting booking', () => {
   assert.ok(res.body.booking.createdAt);
 });
 
+test('POST preserves a valid existing browser booking ID', () => {
+  const res = invoke({ method: 'POST', body: { ...sample, bookingId: 'M4ABC12345' } });
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.booking.bookingId, 'M4ABC12345');
+  assert.equal(res.body.booking.phase, 'requesting');
+});
+
+test('POST replaces malformed client booking IDs with a v6 ID', () => {
+  const res = invoke({ method: 'POST', body: { ...sample, bookingId: 'bad-id' } });
+  assert.equal(res.statusCode, 201);
+  assert.match(res.body.booking.bookingId, /^M6[A-Z0-9]{8}$/);
+});
+
 test('POST rejects incomplete booking input', () => {
   const res = invoke({ method: 'POST', body: { hospitalName: '똑똑연세내과의원' } });
   assert.equal(res.statusCode, 422);
@@ -91,6 +104,13 @@ test('PATCH rejects invalid transitions and unknown actions', () => {
   const unknown = invoke({ method: 'PATCH', body: { action: 'teleport', booking: created } });
   assert.equal(unknown.statusCode, 400);
   assert.equal(unknown.body.error, 'unknown_action');
+});
+
+test('PATCH rejects malformed booking IDs', () => {
+  const invalid = { ...sample, phase: 'requesting', bookingId: 'broken' };
+  const res = invoke({ method: 'PATCH', body: { action: 'confirm', booking: invalid } });
+  assert.equal(res.statusCode, 422);
+  assert.equal(res.body.error, 'booking_id_required');
 });
 
 test('scheduled booking can be cancelled through the API', () => {
