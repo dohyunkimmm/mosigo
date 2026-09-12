@@ -81,3 +81,21 @@
      .ai-chip / .map-badge / .mgr-badge 보조 뱃지
      svg text                           차트 축 라벨
    ──────────────────────────────────────────────────────────── */
+
+/* ── v5 Product-ready Demo: keyboard focus + reduced motion ─── */
+#phone :where(button, a, input, textarea, select, [role="button"], [tabindex]):focus-visible,
+.portfolio-review :where(button, a):focus-visible {
+  outline:3px solid #126B31;
+  outline-offset:2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within { scroll-behavior:auto; }
+  #phone *, #phone *::before, #phone *::after,
+  .portfolio-review *, .portfolio-review *::before, .portfolio-review *::after {
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+    scroll-behavior:auto !important;
+  }
+}
