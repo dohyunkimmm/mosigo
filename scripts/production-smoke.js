@@ -67,11 +67,14 @@ async function runChecks() {
   const bookings = await fetchJson('/api/bookings');
   assert(bookings.response.ok, `/api/bookings returned ${bookings.response.status}`);
   assert(bookings.json.success === true, 'Booking API did not report success');
-  assert(bookings.json.schemaVersion === 'v7', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
+  assert(bookings.json.schemaVersion === 'v8', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
+  assert(bookings.json.resource === 'traceable-booking-resource', `Unexpected booking resource: ${bookings.json.resource}`);
   assert(bookings.json.authoritativeTransitions === true, 'Booking API transition authority is not enabled');
   assert(bookings.json.recoverable === true, 'Booking API recovery is not enabled');
   assert(bookings.json.recoveryScope === 'same-device', `Unexpected recovery scope: ${bookings.json.recoveryScope}`);
   assert(bookings.json.durableServerPersistence === false, 'Prototype must not claim durable server persistence');
+  assert(bookings.json.traceable === true, 'Booking lifecycle trace is not enabled');
+  assert(bookings.json.historyValidation === 'server', 'Booking history is not server-validated');
   assert(Array.isArray(bookings.json.actions) && bookings.json.actions.includes('cancel'), 'Booking API actions are incomplete');
 
   const sampleBooking = {
@@ -92,18 +95,34 @@ async function runChecks() {
     body: JSON.stringify({ booking: sampleBooking })
   });
   assert(created.response.status === 201 && created.json.success === true, 'Booking create smoke failed');
-  assert(/^M7[A-Z0-9]{8}$/.test(created.json.booking?.bookingId || ''), 'Booking create did not return a v7 ID');
+  assert(/^M8[A-Z0-9]{8}$/.test(created.json.booking?.bookingId || ''), 'Booking create did not return a v8 ID');
+  assert(created.json.booking?.revision === 1, 'Booking create revision is not 1');
+  assert(created.json.booking?.historyComplete === true, 'New booking history should be complete');
+  assert(created.json.booking?.history?.[0]?.type === 'created', 'Booking create history event is missing');
+
+  const confirmed = await requestJson('/api/bookings', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'confirm', booking: created.json.booking })
+  });
+  assert(confirmed.response.ok && confirmed.json.success === true, 'Booking transition smoke failed');
+  assert(confirmed.json.booking?.phase === 'confirmed', 'Booking transition did not confirm');
+  assert(confirmed.json.booking?.revision === 2, 'Booking revision did not advance');
+  assert(confirmed.json.booking?.history?.length === 2, 'Booking history did not append transition');
+  assert(confirmed.json.booking?.history?.[1]?.type === 'confirm', 'Booking confirm history event is missing');
 
   const recovered = await requestJson('/api/bookings', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ booking: created.json.booking })
+    body: JSON.stringify({ booking: confirmed.json.booking })
   });
   assert(recovered.response.ok && recovered.json.recovered === true, 'Booking recovery smoke failed');
   assert(recovered.json.booking?.bookingId === created.json.booking.bookingId, 'Recovered booking ID changed');
-  assert(recovered.json.booking?.phase === 'requesting', 'Recovered booking phase changed');
+  assert(recovered.json.booking?.phase === 'confirmed', 'Recovered booking phase changed');
+  assert(recovered.json.booking?.revision === 2, 'Recovered booking revision changed');
+  assert(recovered.json.booking?.history?.length === 2, 'Recovered booking history changed');
 
-  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js']) {
+  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
     assert(/javascript/i.test(result.response.headers.get('content-type') || ''), `${asset} did not return JavaScript`);
