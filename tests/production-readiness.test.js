@@ -36,6 +36,14 @@ test('Vercel config applies low-risk production security headers', () => {
   assert.match(headers['permissions-policy'], /geolocation=\(self\)/);
 });
 
+test('Vercel Git deployment policy spends builds on verified main only', () => {
+  const config = JSON.parse(read('vercel.json'));
+  assert.deepEqual(config.git?.deploymentEnabled, {
+    '*': false,
+    main: true
+  });
+});
+
 test('health endpoint is part of the deployed application surface', () => {
   assert.ok(fs.existsSync(path.join(SRC, 'api', 'health.js')));
 });
