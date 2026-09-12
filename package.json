@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "audit:source": "node scripts/source-audit.js",
-    "quality": "npm test && npm run audit:source"
+    "quality": "npm test && npm run audit:source",
+    "smoke:production": "node scripts/production-smoke.js"
   },
   "engines": {
     "node": ">=24"
