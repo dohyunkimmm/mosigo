@@ -59,7 +59,7 @@ async function runChecks() {
   assert(bookings.json.authoritativeTransitions === true, 'Booking API transition authority is not enabled');
   assert(Array.isArray(bookings.json.actions) && bookings.json.actions.includes('cancel'), 'Booking API actions are incomplete');
 
-  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js']) {
+  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
     assert(/javascript/i.test(result.response.headers.get('content-type') || ''), `${asset} did not return JavaScript`);
