@@ -2,6 +2,28 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v6.0.0 — 2026-09-13
+
+### Pilot-ready beta
+- Added a v6 `/api/bookings` command surface with capability discovery (`GET`), validated booking creation (`POST`), and lifecycle commands (`PATCH`) for `confirm`, `start`, `complete`, and `cancel`.
+- Added `src/lib/booking-service.js` to reuse the shared booking state machine as the server-side transition authority, including explicit request validation, stable M6 booking IDs, compatibility with existing M4/M6 IDs, and structured 4xx errors for invalid input or transitions.
+- Kept v6 intentionally non-durable for this milestone: the booking API declares `persistence: client-session`, while server commands own legal transition validation and the browser remains the session persistence fallback.
+- Added `src/v6-booking.js` after the stable v4 booking runtime to mirror booking creation and lifecycle changes through `/api/bookings` without replacing the existing UI flow.
+- Added best-effort queued synchronization, session-scoped remote shadow state, sync/fallback status, and local-flow continuity when the booking API cannot be reached.
+- Extended automated tests with the v6 booking command contract, request validation, legal/illegal transition coverage, booking-ID compatibility, browser sync asset/order checks, and JavaScript syntax validation.
+- Extended Production Smoke to require the v6 booking API capability contract and the deployed `v6-booking.js` asset in addition to the existing health, hospital, security-header, crawler, and runtime checks.
+
+### Final QA
+- Passed the v6 booking API and browser-sync Pull Request Quality gates and the corresponding `main` Quality gates.
+- Encountered Vercel build-rate limiting after the first v6 `main` deployments; no speculative runtime workaround or extra feature change was used to bypass the platform limit.
+- Re-triggered Production once with PR #25 using a runtime-neutral `src/vercel.json` formatting-only change after the deployment quota became available.
+- Verified Vercel Production deployment `dpl_5vBYdXu3uewPExqp91c5UvYvSFQu` is `READY` from GitHub-verified `main` commit `3f4979403d2ade81495eb4b8a60e3f7e60f2f851`.
+- Confirmed `/api/health` reports that exact Production commit, `/api/bookings` returns the v6 booking-command capability with authoritative transitions enabled, and `/v6-booking.js` is served successfully.
+- Confirmed final `main` Quality run #46 and automated `Production Smoke` run #17 completed successfully.
+
+### Scope
+v6 advances Mosigo from a product-ready public demo to a **Pilot-ready Beta** by moving booking validation and lifecycle authority across a server API boundary while preserving the proven v4/v5 UX, client-session persistence fallback, prototype hospital data, and the explicit non-production-service positioning. Durable database persistence, user identity, and real operational booking infrastructure remain outside this release.
+
 ## v5.0.0 — 2026-09-12
 
 ### Product-ready demo
