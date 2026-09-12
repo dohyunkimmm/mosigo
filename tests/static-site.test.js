@@ -6,10 +6,44 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html'];
-const CSS_FILES = ['new_montage.css', 'new_roles.css'];
+const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css'];
+const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js'];
 
 function readSrc(file) {
   return fs.readFileSync(path.join(SRC, file), 'utf8');
+}
+
+function maskHtmlComments(source) {
+  return source.replace(/<!--[\s\S]*?-->/g, (comment) =>
+    comment.replace(/[^\n]/g, ' ')
+  );
+}
+
+function collectTagBlocks(tagName, source) {
+  const masked = maskHtmlComments(source);
+  const pattern = new RegExp(`<${tagName}\\b([^>]*)>[\\s\\S]*?<\\/${tagName}>`, 'gi');
+  const exactPattern = new RegExp(`^<${tagName}\\b([^>]*)>([\\s\\S]*?)<\\/${tagName}>$`, 'i');
+  const blocks = [];
+  let match;
+
+  while ((match = pattern.exec(masked)) !== null) {
+    const full = source.slice(match.index, match.index + match[0].length);
+    const exact = full.match(exactPattern);
+    assert.ok(exact, `Could not parse ${tagName} block at index ${match.index}`);
+    blocks.push({ attrs: exact[1], body: exact[2] });
+  }
+
+  return blocks;
+}
+
+function getAttr(attrs, name) {
+  return attrs.match(new RegExp(`\\b${name}\\s*=\\s*["']([^"']+)["']`, 'i'))?.[1] || null;
+}
+
+function isClassicInlineScript(block) {
+  if (getAttr(block.attrs, 'src')) return false;
+  const type = getAttr(block.attrs, 'type');
+  return !type || type === 'text/javascript' || type === 'application/javascript';
 }
 
 function isExternalOrDynamic(ref) {
@@ -59,6 +93,7 @@ test('required application entrypoints, modules, and config exist', () => {
   for (const file of [
     ...HTML_FILES,
     ...CSS_FILES,
+    ...JS_FILES,
     'api/hospitals.js',
     'data/hospitals.js',
     'lib/hospital-query.js',
@@ -76,6 +111,26 @@ test('main page has essential mobile, SEO, and language metadata', () => {
   assert.match(html, /<meta\b[^>]*name=["']viewport["'][^>]*>/i, 'index.html should include viewport metadata');
   assert.match(html, /<title>[^<]+<\/title>/i, 'index.html should include a non-empty title');
   assert.match(html, /<meta\b[^>]*name=["']description["'][^>]*content=["'][^"']+["'][^>]*>/i, 'index.html should include a non-empty description');
+});
+
+test('main page keeps CSS and classic JavaScript externalized in execution order', () => {
+  const html = readSrc('index.html');
+  const scripts = collectTagBlocks('script', html);
+  const classicInline = scripts.filter(isClassicInlineScript);
+  const srcs = scripts.map((script) => getAttr(script.attrs, 'src')).filter(Boolean);
+
+  assert.equal((html.match(/<!--/g) || []).length, (html.match(/-->/g) || []).length, 'HTML comments should stay balanced');
+  assert.equal(collectTagBlocks('style', html).length, 0, 'index.html should not contain actual inline style blocks');
+  assert.equal(classicInline.length, 0, 'index.html should not contain classic inline JavaScript');
+  assert.ok(html.includes('href="index.css"'), 'index.html should load index.css');
+
+  const coreIndex = srcs.indexOf('index-core.js');
+  const extIndex = srcs.indexOf('new_ext-pages.js');
+  const postIndex = srcs.indexOf('index-post.js');
+  assert.ok(coreIndex >= 0, 'index-core.js should be loaded');
+  assert.ok(extIndex > coreIndex, 'new_ext-pages.js should load after index-core.js');
+  assert.ok(postIndex > extIndex, 'index-post.js should load after new_ext-pages.js');
+  assert.ok(Buffer.byteLength(html) < 200_000, 'index.html should remain below the v3 structural size guard');
 });
 
 test('local HTML asset and page references resolve to existing files', () => {
@@ -118,24 +173,27 @@ test('local CSS url() references resolve to existing files', () => {
   assert.deepEqual(missing, [], `Missing local CSS references:\n${missing.join('\n')}`);
 });
 
-test('classic inline JavaScript blocks are syntax-valid', () => {
+test('externalized classic JavaScript files are syntax-valid', () => {
   const failures = [];
-  const scriptPattern = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+  for (const file of JS_FILES) {
+    try {
+      new Function(readSrc(file));
+    } catch (error) {
+      failures.push(`${file}: ${error.message}`);
+    }
+  }
+  assert.deepEqual(failures, [], `External JavaScript syntax errors:\n${failures.join('\n')}`);
+});
+
+test('remaining classic inline JavaScript blocks are syntax-valid', () => {
+  const failures = [];
 
   for (const file of HTML_FILES) {
     const html = readSrc(file);
-    let match;
-    while ((match = scriptPattern.exec(html)) !== null) {
-      const attrs = match[1];
-      const code = match[2].trim();
-      if (!code || /\bsrc\s*=/i.test(attrs)) continue;
-
-      const typeMatch = attrs.match(/\btype\s*=\s*["']([^"']+)["']/i);
-      const type = typeMatch ? typeMatch[1].toLowerCase() : '';
-      if (type && type !== 'text/javascript' && type !== 'application/javascript') continue;
-
+    for (const block of collectTagBlocks('script', html).filter(isClassicInlineScript)) {
+      const code = block.body.trim();
+      if (!code) continue;
       try {
-        // Syntax validation only. The browser code is not executed.
         new Function(code);
       } catch (error) {
         failures.push(`${file}: ${error.message}`);
