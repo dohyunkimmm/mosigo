@@ -12,7 +12,11 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 - Added a separate `v4-functional.js` browser layer so v4 behavior can advance without re-coupling the v3 `index-core.js` structure.
 - Added explicit hospital-search request states for loading, empty results, API fallback, and retry UX.
 - Upgraded hospital result cards to expose prototype open/closed status, wait-time examples, rating/review context, same-day availability, and linked-manager counts.
-- Extended automated QA to cover v4 API filters, sort order, metadata, specialty search, functional-layer loading, and JavaScript syntax.
+- Added a shared booking state machine covering `idle → requesting → confirmed → in_progress → completed` plus scheduled cancellation.
+- Connected the existing booking UI to the shared state model with validation for hospital/manager selection, deterministic booking IDs, and consistent phase-driven status copy.
+- Persisted active booking state in `sessionStorage` and restore the selected hospital, manager, schedule, transport mode, home/live state, and order status after an in-tab refresh.
+- Disabled forward booking progression when a selected hospital has no linked manager and kept cancellation/completion transitions synchronized with the existing demo flow.
+- Extended automated QA to cover v4 API filters, sort order, metadata, specialty search, functional-layer loading, booking lifecycle transitions/restore, and JavaScript syntax.
 
 ## v3.0.0 — 2026-09-12
 
