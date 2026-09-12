@@ -18,6 +18,10 @@ function createPilotBookingId(now = Date.now()) {
   return `M6${stamp}`;
 }
 
+function validBookingId(value) {
+  return /^M[46][A-Z0-9]{8}$/.test(String(value || '').trim());
+}
+
 function validateBookingRequest(input = {}) {
   const booking = Booking.createBookingState(input);
   if (!booking.hospitalId && !booking.hospitalName) {
@@ -41,12 +45,17 @@ function validateBookingRequest(input = {}) {
 function createBookingRequest(input = {}, { now = Date.now(), bookingId } = {}) {
   const normalized = validateBookingRequest(input);
   const state = Booking.createBookingState();
+  const requestedId = validBookingId(bookingId)
+    ? bookingId
+    : validBookingId(normalized.bookingId)
+      ? normalized.bookingId
+      : createPilotBookingId(now);
   return Booking.transitionBookingState(
     state,
     Booking.PHASES.REQUESTING,
     {
       ...normalized,
-      bookingId: bookingId || createPilotBookingId(now)
+      bookingId: requestedId
     },
     now
   );
@@ -61,8 +70,8 @@ const ACTION_TO_PHASE = Object.freeze({
 
 function applyBookingAction(input = {}, action, { now = Date.now() } = {}) {
   const booking = Booking.createBookingState(input);
-  if (!booking.bookingId) {
-    throw new BookingServiceError('booking_id_required', 'Booking ID is required.', 422);
+  if (!validBookingId(booking.bookingId)) {
+    throw new BookingServiceError('booking_id_required', 'A valid booking ID is required.', 422);
   }
   const nextPhase = ACTION_TO_PHASE[action];
   if (!nextPhase) {
@@ -92,5 +101,6 @@ module.exports = {
   capability,
   createBookingRequest,
   createPilotBookingId,
+  validBookingId,
   validateBookingRequest
 };
