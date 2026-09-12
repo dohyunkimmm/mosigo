@@ -31,7 +31,7 @@ function assert(condition, message) {
 async function runChecks() {
   const root = await fetchText('/');
   assert(root.response.ok, `/ returned ${root.response.status}`);
-  assert(/<title>모시고\b/i.test(root.text), 'Production root is missing the Mosigo title');
+  assert(root.text.includes('<title>모시고 |'), 'Production root is missing the Mosigo title');
   assert(root.response.headers.get('x-content-type-options') === 'nosniff', 'Missing X-Content-Type-Options header');
   assert(root.response.headers.get('referrer-policy') === 'strict-origin-when-cross-origin', 'Unexpected Referrer-Policy header');
 
