@@ -38,16 +38,20 @@
 
 ```text
 .
-├── .github/workflows/quality.yml  # PR/main API smoke test
-├── tests/hospitals.test.js        # 병원 API 기본 동작 검증
-├── CHANGELOG.md                   # 버전별 누적 변경 기록
-├── VERSION                        # 현재 안정 버전
+├── .github/workflows/
+│   ├── quality.yml             # PR/main 자동 QA
+│   └── release.yml             # 최종 QA 후 수동 Tag/Release 발행
+├── tests/
+│   ├── hospitals.test.js       # 병원 API 동작 검증
+│   └── static-site.test.js     # 정적 페이지·자산·inline JS 검증
+├── CHANGELOG.md                # 버전별 누적 변경 기록
+├── VERSION                     # 현재 안정 버전
 └── src/
-    ├── index.html                 # 메인 인터랙티브 데모
+    ├── index.html              # 메인 인터랙티브 데모
     ├── api/
-    │   └── hospitals.js           # 프로토타입 병원 검색 API
-    ├── vercel.json                # Vercel 프로젝트 설정
-    └── ...                        # 이미지·영상 등 UI 자산
+    │   └── hospitals.js        # 프로토타입 병원 검색 API
+    ├── vercel.json             # Vercel 프로젝트 설정
+    └── ...                     # 이미지·영상 등 UI 자산
 ```
 
 ## 배포
@@ -60,13 +64,25 @@ GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩
 
 ## 품질 검증
 
-병원 API의 기본 응답, 진료과 필터, 이름 검색, 결과 수 제한, 허용되지 않은 HTTP method 처리를 smoke test로 검증합니다.
+`npm test`는 다음 v2 기준을 자동 검증합니다.
+
+- 병원 API 기본 응답·진료과/이름 검색·결과 수 제한·HTTP method 처리
+- 필수 페이지/API/Vercel 설정 파일 존재 여부
+- 메인 페이지의 언어·viewport·title·description 등 기본 metadata
+- HTML/CSS가 참조하는 로컬 자산의 누락 여부
+- classic inline JavaScript의 syntax validity
 
 ```bash
 npm test
 ```
 
-동일한 검증은 Pull Request와 `main` push 시 GitHub Actions에서도 실행됩니다.
+동일한 검증은 Pull Request와 `main` push 시 GitHub Actions에서도 실행됩니다. v2 최종 QA에서는 Production의 메인 페이지, 이벤트 페이지, 게임 페이지, 병원 API와 진료과 필터 응답을 실제 Vercel 환경에서 추가 확인하고 runtime error/fatal 로그가 없는지도 점검합니다.
+
+## Release
+
+GitHub Release는 `.github/workflows/release.yml`을 통해 최종 QA 이후에만 수동 발행합니다. Release workflow는 `main`에서 `npm test`를 다시 실행하고 `VERSION` 값을 읽어 동일한 버전의 Release가 없는지 확인한 뒤 Git tag와 GitHub Release를 함께 생성합니다.
+
+저장소 전체 Actions 기본 권한은 read-only로 유지하며, Release workflow에만 `contents: write` 권한을 제한적으로 부여합니다.
 
 ## 로컬 확인
 
@@ -90,6 +106,8 @@ Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 �
 - GitHub `main` 동기화 완료
 - Git 기반 Production 재배포 및 동작 검증 완료
 - GitHub README와 Notion 프로젝트 문서 동기화 완료
-- PR/main 자동 API smoke test 기반 추가
+- PR/main 자동 API 및 정적 사이트 QA 추가
+- v2 최종 Production runtime smoke QA 통과
+- 최종 QA 후 수동 Git tag/GitHub Release 발행 workflow 구성 완료
 
 마지막 문서 동기화: 2026-09-12
