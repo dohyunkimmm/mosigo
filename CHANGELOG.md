@@ -2,7 +2,7 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
-## Unreleased — v3
+## v3.0.0 — 2026-09-12
 
 ### Maintainability
 - Separated prototype hospital data from the Vercel API handler into `src/data/hospitals.js`.
@@ -13,8 +13,19 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 - Added a comment-safe `src/index.html` source-structure audit for inline CSS/JavaScript and linked asset sizes.
 - Extracted seven inline style blocks into `src/index.css` while preserving cascade order.
 - Extracted the two large classic inline JavaScript blocks into `src/index-core.js` and `src/index-post.js`, preserving `new_ext-pages.js` between them so execution order stays unchanged.
-- Reduced `src/index.html` from 421,695 bytes to 139,541 bytes without changing the rendered flow by moving CSS/JavaScript to same-directory assets.
+- Reduced `src/index.html` from 421,695 bytes to 139,541 bytes without changing the intended rendered flow by moving CSS/JavaScript to same-directory assets.
 - Added regression checks for balanced HTML comments, externalized index assets, script order, local asset integrity, JavaScript syntax, and a 200 KB structural size guard for `index.html`.
+- Unified Pull Request, `main`, and Release verification behind the same `npm run quality` gate.
+
+### Final QA
+- Passed the v3 automated test suite and source-structure audit after the index asset extraction.
+- Verified the v3 application source on a GitHub-verified `main` Vercel Production deployment.
+- Runtime-smoke-tested the Production root page and the extracted `index.css`, `index-core.js`, and `index-post.js` assets with successful HTTP responses.
+- Runtime-smoke-tested `/api/hospitals?qd=D006` and confirmed the expected prototype orthopedics result.
+- Confirmed no Production runtime `error` or `fatal` logs during the v3 final QA window.
+
+### Scope
+v3 improves source structure, maintainability, and regression protection while preserving the established prototype product flow. Product-level data realism and functional expansion are intentionally deferred to v4.
 
 ## v2.0.0 — 2026-09-12
 

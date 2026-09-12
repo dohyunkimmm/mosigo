@@ -23,8 +23,8 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Run quality checks
-        run: npm test
+      - name: Run quality gate
+        run: npm run quality
 
       - name: Resolve release version
         id: version

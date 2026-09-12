@@ -22,7 +22,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Run tests
-        run: npm test
-      - name: Audit source structure
-        run: npm run audit:source
+      - name: Run quality gate
+        run: npm run quality

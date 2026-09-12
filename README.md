@@ -2,7 +2,7 @@
 
 자녀가 부모님의 병원 이용을 대신 준비하고, 병원 탐색부터 동행 매니저 매칭·동의/결제·실시간 동행·건강 리포트·재예약까지 이어지는 흐름을 검증하기 위한 인터랙티브 병원동행 서비스 프로토타입입니다.
 
-- **Current stable version:** `v2.0.0`
+- **Current stable version:** `v3.0.0`
 - **Live Demo:** https://mosigo-nine.vercel.app/
 
 ## 프로젝트 개요
@@ -25,13 +25,24 @@
 
 > 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다.
 
+## v3 고도화
+
+v3는 v2의 사용자 흐름과 화면 의도를 유지하면서 코드 구조와 검증 체계를 개선한 **Maintainable Prototype** 버전입니다.
+
+- 421,695 bytes였던 단일 `src/index.html`에서 CSS와 JavaScript를 분리해 HTML을 139,541 bytes로 축소했습니다.
+- 기존 inline CSS 7개 블록을 `src/index.css`로 이동하고 원래 cascade 순서를 유지했습니다.
+- 대형 classic inline JavaScript 2개 블록을 `src/index-core.js`, `src/index-post.js`로 분리하고 `new_ext-pages.js`를 포함한 기존 실행 순서를 유지했습니다.
+- 병원 프로토타입 데이터, 검색/필터 로직, Vercel API handler를 각각 `data/`, `lib/`, `api/` 계층으로 분리했습니다.
+- HTML comment balance, asset reference, script order, JavaScript syntax, index 크기 등을 자동 검증하는 구조 QA를 추가했습니다.
+- PR, `main`, Release가 동일한 `npm run quality` 품질 게이트를 사용하도록 통일했습니다.
+
 ## 기술 구성
 
 - HTML / CSS / JavaScript
 - Leaflet
 - Vercel
-- Vercel Serverless Function (`src/api/hospitals.js`)
-- Node.js built-in test runner (repository quality checks)
+- Vercel Serverless Function
+- Node.js built-in test runner
 - GitHub Actions
 
 ## 저장소 구조
@@ -39,19 +50,30 @@
 ```text
 .
 ├── .github/workflows/
-│   ├── quality.yml             # PR/main 자동 QA
-│   └── release.yml             # 최종 QA 후 수동 Tag/Release 발행
+│   ├── quality.yml              # PR/main 자동 품질 게이트
+│   └── release.yml              # 최종 QA 후 수동 Tag/Release 발행
+├── scripts/
+│   └── source-audit.js          # index 구조·asset 크기 감사
 ├── tests/
-│   ├── hospitals.test.js       # 병원 API 동작 검증
-│   └── static-site.test.js     # 정적 페이지·자산·inline JS 검증
-├── CHANGELOG.md                # 버전별 누적 변경 기록
-├── VERSION                     # 현재 안정 버전
+│   ├── hospital-query.test.js   # 병원 검색 로직 단위 검증
+│   ├── hospitals.test.js        # 병원 API 계약 검증
+│   └── static-site.test.js      # 정적 구조·asset·JS 검증
+├── CHANGELOG.md                 # 버전별 누적 변경 기록
+├── VERSION                      # 현재 안정 버전
 └── src/
-    ├── index.html              # 메인 인터랙티브 데모
+    ├── index.html               # 메인 인터랙티브 데모 구조
+    ├── index.css                # 메인 화면 스타일
+    ├── index-core.js            # 메인 앱 핵심 인터랙션
+    ├── new_ext-pages.js         # 확장 페이지 인터랙션
+    ├── index-post.js            # 후속 접근성·데모 보강 로직
+    ├── data/
+    │   └── hospitals.js         # 프로토타입 병원 데이터
+    ├── lib/
+    │   └── hospital-query.js    # 병원 검색/필터 로직
     ├── api/
-    │   └── hospitals.js        # 프로토타입 병원 검색 API
-    ├── vercel.json             # Vercel 프로젝트 설정
-    └── ...                     # 이미지·영상 등 UI 자산
+    │   └── hospitals.js         # Vercel API handler
+    ├── vercel.json
+    └── ...                      # 이미지·영상 등 UI 자산
 ```
 
 ## 배포
@@ -60,27 +82,33 @@
 - **Vercel Root Directory:** `src`
 - **Production URL:** https://mosigo-nine.vercel.app/
 
-GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩니다. 저장소 루트의 테스트/문서 파일은 Vercel Root Directory(`src`) 밖에 있어 앱 런타임에 영향을 주지 않습니다.
+GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩니다. 저장소 루트의 테스트·문서·audit 파일은 Vercel Root Directory(`src`) 밖에 있어 앱 런타임에 영향을 주지 않습니다.
 
 ## 품질 검증
 
-`npm test`는 다음 v2 기준을 자동 검증합니다.
-
-- 병원 API 기본 응답·진료과/이름 검색·결과 수 제한·HTTP method 처리
-- 필수 페이지/API/Vercel 설정 파일 존재 여부
-- 메인 페이지의 언어·viewport·title·description 등 기본 metadata
-- HTML/CSS가 참조하는 로컬 자산의 누락 여부
-- classic inline JavaScript의 syntax validity
+전체 품질 게이트는 다음 한 명령으로 실행합니다.
 
 ```bash
-npm test
+npm run quality
 ```
 
-동일한 검증은 Pull Request와 `main` push 시 GitHub Actions에서도 실행됩니다. v2 최종 QA에서는 Production의 메인 페이지, 이벤트 페이지, 게임 페이지, 병원 API와 진료과 필터 응답을 실제 Vercel 환경에서 추가 확인하고 runtime error/fatal 로그가 없는지도 점검합니다.
+이 명령은 Node.js 테스트와 source audit를 연속 실행해 다음을 검증합니다.
+
+- 병원 API 기본 응답·진료과/이름 검색·결과 수 제한·HTTP method 처리
+- 병원 검색 모듈의 query 정규화·진료과 코드 변환·필터 우선순위·row limit
+- 필수 페이지/API/data/lib/Vercel 설정 파일 존재 여부
+- 메인 페이지의 언어·viewport·title·description 등 기본 metadata
+- HTML/CSS가 참조하는 로컬 asset 누락 여부
+- 외부화된 JavaScript 및 남은 inline JavaScript syntax validity
+- `index.html`의 HTML comment balance와 CSS/JavaScript 외부화 유지 여부
+- `index-core.js → new_ext-pages.js → index-post.js` 실행 순서
+- `index.html` 200 KB 구조 size guard
+
+동일한 품질 게이트는 Pull Request와 `main` push, GitHub Release 발행 직전에도 실행됩니다.
 
 ## Release
 
-GitHub Release는 `.github/workflows/release.yml`을 통해 최종 QA 이후에만 수동 발행합니다. Release workflow는 `main`에서 `npm test`를 다시 실행하고 `VERSION` 값을 읽어 동일한 버전의 Release가 없는지 확인한 뒤 Git tag와 GitHub Release를 함께 생성합니다.
+GitHub Release는 `.github/workflows/release.yml`을 통해 최종 QA 이후에만 수동 발행합니다. Release workflow는 `main`에서 `npm run quality`를 다시 실행하고 `VERSION` 값을 읽어 동일 버전 Release가 없는지 확인한 뒤 Git tag와 GitHub Release를 함께 생성합니다.
 
 저장소 전체 Actions 기본 권한은 read-only로 유지하며, Release workflow에만 `contents: write` 권한을 제한적으로 부여합니다.
 
@@ -97,17 +125,15 @@ python -m http.server 8000
 
 ## 버전 전략
 
-Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 버전의 변경 내용은 `CHANGELOG.md`에 누적합니다.
+Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → Tag/Release → README/Notion sync` 흐름으로 마감하며, 변경 내용은 `CHANGELOG.md`에 누적합니다.
 
 ## 상태
 
-- `v2.0.0` 안정 기준선 정립
-- Vercel Drop 기준 소스 복원 완료
-- GitHub `main` 동기화 완료
-- Git 기반 Production 재배포 및 동작 검증 완료
-- GitHub README와 Notion 프로젝트 문서 동기화 완료
-- PR/main 자동 API 및 정적 사이트 QA 추가
-- v2 최종 Production runtime smoke QA 통과
-- 최종 QA 후 수동 Git tag/GitHub Release 발행 workflow 구성 완료
+- `v2.0.0` — 복원·안정 기준선 및 자동 QA 기반 정립
+- `v3.0.0` — 구조·유지보수성 고도화 완료
+- 병원 데이터 / query logic / API handler 분리
+- 메인 HTML의 CSS/JavaScript 외부화 및 구조 size guard 적용
+- PR/main/Release 공통 품질 게이트 구성
+- GitHub verified `main` 기반 Vercel Production 배포 및 v3 runtime smoke QA 통과
 
 마지막 문서 동기화: 2026-09-12
