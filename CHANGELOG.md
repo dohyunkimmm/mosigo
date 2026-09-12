@@ -2,6 +2,18 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## Unreleased — v4
+
+### Functional prototype
+- Enriched the prototype hospital dataset with stable IDs, ratings, review counts, specialties, linked-manager availability, same-day availability, open/closed state, and prototype wait-time data.
+- Extended `/api/hospitals` with deterministic recommended/rating/wait sorting plus `managerAvailable` and `sameDay` filters while preserving the existing `items` response contract.
+- Added API query metadata (`total`, `returned`, applied filters, sort, and limit) and an explicit `v4` schema marker for runtime verification.
+- Expanded free-text hospital search so symptom/specialty terms can match the prototype data model instead of relying only on hospital or department names.
+- Added a separate `v4-functional.js` browser layer so v4 behavior can advance without re-coupling the v3 `index-core.js` structure.
+- Added explicit hospital-search request states for loading, empty results, API fallback, and retry UX.
+- Upgraded hospital result cards to expose prototype open/closed status, wait-time examples, rating/review context, same-day availability, and linked-manager counts.
+- Extended automated QA to cover v4 API filters, sort order, metadata, specialty search, functional-layer loading, and JavaScript syntax.
+
 ## v3.0.0 — 2026-09-12
 
 ### Maintainability

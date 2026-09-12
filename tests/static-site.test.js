@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html'];
 const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css'];
-const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js'];
+const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'v4-functional.js'];
 
 function readSrc(file) {
   return fs.readFileSync(path.join(SRC, file), 'utf8');
@@ -131,6 +131,12 @@ test('main page keeps CSS and classic JavaScript externalized in execution order
   assert.ok(extIndex > coreIndex, 'new_ext-pages.js should load after index-core.js');
   assert.ok(postIndex > extIndex, 'index-post.js should load after new_ext-pages.js');
   assert.ok(Buffer.byteLength(html) < 200_000, 'index.html should remain below the v3 structural size guard');
+});
+
+test('v4 functional layer is loaded by the post-runtime extension point', () => {
+  const post = readSrc('index-post.js');
+  assert.match(post, /script\.src=['"]v4-functional\.js['"]/, 'index-post.js should load v4-functional.js');
+  assert.match(readSrc('v4-functional.js'), /v4SearchHospitals/, 'v4 functional search layer should expose its search implementation');
 });
 
 test('local HTML asset and page references resolve to existing files', () => {
