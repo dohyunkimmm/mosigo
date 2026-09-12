@@ -39,14 +39,6 @@
       return String(storageGet(LATEST_KEY)||'').trim();
     }
 
-    function saveSnapshot(booking){
-      if(!booking?.bookingId) return false;
-      const serialized=JSON.stringify(booking);
-      if(!storageSet(bookingKey(booking.bookingId),serialized)) return false;
-      storageSet(LATEST_KEY,booking.bookingId);
-      return true;
-    }
-
     function readSnapshot(bookingId){
       const raw=storageGet(bookingKey(bookingId));
       if(!raw) return null;
@@ -56,6 +48,58 @@
       }catch(error){
         return null;
       }
+    }
+
+    function snapshotRevision(booking){
+      const revision=Number(booking?.revision);
+      return Number.isInteger(revision) && revision>=0 ? revision : 0;
+    }
+
+    function snapshotUpdatedAt(booking){
+      const value=Date.parse(booking?.updatedAt || booking?.createdAt || '');
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function emitSnapshotConflict(kind,incoming,stored){
+      try{
+        window.dispatchEvent(new CustomEvent('mosigo:booking-snapshot-conflict',{
+          detail:{ kind, incoming, stored }
+        }));
+      }catch(error){}
+    }
+
+    function shouldPromoteLatest(booking){
+      const currentId=latestId();
+      if(!currentId || currentId===booking.bookingId) return true;
+      const current=readSnapshot(currentId);
+      if(!current) return true;
+      return snapshotUpdatedAt(booking)>=snapshotUpdatedAt(current);
+    }
+
+    function saveSnapshot(booking){
+      if(!booking?.bookingId) return false;
+      const existing=readSnapshot(booking.bookingId);
+      const incomingRevision=snapshotRevision(booking);
+      const storedRevision=snapshotRevision(existing);
+      const serialized=JSON.stringify(booking);
+
+      if(existing && incomingRevision<storedRevision){
+        emitSnapshotConflict('stale-revision',booking,existing);
+        return false;
+      }
+      if(existing && incomingRevision===storedRevision){
+        const storedSerialized=JSON.stringify(existing);
+        if(serialized!==storedSerialized){
+          emitSnapshotConflict('equal-revision-divergence',booking,existing);
+          return false;
+        }
+        if(shouldPromoteLatest(booking)) storageSet(LATEST_KEY,booking.bookingId);
+        return true;
+      }
+
+      if(!storageSet(bookingKey(booking.bookingId),serialized)) return false;
+      if(shouldPromoteLatest(booking)) storageSet(LATEST_KEY,booking.bookingId);
+      return true;
     }
 
     function clearSnapshot(bookingId){
@@ -108,8 +152,8 @@
     window.addEventListener('mosigo:booking-sync',(event)=>{
       const booking=event?.detail?.booking;
       if(booking?.bookingId){
-        saveSnapshot(booking);
-        publish('saved',booking.bookingId);
+        const saved=saveSnapshot(booking);
+        publish(saved?'saved':'conflict',booking.bookingId,saved?'':'A newer or conflicting snapshot is already stored.');
         return;
       }
       const id=latestId();

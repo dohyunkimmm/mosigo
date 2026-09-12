@@ -15,11 +15,11 @@ function createPilotBookingId(now = Date.now()) {
     .toUpperCase()
     .slice(-8)
     .padStart(8, '0');
-  return `M8${stamp}`;
+  return `M9${stamp}`;
 }
 
 function validBookingId(value) {
-  return /^M[4678][A-Z0-9]{8}$/.test(String(value || '').trim());
+  return /^M[46789][A-Z0-9]{8}$/.test(String(value || '').trim());
 }
 
 function validTimestamp(value) {
@@ -242,8 +242,8 @@ function applyBookingAction(input = {}, action, { now = Date.now() } = {}) {
 
 function capability() {
   return {
-    schemaVersion: 'v8',
-    resource: 'traceable-booking-resource',
+    schemaVersion: 'v9',
+    resource: 'coordinated-booking-resource',
     authoritativeTransitions: true,
     persistence: 'client-local',
     recoverable: true,
@@ -255,6 +255,11 @@ function capability() {
     revisionField: 'revision',
     historyValidation: 'server',
     legacyRecoveryMigration: true,
+    coordinated: true,
+    coordinationScope: 'same-device',
+    coordinationTransport: 'storage-event',
+    snapshotConflictPolicy: 'higher-revision-wins',
+    equalRevisionConflictPolicy: 'stored-snapshot-wins',
     actions: Object.keys(ACTION_TO_PHASE)
   };
 }

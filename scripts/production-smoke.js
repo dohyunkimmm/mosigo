@@ -67,14 +67,19 @@ async function runChecks() {
   const bookings = await fetchJson('/api/bookings');
   assert(bookings.response.ok, `/api/bookings returned ${bookings.response.status}`);
   assert(bookings.json.success === true, 'Booking API did not report success');
-  assert(bookings.json.schemaVersion === 'v8', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
-  assert(bookings.json.resource === 'traceable-booking-resource', `Unexpected booking resource: ${bookings.json.resource}`);
+  assert(bookings.json.schemaVersion === 'v9', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
+  assert(bookings.json.resource === 'coordinated-booking-resource', `Unexpected booking resource: ${bookings.json.resource}`);
   assert(bookings.json.authoritativeTransitions === true, 'Booking API transition authority is not enabled');
   assert(bookings.json.recoverable === true, 'Booking API recovery is not enabled');
   assert(bookings.json.recoveryScope === 'same-device', `Unexpected recovery scope: ${bookings.json.recoveryScope}`);
   assert(bookings.json.durableServerPersistence === false, 'Prototype must not claim durable server persistence');
   assert(bookings.json.traceable === true, 'Booking lifecycle trace is not enabled');
   assert(bookings.json.historyValidation === 'server', 'Booking history is not server-validated');
+  assert(bookings.json.coordinated === true, 'Same-device booking coordination is not enabled');
+  assert(bookings.json.coordinationScope === 'same-device', `Unexpected coordination scope: ${bookings.json.coordinationScope}`);
+  assert(bookings.json.coordinationTransport === 'storage-event', `Unexpected coordination transport: ${bookings.json.coordinationTransport}`);
+  assert(bookings.json.snapshotConflictPolicy === 'higher-revision-wins', 'Unexpected snapshot conflict policy');
+  assert(bookings.json.equalRevisionConflictPolicy === 'stored-snapshot-wins', 'Unexpected equal-revision conflict policy');
   assert(Array.isArray(bookings.json.actions) && bookings.json.actions.includes('cancel'), 'Booking API actions are incomplete');
 
   const sampleBooking = {
@@ -95,7 +100,7 @@ async function runChecks() {
     body: JSON.stringify({ booking: sampleBooking })
   });
   assert(created.response.status === 201 && created.json.success === true, 'Booking create smoke failed');
-  assert(/^M8[A-Z0-9]{8}$/.test(created.json.booking?.bookingId || ''), 'Booking create did not return a v8 ID');
+  assert(/^M9[A-Z0-9]{8}$/.test(created.json.booking?.bookingId || ''), 'Booking create did not return a v9 ID');
   assert(created.json.booking?.revision === 1, 'Booking create revision is not 1');
   assert(created.json.booking?.historyComplete === true, 'New booking history should be complete');
   assert(created.json.booking?.history?.[0]?.type === 'created', 'Booking create history event is missing');
@@ -122,11 +127,15 @@ async function runChecks() {
   assert(recovered.json.booking?.revision === 2, 'Recovered booking revision changed');
   assert(recovered.json.booking?.history?.length === 2, 'Recovered booking history changed');
 
-  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js']) {
+  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
     assert(/javascript/i.test(result.response.headers.get('content-type') || ''), `${asset} did not return JavaScript`);
   }
+
+  const v9Asset = await fetchText('/v9-booking.js');
+  assert(v9Asset.text.includes('MosigoV9BookingCoordination'), 'v9 coordination runtime is missing');
+  assert(v9Asset.text.includes("addEventListener('storage'"), 'v9 storage-event coordination is missing');
 
   const robots = await fetchText('/robots.txt');
   assert(robots.response.ok && /Sitemap:\s*https:\/\/mosigo-nine\.vercel\.app\/sitemap\.xml/i.test(robots.text), 'robots.txt is not production-ready');

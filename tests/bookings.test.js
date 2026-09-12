@@ -36,12 +36,12 @@ const sample = {
   amount: 45000
 };
 
-test('GET exposes the v8 traceable booking resource capability', () => {
+test('GET exposes the v9 coordinated booking resource capability', () => {
   const res = invoke();
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.success, true);
-  assert.equal(res.body.schemaVersion, 'v8');
-  assert.equal(res.body.resource, 'traceable-booking-resource');
+  assert.equal(res.body.schemaVersion, 'v9');
+  assert.equal(res.body.resource, 'coordinated-booking-resource');
   assert.equal(res.body.authoritativeTransitions, true);
   assert.equal(res.body.persistence, 'client-local');
   assert.equal(res.body.recoverable, true);
@@ -53,18 +53,23 @@ test('GET exposes the v8 traceable booking resource capability', () => {
   assert.equal(res.body.revisionField, 'revision');
   assert.equal(res.body.historyValidation, 'server');
   assert.equal(res.body.legacyRecoveryMigration, true);
+  assert.equal(res.body.coordinated, true);
+  assert.equal(res.body.coordinationScope, 'same-device');
+  assert.equal(res.body.coordinationTransport, 'storage-event');
+  assert.equal(res.body.snapshotConflictPolicy, 'higher-revision-wins');
+  assert.equal(res.body.equalRevisionConflictPolicy, 'stored-snapshot-wins');
   assert.deepEqual(res.body.actions, ['confirm', 'start', 'complete', 'cancel']);
   assert.equal(res.headers['cache-control'], 'no-store');
-  assert.equal(res.headers['x-mosigo-schema'], 'v8');
+  assert.equal(res.headers['x-mosigo-schema'], 'v9');
 });
 
-test('POST creates a traceable requesting booking with a v8 ID', () => {
+test('POST creates a traceable requesting booking with a v9 ID', () => {
   const res = invoke({ method: 'POST', body: sample });
   assert.equal(res.statusCode, 201);
   assert.equal(res.body.success, true);
-  assert.equal(res.body.schemaVersion, 'v8');
+  assert.equal(res.body.schemaVersion, 'v9');
   assert.equal(res.body.booking.phase, 'requesting');
-  assert.match(res.body.booking.bookingId, /^M8[A-Z0-9]{8}$/);
+  assert.match(res.body.booking.bookingId, /^M9[A-Z0-9]{8}$/);
   assert.equal(res.body.booking.hospitalId, sample.hospitalId);
   assert.equal(res.body.booking.managerName, sample.managerName);
   assert.ok(res.body.booking.createdAt);
@@ -82,8 +87,8 @@ test('POST creates a traceable requesting booking with a v8 ID', () => {
   );
 });
 
-test('POST preserves valid v4/v6/v7/v8 browser booking IDs', () => {
-  for (const bookingId of ['M4ABC12345', 'M6ABC12345', 'M7ABC12345', 'M8ABC12345']) {
+test('POST preserves valid v4/v6/v7/v8/v9 browser booking IDs', () => {
+  for (const bookingId of ['M4ABC12345', 'M6ABC12345', 'M7ABC12345', 'M8ABC12345', 'M9ABC12345']) {
     const res = invoke({ method: 'POST', body: { ...sample, bookingId } });
     assert.equal(res.statusCode, 201);
     assert.equal(res.body.booking.bookingId, bookingId);
@@ -92,10 +97,10 @@ test('POST preserves valid v4/v6/v7/v8 browser booking IDs', () => {
   }
 });
 
-test('POST replaces malformed client booking IDs with a v8 ID', () => {
+test('POST replaces malformed client booking IDs with a v9 ID', () => {
   const res = invoke({ method: 'POST', body: { ...sample, bookingId: 'bad-id' } });
   assert.equal(res.statusCode, 201);
-  assert.match(res.body.booking.bookingId, /^M8[A-Z0-9]{8}$/);
+  assert.match(res.body.booking.bookingId, /^M9[A-Z0-9]{8}$/);
 });
 
 test('POST rejects incomplete booking input', () => {
@@ -141,7 +146,7 @@ test('PUT migrates a legacy v7 same-device snapshot into an explicitly incomplet
 });
 
 test('PUT rejects idle, malformed, or tampered recovery snapshots', () => {
-  const idle = invoke({ method: 'PUT', body: { booking: { ...sample, bookingId: 'M8ABC12345', phase: 'idle' } } });
+  const idle = invoke({ method: 'PUT', body: { booking: { ...sample, bookingId: 'M9ABC12345', phase: 'idle' } } });
   assert.equal(idle.statusCode, 422);
   assert.equal(idle.body.error, 'booking_phase_required');
 
@@ -219,5 +224,5 @@ test('unsupported methods are rejected', () => {
   const res = invoke({ method: 'DELETE' });
   assert.equal(res.statusCode, 405);
   assert.equal(res.headers.allow, 'GET, POST, PUT, PATCH');
-  assert.equal(res.body.schemaVersion, 'v8');
+  assert.equal(res.body.schemaVersion, 'v9');
 });
