@@ -2,7 +2,7 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
-## Unreleased — v4
+## v4.0.0 — 2026-09-12
 
 ### Functional prototype
 - Enriched the prototype hospital dataset with stable IDs, ratings, review counts, specialties, linked-manager availability, same-day availability, open/closed state, and prototype wait-time data.
@@ -17,6 +17,17 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 - Persisted active booking state in `sessionStorage` and restore the selected hospital, manager, schedule, transport mode, home/live state, and order status after an in-tab refresh.
 - Disabled forward booking progression when a selected hospital has no linked manager and kept cancellation/completion transitions synchronized with the existing demo flow.
 - Extended automated QA to cover v4 API filters, sort order, metadata, specialty search, functional-layer loading, booking lifecycle transitions/restore, and JavaScript syntax.
+
+### Final QA
+- Passed the v4 Pull Request and `main` Quality gates after the functional search and booking-state changes.
+- Re-triggered Vercel after the temporary daily deployment limit using a runtime-neutral `src/vercel.json` formatting change.
+- Verified Production deployment `dpl_DH2KHqg5mVeTMobUgz1CucvVRzgW` is `READY` from GitHub-verified `main` commit `2acd44d632bfb95005d02e13980daedc8312828e`.
+- Runtime-smoke-tested the public root page plus `v4-functional.js`, `booking-state.js`, and `v4-booking.js` with successful HTTP responses.
+- Runtime-smoke-tested `/api/hospitals?managerAvailable=1&sameDay=1&sort=wait&numOfRows=6` and confirmed the v4 schema marker, filter metadata, and sorted prototype results.
+- Confirmed no Production runtime `error` or `fatal` logs during the v4 final QA window.
+
+### Scope
+v4 advances Mosigo from a maintainable prototype to a more functional prototype with explicit data/query behavior, resilient hospital-search states, and a persistent booking lifecycle while keeping the project intentionally prototype-only rather than presenting it as a live medical or reservation service.
 
 ## v3.0.0 — 2026-09-12
 
