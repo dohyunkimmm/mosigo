@@ -24,6 +24,18 @@ async function fetchJson(path) {
   return { response, json };
 }
 
+async function requestJson(path, options) {
+  const response = await fetch(new URL(path, BASE_URL), options);
+  const text = await response.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${path} returned invalid JSON (${response.status}): ${text.slice(0, 160)}`);
+  }
+  return { response, json };
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -55,11 +67,43 @@ async function runChecks() {
   const bookings = await fetchJson('/api/bookings');
   assert(bookings.response.ok, `/api/bookings returned ${bookings.response.status}`);
   assert(bookings.json.success === true, 'Booking API did not report success');
-  assert(bookings.json.schemaVersion === 'v6', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
+  assert(bookings.json.schemaVersion === 'v7', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
   assert(bookings.json.authoritativeTransitions === true, 'Booking API transition authority is not enabled');
+  assert(bookings.json.recoverable === true, 'Booking API recovery is not enabled');
+  assert(bookings.json.recoveryScope === 'same-device', `Unexpected recovery scope: ${bookings.json.recoveryScope}`);
+  assert(bookings.json.durableServerPersistence === false, 'Prototype must not claim durable server persistence');
   assert(Array.isArray(bookings.json.actions) && bookings.json.actions.includes('cancel'), 'Booking API actions are incomplete');
 
-  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js']) {
+  const sampleBooking = {
+    hospitalId: 'hospital-1',
+    hospitalName: '똑똑연세내과의원',
+    managerIndex: 0,
+    managerName: '김민준',
+    targetName: '아버지',
+    date: '2026-09-20',
+    time: '10:00',
+    durationHours: 2,
+    mode: '차량 동행',
+    amount: 45000
+  };
+  const created = await requestJson('/api/bookings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ booking: sampleBooking })
+  });
+  assert(created.response.status === 201 && created.json.success === true, 'Booking create smoke failed');
+  assert(/^M7[A-Z0-9]{8}$/.test(created.json.booking?.bookingId || ''), 'Booking create did not return a v7 ID');
+
+  const recovered = await requestJson('/api/bookings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ booking: created.json.booking })
+  });
+  assert(recovered.response.ok && recovered.json.recovered === true, 'Booking recovery smoke failed');
+  assert(recovered.json.booking?.bookingId === created.json.booking.bookingId, 'Recovered booking ID changed');
+  assert(recovered.json.booking?.phase === 'requesting', 'Recovered booking phase changed');
+
+  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
     assert(/javascript/i.test(result.response.headers.get('content-type') || ''), `${asset} did not return JavaScript`);
