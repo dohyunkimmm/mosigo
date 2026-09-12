@@ -10,7 +10,11 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 - Kept the public `/api/hospitals` response contract and cache headers unchanged while reducing handler responsibilities.
 - Added focused unit coverage for the hospital query module and retained API contract tests.
 - Generalized structural QA and the Release workflow so the same quality/release path can be reused beyond v2.
-- Added an automated `src/index.html` source-structure audit to measure inline CSS/JavaScript before splitting the monolithic entrypoint.
+- Added a comment-safe `src/index.html` source-structure audit for inline CSS/JavaScript and linked asset sizes.
+- Extracted seven inline style blocks into `src/index.css` while preserving cascade order.
+- Extracted the two large classic inline JavaScript blocks into `src/index-core.js` and `src/index-post.js`, preserving `new_ext-pages.js` between them so execution order stays unchanged.
+- Reduced `src/index.html` from 421,695 bytes to 139,541 bytes without changing the rendered flow by moving CSS/JavaScript to same-directory assets.
+- Added regression checks for balanced HTML comments, externalized index assets, script order, local asset integrity, JavaScript syntax, and a 200 KB structural size guard for `index.html`.
 
 ## v2.0.0 — 2026-09-12
 
