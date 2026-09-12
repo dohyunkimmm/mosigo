@@ -15,11 +15,11 @@ function createPilotBookingId(now = Date.now()) {
     .toUpperCase()
     .slice(-8)
     .padStart(8, '0');
-  return `M6${stamp}`;
+  return `M7${stamp}`;
 }
 
 function validBookingId(value) {
-  return /^M[46][A-Z0-9]{8}$/.test(String(value || '').trim());
+  return /^M[467][A-Z0-9]{8}$/.test(String(value || '').trim());
 }
 
 function validateBookingRequest(input = {}) {
@@ -61,6 +61,17 @@ function createBookingRequest(input = {}, { now = Date.now(), bookingId } = {}) 
   );
 }
 
+function recoverBookingSnapshot(input = {}) {
+  const booking = validateBookingRequest(input);
+  if (!validBookingId(booking.bookingId)) {
+    throw new BookingServiceError('booking_id_required', 'A valid booking ID is required.', 422);
+  }
+  if (booking.phase === Booking.PHASES.IDLE) {
+    throw new BookingServiceError('booking_phase_required', 'A recoverable booking phase is required.', 422);
+  }
+  return booking;
+}
+
 const ACTION_TO_PHASE = Object.freeze({
   confirm: Booking.PHASES.CONFIRMED,
   start: Booking.PHASES.IN_PROGRESS,
@@ -86,10 +97,14 @@ function applyBookingAction(input = {}, action, { now = Date.now() } = {}) {
 
 function capability() {
   return {
-    schemaVersion: 'v6',
-    resource: 'booking-command',
+    schemaVersion: 'v7',
+    resource: 'booking-resource',
     authoritativeTransitions: true,
-    persistence: 'client-session',
+    persistence: 'client-local',
+    recoverable: true,
+    recoveryScope: 'same-device',
+    durableServerPersistence: false,
+    recoveryMethod: 'PUT',
     actions: Object.keys(ACTION_TO_PHASE)
   };
 }
@@ -101,6 +116,7 @@ module.exports = {
   capability,
   createBookingRequest,
   createPilotBookingId,
+  recoverBookingSnapshot,
   validBookingId,
   validateBookingRequest
 };
