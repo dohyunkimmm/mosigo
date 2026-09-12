@@ -19,7 +19,7 @@ function readBody(req) {
 
 function writeCommonHeaders(res) {
   res.setHeader('Cache-Control', 'no-store');
-  res.setHeader('X-Mosigo-Schema', 'v7');
+  res.setHeader('X-Mosigo-Schema', 'v8');
   res.setHeader('X-Mosigo-Data', 'prototype');
 }
 
@@ -28,7 +28,7 @@ function writeError(res, error) {
   const status = known ? error.status : 500;
   return res.status(status).json({
     success: false,
-    schemaVersion: 'v7',
+    schemaVersion: 'v8',
     error: known ? error.code : 'internal_error',
     message: known ? error.message : 'Unexpected booking service error.'
   });
@@ -52,7 +52,7 @@ module.exports = function handler(req, res) {
       return res.status(201).json({
         success: true,
         source: 'prototype',
-        schemaVersion: 'v7',
+        schemaVersion: 'v8',
         booking
       });
     }
@@ -63,7 +63,7 @@ module.exports = function handler(req, res) {
       return res.status(200).json({
         success: true,
         source: 'prototype',
-        schemaVersion: 'v7',
+        schemaVersion: 'v8',
         recovered: true,
         recoveryScope: 'same-device',
         booking
@@ -76,7 +76,7 @@ module.exports = function handler(req, res) {
       return res.status(200).json({
         success: true,
         source: 'prototype',
-        schemaVersion: 'v7',
+        schemaVersion: 'v8',
         booking
       });
     }
@@ -84,7 +84,7 @@ module.exports = function handler(req, res) {
     res.setHeader('Allow', 'GET, POST, PUT, PATCH');
     return res.status(405).json({
       success: false,
-      schemaVersion: 'v7',
+      schemaVersion: 'v8',
       error: 'method_not_allowed',
       message: 'Method Not Allowed'
     });
