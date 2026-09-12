@@ -240,3 +240,11 @@ syncHealthCounts();
 
 window.addEventListener('offline',()=>showToast('네트워크 연결이 끊겼어요. 병원 검색은 예시 데이터로 전환될 수 있어요.'));
 window.addEventListener('online',()=>showToast('네트워크 연결이 복구됐어요.'));
+
+// v4 기능 레이어는 안정화된 v3 스크립트 뒤에서 점진적으로 기능을 확장한다.
+(function loadV4FunctionalLayer(){
+  const script=document.createElement('script');
+  script.src='v4-functional.js';
+  script.async=false;
+  document.head.appendChild(script);
+})();
