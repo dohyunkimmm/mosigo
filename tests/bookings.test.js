@@ -36,40 +36,48 @@ const sample = {
   amount: 45000
 };
 
-test('GET exposes the v6 booking command capability', () => {
+test('GET exposes the v7 recoverable booking resource capability', () => {
   const res = invoke();
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.success, true);
-  assert.equal(res.body.schemaVersion, 'v6');
+  assert.equal(res.body.schemaVersion, 'v7');
+  assert.equal(res.body.resource, 'booking-resource');
   assert.equal(res.body.authoritativeTransitions, true);
-  assert.equal(res.body.persistence, 'client-session');
+  assert.equal(res.body.persistence, 'client-local');
+  assert.equal(res.body.recoverable, true);
+  assert.equal(res.body.recoveryScope, 'same-device');
+  assert.equal(res.body.durableServerPersistence, false);
+  assert.equal(res.body.recoveryMethod, 'PUT');
   assert.deepEqual(res.body.actions, ['confirm', 'start', 'complete', 'cancel']);
   assert.equal(res.headers['cache-control'], 'no-store');
-  assert.equal(res.headers['x-mosigo-schema'], 'v6');
+  assert.equal(res.headers['x-mosigo-schema'], 'v7');
 });
 
-test('POST creates a canonical requesting booking', () => {
+test('POST creates a canonical requesting booking with a v7 ID', () => {
   const res = invoke({ method: 'POST', body: sample });
   assert.equal(res.statusCode, 201);
   assert.equal(res.body.success, true);
+  assert.equal(res.body.schemaVersion, 'v7');
   assert.equal(res.body.booking.phase, 'requesting');
-  assert.match(res.body.booking.bookingId, /^M6[A-Z0-9]{8}$/);
+  assert.match(res.body.booking.bookingId, /^M7[A-Z0-9]{8}$/);
   assert.equal(res.body.booking.hospitalId, sample.hospitalId);
   assert.equal(res.body.booking.managerName, sample.managerName);
   assert.ok(res.body.booking.createdAt);
 });
 
-test('POST preserves a valid existing browser booking ID', () => {
-  const res = invoke({ method: 'POST', body: { ...sample, bookingId: 'M4ABC12345' } });
-  assert.equal(res.statusCode, 201);
-  assert.equal(res.body.booking.bookingId, 'M4ABC12345');
-  assert.equal(res.body.booking.phase, 'requesting');
+test('POST preserves valid v4/v6/v7 browser booking IDs', () => {
+  for (const bookingId of ['M4ABC12345', 'M6ABC12345', 'M7ABC12345']) {
+    const res = invoke({ method: 'POST', body: { ...sample, bookingId } });
+    assert.equal(res.statusCode, 201);
+    assert.equal(res.body.booking.bookingId, bookingId);
+    assert.equal(res.body.booking.phase, 'requesting');
+  }
 });
 
-test('POST replaces malformed client booking IDs with a v6 ID', () => {
+test('POST replaces malformed client booking IDs with a v7 ID', () => {
   const res = invoke({ method: 'POST', body: { ...sample, bookingId: 'bad-id' } });
   assert.equal(res.statusCode, 201);
-  assert.match(res.body.booking.bookingId, /^M6[A-Z0-9]{8}$/);
+  assert.match(res.body.booking.bookingId, /^M7[A-Z0-9]{8}$/);
 });
 
 test('POST rejects incomplete booking input', () => {
@@ -77,6 +85,30 @@ test('POST rejects incomplete booking input', () => {
   assert.equal(res.statusCode, 422);
   assert.equal(res.body.success, false);
   assert.equal(res.body.error, 'manager_required');
+});
+
+test('PUT revalidates a same-device booking snapshot without resetting phase', () => {
+  const created = invoke({ method: 'POST', body: sample }).body.booking;
+  const confirmed = invoke({ method: 'PATCH', body: { action: 'confirm', booking: created } }).body.booking;
+  const recovered = invoke({ method: 'PUT', body: { booking: confirmed } });
+
+  assert.equal(recovered.statusCode, 200);
+  assert.equal(recovered.body.success, true);
+  assert.equal(recovered.body.recovered, true);
+  assert.equal(recovered.body.recoveryScope, 'same-device');
+  assert.equal(recovered.body.booking.bookingId, confirmed.bookingId);
+  assert.equal(recovered.body.booking.phase, 'confirmed');
+  assert.equal(recovered.body.booking.updatedAt, confirmed.updatedAt);
+});
+
+test('PUT rejects idle or malformed recovery snapshots', () => {
+  const idle = invoke({ method: 'PUT', body: { booking: { ...sample, bookingId: 'M7ABC12345', phase: 'idle' } } });
+  assert.equal(idle.statusCode, 422);
+  assert.equal(idle.body.error, 'booking_phase_required');
+
+  const malformed = invoke({ method: 'PUT', body: { booking: { ...sample, bookingId: 'broken', phase: 'confirmed' } } });
+  assert.equal(malformed.statusCode, 422);
+  assert.equal(malformed.body.error, 'booking_id_required');
 });
 
 test('PATCH applies legal booking lifecycle transitions', () => {
@@ -123,5 +155,5 @@ test('scheduled booking can be cancelled through the API', () => {
 test('unsupported methods are rejected', () => {
   const res = invoke({ method: 'DELETE' });
   assert.equal(res.statusCode, 405);
-  assert.equal(res.headers.allow, 'GET, POST, PATCH');
+  assert.equal(res.headers.allow, 'GET, POST, PUT, PATCH');
 });
