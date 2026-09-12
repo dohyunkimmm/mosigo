@@ -52,6 +52,13 @@ async function runChecks() {
   assert(hospitals.json.schemaVersion === 'v4', `Unexpected hospital schema: ${hospitals.json.schemaVersion}`);
   assert(Array.isArray(hospitals.json.items) && hospitals.json.items.length > 0, 'Hospital API returned no smoke-test items');
 
+  const bookings = await fetchJson('/api/bookings');
+  assert(bookings.response.ok, `/api/bookings returned ${bookings.response.status}`);
+  assert(bookings.json.success === true, 'Booking API did not report success');
+  assert(bookings.json.schemaVersion === 'v6', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
+  assert(bookings.json.authoritativeTransitions === true, 'Booking API transition authority is not enabled');
+  assert(Array.isArray(bookings.json.actions) && bookings.json.actions.includes('cancel'), 'Booking API actions are incomplete');
+
   for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
