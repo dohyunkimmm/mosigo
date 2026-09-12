@@ -2,6 +2,31 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v8.0.0 — 2026-09-13
+
+### Traceable booking beta
+- Advanced `/api/bookings` from the v7 recoverable resource to a v8 `traceable-booking-resource` contract while preserving server-authoritative lifecycle transitions and same-device recovery.
+- Added canonical `revision` and ordered `history` metadata to booking responses so creation and lifecycle commands carry an explicit resource trace.
+- Added server validation for history sequence continuity, booking identity, timestamps, legal lifecycle transitions, action/type matching, revision length, and agreement between the final history event and the current booking phase.
+- Changed newly generated booking IDs to M8 format while preserving compatibility with existing M4, M6, M7, and M8 booking IDs.
+- Added explicit legacy recovery migration: older v7 same-device snapshots without history are recovered as `legacy_import` traces with `historyComplete: false` instead of being rejected or represented as a complete audit trail.
+- Added `src/v8-booking.js` as a read-only browser trace facade over the established v6 sync and v7 recovery layers, exposing canonical history, revision, completeness, and trace status without replacing the proven booking UI.
+- Kept persistence scope explicit through `persistence: client-local`, `recoveryScope: same-device`, and `durableServerPersistence: false`; v8 does not claim durable server storage or a tamper-proof audit log.
+- Extended booking API tests for v8 capability discovery, M4/M6/M7/M8 compatibility, trace creation, legal lifecycle history, stale revision rejection, phase/history conflict rejection, legacy snapshot migration, and expanded error behavior.
+- Extended structural QA to require the v7→v8 extension load, `v8-booking.js`, revision/history consumption, and JavaScript syntax validity.
+- Extended Production Smoke to require the v8 capability contract, create an M8 booking, append a `confirm` history event through `PATCH`, recover the traced booking through `PUT`, verify revision/history preservation, and require the deployed `v8-booking.js` asset.
+
+### Final QA
+- Passed PR #29 Quality run #53 and merged the v8 trace implementation through GitHub server-side squash merge.
+- Verified `main` Quality run #54 succeeded on GitHub-verified commit `e4a010838424631ce3b36189e0a3022cca30a554`.
+- Verified Vercel Production deployment `dpl_Dv7SPzv4np5VNiBsz8snZVppPGcq` is `READY` from that exact verified `main` commit.
+- Confirmed `/api/health` reports commit `e4a010838424631ce3b36189e0a3022cca30a554`, `/api/bookings` exposes the v8 traceable-resource capability, and `/v8-booking.js` is served successfully.
+- Confirmed automated Production Smoke run #25 completed successfully, including live `GET`, `POST`, `PATCH`, and `PUT` booking checks for history and revision behavior.
+- Confirmed the v8 Production smoke path returned `POST /api/bookings` 201 plus `PATCH /api/bookings` and `PUT /api/bookings` 200. The only runtime warning observed was the previously known Node 24 `url.parse()` deprecation warning on the hospital API path, with no v8 booking request failures.
+
+### Scope
+v8 advances Mosigo from a Recoverable Booking Beta to a **Traceable Booking Beta** by carrying a server-validated lifecycle history and revision with each canonical booking resource while preserving same-device recovery. The history is integrity-checked within the submitted resource but is not a durable or tamper-proof audit system because database persistence, authentication, account ownership, cross-device recovery, and real operational booking storage remain outside this release.
+
 ## v7.0.0 — 2026-09-13
 
 ### Recoverable booking beta
