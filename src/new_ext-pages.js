@@ -181,7 +181,6 @@
 
   function init(){
     injectStyle();
-    mount();
     hookBanner();
   }
 
