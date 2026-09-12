@@ -16,6 +16,11 @@
     function publish(){
       globalThis.v6BookingState=remoteBooking;
       globalThis.v6BookingSyncStatus=syncStatus;
+      try{
+        window.dispatchEvent(new CustomEvent('mosigo:booking-sync',{
+          detail:{ booking:remoteBooking, status:syncStatus }
+        }));
+      }catch(error){}
     }
 
     function setStatus(status,error=''){
@@ -112,6 +117,12 @@
       return remoteBooking;
     }
 
+    function hydrate(booking){
+      persistRemote(booking);
+      setStatus(remoteBooking?'synced':'idle');
+      return remoteBooking;
+    }
+
     remoteBooking=restoreRemote();
     publish();
 
@@ -144,12 +155,22 @@
 
     globalThis.MosigoV6BookingSync={
       reconcile:()=>enqueue(()=>reconcileLocal(globalThis.v4BookingState)),
+      hydrate,
       getState:()=>remoteBooking,
       getStatus:()=>syncStatus
     };
 
     if(globalThis.v4BookingState?.bookingId){
       enqueue(()=>reconcileLocal(globalThis.v4BookingState));
+    }
+
+    // v7 adds same-device recovery on top of the stable v6 command sync contract.
+    if(!document.querySelector('script[data-mosigo-v7-booking]')){
+      const v7=document.createElement('script');
+      v7.src='v7-booking.js';
+      v7.async=false;
+      v7.dataset.mosigoV7Booking='1';
+      document.head.appendChild(v7);
     }
   }
 
