@@ -2,7 +2,7 @@
 
 자녀가 부모님의 병원 이용을 대신 준비하고, 병원 탐색부터 동행 매니저 매칭·동의/결제·실시간 동행·건강 리포트·재예약까지 이어지는 흐름을 검증하기 위한 인터랙티브 병원동행 서비스 프로토타입입니다.
 
-- **Current stable version:** `v3.0.0`
+- **Current stable version:** `v4.0.0`
 - **Live Demo:** https://mosigo-nine.vercel.app/
 
 ## 프로젝트 개요
@@ -15,9 +15,10 @@
 
 ## 구현 범위
 
-- 병원 검색 및 진료과 필터
+- 병원 검색 및 진료과·증상 필터
 - 동행 매니저 비교·매칭
 - 민감정보 동의 및 결제 흐름
+- 예약 상태 및 세션 내 복원
 - 동행 진행 타임라인
 - 건강 리포트와 재예약 흐름
 - 모바일 화면 중심 인터랙티브 UI
@@ -25,16 +26,19 @@
 
 > 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다.
 
-## v3 고도화
+## v4 고도화
 
-v3는 v2의 사용자 흐름과 화면 의도를 유지하면서 코드 구조와 검증 체계를 개선한 **Maintainable Prototype** 버전입니다.
+v4는 v3의 구조적 안정성을 유지하면서 검색과 예약을 명시적인 데이터·상태 기반으로 확장한 **Functional Prototype** 버전입니다.
 
-- 421,695 bytes였던 단일 `src/index.html`에서 CSS와 JavaScript를 분리해 HTML을 139,541 bytes로 축소했습니다.
-- 기존 inline CSS 7개 블록을 `src/index.css`로 이동하고 원래 cascade 순서를 유지했습니다.
-- 대형 classic inline JavaScript 2개 블록을 `src/index-core.js`, `src/index-post.js`로 분리하고 `new_ext-pages.js`를 포함한 기존 실행 순서를 유지했습니다.
-- 병원 프로토타입 데이터, 검색/필터 로직, Vercel API handler를 각각 `data/`, `lib/`, `api/` 계층으로 분리했습니다.
-- HTML comment balance, asset reference, script order, JavaScript syntax, index 크기 등을 자동 검증하는 구조 QA를 추가했습니다.
-- PR, `main`, Release가 동일한 `npm run quality` 품질 게이트를 사용하도록 통일했습니다.
+- 병원 프로토타입 데이터에 평점·후기 수·전문 분야·진료 상태·당일접수·예시 대기시간·연결 가능한 매니저 정보를 추가했습니다.
+- `/api/hospitals`에 `recommended`/`rating`/`wait` 정렬, `managerAvailable`/`sameDay` 필터, 적용 조건과 결과 수를 담은 query metadata, `v4` schema marker를 추가했습니다.
+- 병원 검색 UI에서 로딩·빈 결과·API fallback·재시도 상태를 구분하고 API 장애 시 프로토타입 fallback 데이터로 안전하게 전환합니다.
+- 공유 booking state machine으로 `요청 → 확정 → 진행 → 완료/취소` 생명주기를 모델링했습니다.
+- 진행 중 예약을 `sessionStorage`에 저장해 같은 탭에서 새로고침해도 병원·매니저·일정·이동수단·예약 상태를 복원합니다.
+- 병원 또는 매니저 정보가 없거나 연결 가능한 매니저가 없는 경우 잘못된 예약 진행을 차단합니다.
+- API 필터/정렬/metadata와 booking lifecycle/restore를 자동 QA에 추가했습니다.
+
+v3에서 구축한 CSS/JavaScript 외부화, 병원 data/query/API 계층 분리, 공통 `npm run quality` 게이트는 그대로 유지됩니다.
 
 ## 기술 구성
 
@@ -55,8 +59,9 @@ v3는 v2의 사용자 흐름과 화면 의도를 유지하면서 코드 구조�
 ├── scripts/
 │   └── source-audit.js          # index 구조·asset 크기 감사
 ├── tests/
-│   ├── hospital-query.test.js   # 병원 검색 로직 단위 검증
-│   ├── hospitals.test.js        # 병원 API 계약 검증
+│   ├── booking-state.test.js    # 예약 상태 전이·복원 검증
+│   ├── hospital-query.test.js   # 병원 검색·필터·정렬 단위 검증
+│   ├── hospitals.test.js        # 병원 API 계약·v4 metadata 검증
 │   └── static-site.test.js      # 정적 구조·asset·JS 검증
 ├── CHANGELOG.md                 # 버전별 누적 변경 기록
 ├── VERSION                      # 현재 안정 버전
@@ -66,10 +71,13 @@ v3는 v2의 사용자 흐름과 화면 의도를 유지하면서 코드 구조�
     ├── index-core.js            # 메인 앱 핵심 인터랙션
     ├── new_ext-pages.js         # 확장 페이지 인터랙션
     ├── index-post.js            # 후속 접근성·데모 보강 로직
+    ├── v4-functional.js         # v4 병원 검색 상태·fallback·retry 레이어
+    ├── booking-state.js         # 공유 예약 상태 모델
+    ├── v4-booking.js            # v4 예약 lifecycle 런타임 어댑터
     ├── data/
     │   └── hospitals.js         # 프로토타입 병원 데이터
     ├── lib/
-    │   └── hospital-query.js    # 병원 검색/필터 로직
+    │   └── hospital-query.js    # 병원 검색/필터/정렬 로직
     ├── api/
     │   └── hospitals.js         # Vercel API handler
     ├── vercel.json
@@ -94,9 +102,10 @@ npm run quality
 
 이 명령은 Node.js 테스트와 source audit를 연속 실행해 다음을 검증합니다.
 
-- 병원 API 기본 응답·진료과/이름 검색·결과 수 제한·HTTP method 처리
-- 병원 검색 모듈의 query 정규화·진료과 코드 변환·필터 우선순위·row limit
-- 필수 페이지/API/data/lib/Vercel 설정 파일 존재 여부
+- 병원 API 기본 응답, 진료과·이름·전문 분야 검색, 결과 수 제한, HTTP method 처리
+- v4 병원 API의 매니저/당일접수 필터, 추천·평점·대기시간 정렬, query metadata와 schema marker
+- 예약 상태의 정상/비정상 전이, 직렬화와 복원
+- 필수 페이지/API/data/lib/Vercel 설정 및 v4 runtime 파일 존재 여부
 - 메인 페이지의 언어·viewport·title·description 등 기본 metadata
 - HTML/CSS가 참조하는 로컬 asset 누락 여부
 - 외부화된 JavaScript 및 남은 inline JavaScript syntax validity
@@ -131,9 +140,10 @@ Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 �
 
 - `v2.0.0` — 복원·안정 기준선 및 자동 QA 기반 정립
 - `v3.0.0` — 구조·유지보수성 고도화 완료
-- 병원 데이터 / query logic / API handler 분리
-- 메인 HTML의 CSS/JavaScript 외부화 및 구조 size guard 적용
-- PR/main/Release 공통 품질 게이트 구성
-- GitHub verified `main` 기반 Vercel Production 배포 및 v3 runtime smoke QA 통과
+- `v4.0.0` — 병원 검색 데이터/상태와 예약 lifecycle을 확장한 Functional Prototype 완료
+- v4 병원 API 필터·정렬·metadata 및 fallback/retry UX 적용
+- 예약 상태 머신과 세션 내 복원, 진행 조건 검증 적용
+- PR/main/Release 공통 품질 게이트 및 v4 자동 검증 통과
+- GitHub verified `main` 기반 Vercel Production 배포와 v4 runtime smoke QA 통과
 
 마지막 문서 동기화: 2026-09-12
