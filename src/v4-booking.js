@@ -78,10 +78,14 @@
     }
   }
 
-  function restoreRuntime(){
-    bookingState=readPersisted();
-    globalThis.v4BookingState=bookingState;
-    if(!Booking.isActiveBooking(bookingState)) return;
+  function hydrateRuntime(snapshot,{ persistState=true }={}){
+    bookingState=Booking.createBookingState(snapshot);
+    if(persistState) persist();
+    else globalThis.v4BookingState=bookingState;
+    if(!Booking.isActiveBooking(bookingState)){
+      syncBookingUi();
+      return bookingState;
+    }
 
     const managerIndex=Number.isInteger(bookingState.managerIndex)?bookingState.managerIndex:-1;
     if(managerIndex>=0 && MGRS[managerIndex]){
@@ -107,6 +111,11 @@
     syncBookingUi();
     updateHomeState();
     updateLiveState();
+    return bookingState;
+  }
+
+  function restoreRuntime(){
+    hydrateRuntime(readPersisted(),{ persistState:false });
   }
 
   const originalUpdateSearchMgrList=updateSearchMgrList;
@@ -189,6 +198,10 @@
   };
 
   restoreRuntime();
+  globalThis.MosigoV4BookingRuntime={
+    hydrate:(snapshot)=>hydrateRuntime(snapshot),
+    getState:()=>bookingState
+  };
 
   // v6 extends the stable booking runtime after v4 has restored and published its local state.
   if(!document.querySelector('script[data-mosigo-v6-booking]')){
