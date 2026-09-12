@@ -197,3 +197,24 @@ syncHospitalSourceUI=function(){
     note.querySelector('span:last-child')?.appendChild(count);
   }
 };
+
+// Shared state model first, then the runtime adapter. This keeps one tested lifecycle contract
+// for both Node QA and the browser prototype without introducing a bundler.
+(function loadV4BookingRuntime(){
+  function loadRuntime(){
+    if(document.querySelector('script[data-mosigo-v4-booking]')) return;
+    const runtime=document.createElement('script');
+    runtime.src='v4-booking.js';
+    runtime.async=false;
+    runtime.dataset.mosigoV4Booking='1';
+    document.head.appendChild(runtime);
+  }
+  if(globalThis.MosigoBookingState){ loadRuntime(); return; }
+  if(document.querySelector('script[data-mosigo-booking-state]')) return;
+  const model=document.createElement('script');
+  model.src='booking-state.js';
+  model.async=false;
+  model.dataset.mosigoBookingState='1';
+  model.onload=loadRuntime;
+  document.head.appendChild(model);
+})();
