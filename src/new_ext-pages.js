@@ -19,8 +19,8 @@
   'use strict';
 
   const EXT_PAGES = [
-    { key:'event', file:'new_event.html', banner:'14.png' },
-    { key:'game',  file:'new_game.html' },
+    { key:'event', file:'new_event.html', banner:'14.png', title:'황금낚시 이벤트' },
+    { key:'game',  file:'new_game.html', title:'황금낚시 게임' },
     // 여기에 파일을 추가한다 ↓
   ];
 
@@ -51,6 +51,9 @@
         opacity:0; z-index:1; pointer-events:none;
       }
       .ext-host iframe.is-live{ opacity:1; z-index:2; pointer-events:auto; }
+      @media (prefers-reduced-motion: reduce){
+        .ext-host{ transition:none; }
+      }
     `;
     const el = document.createElement('style');
     el.textContent = css;
@@ -63,9 +66,10 @@
     if(!screens) return false;
     host = document.createElement('div');
     host.className = 'ext-host';
-    frames = [0, 1].map(i => {
+    frames = [0, 1].map(() => {
       const f = document.createElement('iframe');
-      f.title = '이벤트 페이지';
+      f.title = '모시고 확장 페이지';
+      f.loading = 'lazy';
       host.appendChild(f);
       return f;
     });
@@ -75,8 +79,9 @@
   }
 
   // 대기 중인(안 보이는) iframe 에 먼저 싣고, 다 그려지면 앞으로 내보낸다
-  function swapTo(url, onDone){
+  function swapTo(url, title, onDone){
     const back = frames[1 - live], front = frames[live];
+    back.title = title || '모시고 확장 페이지';
     const onReady = () => {
       back.removeEventListener('load', onReady);
       back.classList.add('is-live');
@@ -108,7 +113,7 @@
     const name = currentUserName();
     const wasOpen = host.classList.contains('is-open');
 
-    swapTo(page.file + (name ? '?name=' + encodeURIComponent(name) : ''), () => {
+    swapTo(page.file + (name ? '?name=' + encodeURIComponent(name) : ''), page.title, () => {
       // 처음 열 때는 다 그려진 다음에 밀어 올린다.
       // 먼저 열고 나중에 채우면 비어 있는 흰 화면이 그대로 보인다.
       if(!wasOpen){
@@ -176,7 +181,6 @@
 
   function init(){
     injectStyle();
-    mount();
     hookBanner();
   }
 
