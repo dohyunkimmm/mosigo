@@ -2,6 +2,31 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v5.0.0 — 2026-09-12
+
+### Product-ready demo
+- Added low-risk production security headers through `src/vercel.json`: `X-Content-Type-Options`, `Referrer-Policy`, and a scoped `Permissions-Policy`.
+- Added `/api/health` so Production readiness and the deployed Git commit can be verified from the running application surface.
+- Added `robots.txt` and `sitemap.xml` for basic public-demo crawler discovery against the canonical Production URL.
+- Added visible `:focus-visible` keyboard focus treatment and `prefers-reduced-motion` fallbacks across the main prototype and extension-page transition behavior.
+- Changed event/game extension iframes to mount lazily only when opened, while keeping page-specific iframe titles and lazy-loading semantics.
+- Added automated product-readiness regression checks for keyboard focus, reduced motion, lazy extension surfaces, and MP4 footprint budgets.
+- Added automated production-readiness checks for crawler files, security headers, health endpoint presence, and Vercel deployment policy.
+- Added stable-version consistency checks across `VERSION`, `package.json`, `README.md`, and `CHANGELOG.md`.
+- Added a post-Quality `Production Smoke` workflow that waits for the relevant Production deployment and validates the deployed public surface after `main` QA succeeds.
+- Restricted automatic Vercel Git deployments to verified `main` so feature/PR branches no longer consume deployment quota; Pull Requests continue to use GitHub Quality as their pre-merge gate.
+
+### Final QA
+- Passed the v5 Pull Request and `main` Quality gates after production hardening, Production Smoke automation, accessibility/performance regression coverage, and the main-only Vercel deployment policy.
+- Re-triggered the temporarily rate-limited Production path once with a runtime-neutral `src/vercel.json` formatting change after the quota became available.
+- Verified Vercel Production deployment `dpl_Hme5kDFHHhY7o7NfYZRbAdo48jwz` is `READY` from GitHub-verified `main` commit `f3db1e8d6015ad46c51200fd477f4b5a4b133c07`.
+- Confirmed GitHub Vercel deployment statuses are successful for that exact `main` commit.
+- Confirmed automated `Production Smoke` run #9 completed successfully against the deployed Production surface.
+- Confirmed the final runtime smoke window had no HTTP request failures; one Node 24 `url.parse()` deprecation warning was emitted on the serverless runtime path, while the repository contains no direct `url.parse` or `require('url')` usage.
+
+### Scope
+v5 advances Mosigo from a functional prototype to a product-ready public demo by hardening deployment, regression QA, accessibility, performance behavior, discovery metadata, and Production verification while preserving the established v4 product flow and the project’s prototype-only positioning.
+
 ## v4.0.0 — 2026-09-12
 
 ### Functional prototype
