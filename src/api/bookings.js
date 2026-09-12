@@ -2,7 +2,8 @@ const {
   BookingServiceError,
   applyBookingAction,
   capability,
-  createBookingRequest
+  createBookingRequest,
+  recoverBookingSnapshot
 } = require('../lib/booking-service.js');
 
 function readBody(req) {
@@ -18,7 +19,7 @@ function readBody(req) {
 
 function writeCommonHeaders(res) {
   res.setHeader('Cache-Control', 'no-store');
-  res.setHeader('X-Mosigo-Schema', 'v6');
+  res.setHeader('X-Mosigo-Schema', 'v7');
   res.setHeader('X-Mosigo-Data', 'prototype');
 }
 
@@ -27,7 +28,7 @@ function writeError(res, error) {
   const status = known ? error.status : 500;
   return res.status(status).json({
     success: false,
-    schemaVersion: 'v6',
+    schemaVersion: 'v7',
     error: known ? error.code : 'internal_error',
     message: known ? error.message : 'Unexpected booking service error.'
   });
@@ -51,7 +52,20 @@ module.exports = function handler(req, res) {
       return res.status(201).json({
         success: true,
         source: 'prototype',
-        schemaVersion: 'v6',
+        schemaVersion: 'v7',
+        booking
+      });
+    }
+
+    if (req.method === 'PUT') {
+      const body = readBody(req);
+      const booking = recoverBookingSnapshot(body.booking || body);
+      return res.status(200).json({
+        success: true,
+        source: 'prototype',
+        schemaVersion: 'v7',
+        recovered: true,
+        recoveryScope: 'same-device',
         booking
       });
     }
@@ -62,15 +76,15 @@ module.exports = function handler(req, res) {
       return res.status(200).json({
         success: true,
         source: 'prototype',
-        schemaVersion: 'v6',
+        schemaVersion: 'v7',
         booking
       });
     }
 
-    res.setHeader('Allow', 'GET, POST, PATCH');
+    res.setHeader('Allow', 'GET, POST, PUT, PATCH');
     return res.status(405).json({
       success: false,
-      schemaVersion: 'v6',
+      schemaVersion: 'v7',
       error: 'method_not_allowed',
       message: 'Method Not Allowed'
     });
