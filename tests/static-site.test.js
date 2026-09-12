@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html'];
 const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css'];
-const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'v4-functional.js', 'booking-state.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js'];
+const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'v4-functional.js', 'booking-state.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js', 'v8-booking.js'];
 
 function readSrc(file) {
   return fs.readFileSync(path.join(SRC, file), 'utf8');
@@ -135,12 +135,13 @@ test('main page keeps CSS and classic JavaScript externalized in execution order
   assert.ok(Buffer.byteLength(html) < 200_000, 'index.html should remain below the v3 structural size guard');
 });
 
-test('v4 runtime, v6 sync, and v7 recovery load through stable extension points', () => {
+test('v4 runtime through v8 trace layer load through stable extension points', () => {
   const post = readSrc('index-post.js');
   const functional = readSrc('v4-functional.js');
   const booking = readSrc('v4-booking.js');
   const v6 = readSrc('v6-booking.js');
   const v7 = readSrc('v7-booking.js');
+  const v8 = readSrc('v8-booking.js');
   assert.match(post, /script\.src=['"]v4-functional\.js['"]/, 'index-post.js should load v4-functional.js');
   assert.match(functional, /v4SearchHospitals/, 'v4 functional search layer should expose its search implementation');
   assert.match(functional, /model\.src=['"]booking-state\.js['"]/, 'v4 functional layer should bootstrap the shared booking state model');
@@ -153,6 +154,10 @@ test('v4 runtime, v6 sync, and v7 recovery load through stable extension points'
   assert.match(v7, /localStorage/, 'v7 recovery should persist same-device booking snapshots');
   assert.match(v7, /method:['"]PUT['"]/, 'v7 recovery should revalidate snapshots through the booking API');
   assert.match(v7, /runtime\.hydrate\(booking\)/, 'v7 recovery should hydrate the stable booking runtime');
+  assert.match(v7, /v8\.src=['"]v8-booking\.js['"]/, 'v7 recovery should load the v8 trace layer');
+  assert.match(v8, /MosigoV8BookingTrace/, 'v8 should expose the booking trace runtime');
+  assert.match(v8, /booking\.history/, 'v8 should consume the canonical booking history');
+  assert.match(v8, /booking\.revision/, 'v8 should expose the booking revision');
 });
 
 test('local HTML asset and page references resolve to existing files', () => {
