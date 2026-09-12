@@ -49,6 +49,15 @@
     };
 
     publish(sync.getState());
+
+    // v9 coordinates same-device tabs using the validated booking revision as the conflict boundary.
+    if(!document.querySelector('script[data-mosigo-v9-booking]')){
+      const v9=document.createElement('script');
+      v9.src='v9-booking.js';
+      v9.async=false;
+      v9.dataset.mosigoV9Booking='1';
+      document.head.appendChild(v9);
+    }
   }
 
   initV8BookingTrace();
