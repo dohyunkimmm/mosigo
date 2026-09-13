@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(ROOT, 'src', 'v11-booking.js'), 'utf8');
 
 function createRuntime({ hash = '' } = {}) {
-  const bookingId = 'M11ABCD1234';
+  const bookingId = 'M10ABCD1234';
   const recoveryKey = 'portable_recovery_key_1234567890';
   const calls = [];
   const events = [];
