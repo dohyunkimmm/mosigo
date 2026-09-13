@@ -2,7 +2,7 @@
 
 자녀가 부모님의 병원 이용을 대신 준비하고, 병원 탐색부터 동행 매니저 매칭·동의/결제·실시간 동행·건강 리포트·재예약까지 이어지는 흐름을 검증하기 위한 인터랙티브 병원동행 서비스 프로토타입입니다.
 
-- **Current stable version:** `v10.0.0`
+- **Current stable version:** `v11.0.0`
 - **Live Demo:** https://mosigo-nine.vercel.app/
 
 ## 프로젝트 개요
@@ -27,9 +27,32 @@
 - 동일 기기 탭 간 booking snapshot coordination
 - Private Vercel Blob 기반 durable canonical booking persistence
 - booking ID + recovery key 기반 durable recovery
+- URL fragment 기반 cross-device portable recovery handoff
 - revision + ETag compare-and-swap 기반 stale write 충돌 방지
 
-> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v10은 canonical booking을 서버에 durable하게 저장하지만 계정 인증·사용자 소유권 모델·예약 목록/검색·실운영 의료 예약 인프라는 제공하지 않습니다. recovery key는 계정이 아니라 예약 리소스에 접근하기 위한 프로토타입 credential입니다.
+> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v11은 v10의 durable booking 계약을 유지하면서 recovery link를 통한 cross-device handoff를 추가하지만 계정 인증·사용자 소유권 모델·예약 목록/검색·실운영 의료 예약 인프라는 제공하지 않습니다. recovery key는 계정이 아니라 예약 리소스에 접근하기 위한 프로토타입 credential입니다.
+
+## v11 Portable Recovery Beta
+
+v11은 v10의 durable canonical booking과 booking-key recovery를 그대로 유지하면서 동일 예약을 다른 기기에서 이어볼 수 있게 하는 **Portable Recovery Beta**입니다.
+
+- recovery link는 `#mosigo-recovery=...` URL fragment에 booking ID와 recovery key를 담아 query string이나 서버 요청 경로에 credential을 노출하지 않습니다.
+- 링크를 가져오면 `history.replaceState`로 fragment를 먼저 제거한 뒤 v10 `MosigoV10BookingDurability.recover(...)`에 복구를 위임합니다.
+- `src/v11-booking.js`의 `MosigoV11BookingHandoff`는 recovery link 생성·파싱·복구·클립보드 복사를 담당합니다.
+- `src/v11-ui.js`의 `MosigoV11PortableRecoveryUi`는 랜딩의 `다른 기기의 예약 이어보기` 진입점, 인앱 recovery sheet, 예약 상태 화면의 link copy 동작을 제공합니다.
+- 복구 성공 시 기존 booking status 화면 `s-order`로 이동하며, 브라우저 prompt 대신 앱 내부 UI를 사용합니다.
+- 서버 API schema는 변경하지 않았습니다. `/api/bookings`는 계속 `schemaVersion: v10`, `resource: durable-booking-resource`, M10 booking ID, Private Vercel Blob, revision + ETag CAS 계약을 사용합니다.
+- v11 unit/static coverage와 Production Smoke가 fragment redaction, v11 asset wiring, portable recovery UI, durable v10 contract 유지 여부를 검증합니다.
+
+### Production verification
+
+- v11 feature merge commit: `c73e939a6ed178f0ce349ece95ad88af89028fb0`
+- Production-verified `main` commit: `b402aa16ad4f3217f506e423a10b34c7aa25f71d`
+- Vercel Production deployment: `dpl_HH1M8gqpF4ECfF1nyciLmUdKbuhv`
+- Live `/api/health` commit: `b402aa16ad4f3217f506e423a10b34c7aa25f71d`
+- Live v11 assets: `/v11-booking.js` and `/v11-ui.js` return 200
+- Production Smoke #59: success
+- Durable server contract remains v10/M10 and `serverConflictPolicy: revision-plus-etag-cas`
 
 ## v10 Durable Booking Beta
 
@@ -60,6 +83,7 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 
 ## 이전 버전
 
+- `v10.0.0` — Private Vercel Blob durable persistence와 booking-key recovery를 추가한 Durable Booking Beta
 - `v9.0.0` — same-device multi-tab booking coordination과 deterministic conflict handling을 추가한 Coordinated Booking Beta
 - `v8.0.0` — booking revision과 server-validated lifecycle history를 추가한 Traceable Booking Beta
 - `v7.0.0` — same-device booking snapshot 복구와 서버 재검증을 추가한 Recoverable Booking Beta
@@ -96,6 +120,8 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 │   ├── booking-state.test.js
 │   ├── booking-store.test.js    # durable store·ETag CAS 검증
 │   ├── bookings.test.js         # v10 booking API contract 검증
+│   ├── v11-handoff.test.js      # portable recovery handoff 검증
+│   ├── v11-static.test.js       # v11 runtime/static wiring 검증
 │   ├── v10-static.test.js       # v10 runtime/static wiring 검증
 │   ├── v9-coordination.test.js
 │   └── ...
@@ -109,6 +135,8 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
     ├── v8-booking.js
     ├── v9-booking.js
     ├── v10-booking.js           # durable recovery/canonical facade
+    ├── v11-booking.js           # portable recovery handoff facade
+    ├── v11-ui.js                # in-app portable recovery UI
     ├── lib/
     │   ├── booking-service.js    # lifecycle/history/revision service
     │   └── booking-store.js      # private Blob durable store adapter
@@ -135,9 +163,9 @@ GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩
 npm run quality
 ```
 
-핵심 검증 범위는 병원 API, booking lifecycle/history/revision, durable Blob store, recovery credential, ETag conflict handling, v4~v10 runtime wiring, 보안 헤더, crawler discovery, 접근성, asset integrity, JavaScript syntax, stable-version consistency입니다.
+핵심 검증 범위는 병원 API, booking lifecycle/history/revision, durable Blob store, recovery credential, ETag conflict handling, portable recovery handoff, v4~v11 runtime wiring, 보안 헤더, crawler discovery, 접근성, asset integrity, JavaScript syntax, stable-version consistency입니다.
 
-Production Smoke는 실제 Production에서 `/api/health`, `/api/hospitals`, `/api/bookings`, v4~v10 runtime assets를 확인하고, v10에서는 durable create/transition/recovery/canonical read까지 실행합니다.
+Production Smoke는 실제 Production에서 `/api/health`, `/api/hospitals`, `/api/bookings`, v4~v11 runtime assets를 확인하고, v10 durable create/transition/recovery/canonical read와 v11 portable-recovery wiring을 함께 검증합니다.
 
 ## Release
 
@@ -160,4 +188,4 @@ python -m http.server 8000
 
 Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → README/CHANGELOG/VERSION sync → 자동 Tag/Release → Notion sync` 흐름으로 마감합니다.
 
-마지막 문서 동기화: 2026-09-13
+마지막 문서 동기화: 2026-09-14
