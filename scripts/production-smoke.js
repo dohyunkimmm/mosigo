@@ -79,8 +79,8 @@ async function runChecks() {
   assert(Array.isArray(bookings.json.actions) && bookings.json.actions.includes('cancel'), 'Booking API actions are incomplete');
 
   const durable = bookings.json.durableServerPersistence === true;
-  if (RELEASE_VERSION.startsWith('10.')) {
-    assert(durable, 'v10 release requires durable server persistence to be configured');
+  if (RELEASE_VERSION.startsWith('10.') || RELEASE_VERSION.startsWith('11.')) {
+    assert(durable, 'v10+ release requires durable server persistence to be configured');
   }
   if (durable) {
     assert(bookings.json.persistence === 'server-durable', 'Durable capability should report server-durable persistence');
@@ -156,7 +156,7 @@ async function runChecks() {
     assert(canonical.json.booking?.revision === 2, 'Durable canonical read returned the wrong revision');
   }
 
-  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js', '/v10-booking.js']) {
+  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js', '/v10-booking.js', '/v11-booking.js', '/v11-ui.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
     assert(/javascript/i.test(result.response.headers.get('content-type') || ''), `${asset} did not return JavaScript`);
@@ -165,6 +165,19 @@ async function runChecks() {
   const v10Asset = await fetchText('/v10-booking.js');
   assert(v10Asset.text.includes('MosigoV10BookingDurability'), 'v10 durability runtime is missing');
   assert(v10Asset.text.includes('X-Mosigo-Recovery-Key'), 'v10 recovery credential flow is missing');
+  assert(v10Asset.text.includes("v11.src='v11-booking.js'"), 'v10 does not load the v11 portable recovery runtime');
+  assert(v10Asset.text.includes("v11Ui.src='v11-ui.js'"), 'v10 does not load the v11 portable recovery UI');
+
+  const v11Asset = await fetchText('/v11-booking.js');
+  assert(v11Asset.text.includes('MosigoV11BookingHandoff'), 'v11 portable recovery facade is missing');
+  assert(v11Asset.text.includes('#mosigo-recovery='), 'v11 recovery fragment contract is missing');
+  assert(v11Asset.text.includes('history?.replaceState'), 'v11 recovery fragment redaction is missing');
+  assert(!v11Asset.text.includes('?recoveryKey='), 'v11 must not put recovery credentials in URL query parameters');
+
+  const v11UiAsset = await fetchText('/v11-ui.js');
+  assert(v11UiAsset.text.includes('MosigoV11PortableRecoveryUi'), 'v11 portable recovery UI facade is missing');
+  assert(v11UiAsset.text.includes('다른 기기의 예약 이어보기'), 'v11 recovery entry point is missing');
+  assert(v11UiAsset.text.includes('mosigo:booking-handoff'), 'v11 recovery success routing is missing');
 
   const robots = await fetchText('/robots.txt');
   assert(robots.response.ok && /Sitemap:\s*https:\/\/mosigo-nine\.vercel\.app\/sitemap\.xml/i.test(robots.text), 'robots.txt is not production-ready');
@@ -180,7 +193,7 @@ async function runChecks() {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
       const commit = await runChecks();
-      console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}; durable=${RELEASE_VERSION.startsWith('10.') ? 'required' : 'development'}`);
+      console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}; durable=${RELEASE_VERSION.startsWith('10.') || RELEASE_VERSION.startsWith('11.') ? 'required' : 'development'}`);
       process.exit(0);
     } catch (error) {
       lastError = error;
