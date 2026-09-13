@@ -1,4 +1,4 @@
-// v6 Pilot-ready Beta sync layer, extended by v10 with durable recovery credentials.
+// v6 Pilot-ready Beta sync layer, extended by v10 with durable recovery credentials and v12 temporary share access.
 (function bootV6BookingSync(){
   function initV6BookingSync(){
     if(globalThis.MosigoV6BookingSync) return;
@@ -10,6 +10,7 @@
     const API='/api/bookings';
     const STORAGE_KEY='mosigo-v6-booking';
     const ACCESS_PREFIX='mosigo-v10-recovery-key:';
+    const SHARE_ACCESS_PREFIX='mosigo-v12-share-token:';
     let remoteBooking=null;
     let queue=Promise.resolve();
     let syncStatus={ status:'idle', error:'' };
@@ -33,6 +34,10 @@
       return ACCESS_PREFIX+String(bookingId||'').trim();
     }
 
+    function shareKeyName(bookingId){
+      return SHARE_ACCESS_PREFIX+String(bookingId||'').trim();
+    }
+
     function getRecoveryKey(bookingId=remoteBooking?.bookingId){
       const id=String(bookingId||'').trim();
       if(!id) return '';
@@ -50,6 +55,31 @@
       const id=String(bookingId||'').trim();
       if(!id) return;
       try{localStorage.removeItem(accessKeyName(id));}catch(error){}
+    }
+
+    function getShareToken(bookingId=remoteBooking?.bookingId){
+      const id=String(bookingId||'').trim();
+      if(!id) return '';
+      try{return String(sessionStorage.getItem(shareKeyName(id))||'');}catch(error){return '';}
+    }
+
+    function setShareToken(bookingId,shareToken){
+      const id=String(bookingId||'').trim();
+      const token=String(shareToken||'').trim();
+      if(!id || !token) return false;
+      try{sessionStorage.setItem(shareKeyName(id),token); return true;}catch(error){return false;}
+    }
+
+    function clearShareToken(bookingId){
+      const id=String(bookingId||'').trim();
+      if(!id) return;
+      try{sessionStorage.removeItem(shareKeyName(id));}catch(error){}
+    }
+
+    function getAccess(bookingId=remoteBooking?.bookingId){
+      const recoveryKey=getRecoveryKey(bookingId);
+      if(recoveryKey) return { recoveryKey, shareToken:'' };
+      return { recoveryKey:'', shareToken:getShareToken(bookingId) };
     }
 
     function persistRemote(booking){
@@ -72,9 +102,12 @@
       }
     }
 
-    async function command(method,payload,recoveryKey=''){
+    async function command(method,payload,access={}){
       const headers={ 'Content-Type':'application/json' };
+      const recoveryKey=String(access.recoveryKey||'').trim();
+      const shareToken=String(access.shareToken||'').trim();
       if(recoveryKey) headers['X-Mosigo-Recovery-Key']=recoveryKey;
+      else if(shareToken) headers['X-Mosigo-Share-Token']=shareToken;
       const response=await fetch(API,{
         method,
         headers,
@@ -102,9 +135,13 @@
     async function createRemote(local){
       if(!local?.bookingId) return null;
       setStatus('syncing');
-      const existingKey=getRecoveryKey(local.bookingId);
-      const data=existingKey
-        ? await command('PUT',{ booking:local, recoveryKey:existingKey },existingKey)
+      const access=getAccess(local.bookingId);
+      const hasAccess=Boolean(access.recoveryKey || access.shareToken);
+      const data=hasAccess
+        ? await command('PUT',{
+            booking:local,
+            ...(access.recoveryKey ? { recoveryKey:access.recoveryKey } : {})
+          },access)
         : await command('POST',{ booking:local });
       if(data.recoveryKey) setRecoveryKey(data.booking?.bookingId||local.bookingId,data.recoveryKey);
       persistRemote(data.booking);
@@ -114,14 +151,14 @@
     async function applyAction(action){
       if(!remoteBooking) return null;
       setStatus('syncing');
-      const recoveryKey=getRecoveryKey(remoteBooking.bookingId);
+      const access=getAccess(remoteBooking.bookingId);
       const data=await command('PATCH',{
         action,
         booking:remoteBooking,
         bookingId:remoteBooking.bookingId,
         expectedRevision:remoteBooking.revision,
-        recoveryKey
-      },recoveryKey);
+        ...(access.recoveryKey ? { recoveryKey:access.recoveryKey } : {})
+      },access);
       if(data.recoveryKey) setRecoveryKey(data.booking?.bookingId,data.recoveryKey);
       persistRemote(data.booking);
       return remoteBooking;
@@ -188,7 +225,10 @@
     resetDemoState=function(){
       const currentId=remoteBooking?.bookingId;
       persistRemote(null);
-      if(currentId) clearRecoveryKey(currentId);
+      if(currentId){
+        clearRecoveryKey(currentId);
+        clearShareToken(currentId);
+      }
       setStatus('idle');
       originalResetDemoState();
     };
@@ -200,7 +240,11 @@
       getStatus:()=>syncStatus,
       getRecoveryKey,
       setRecoveryKey,
-      clearRecoveryKey
+      clearRecoveryKey,
+      getShareToken,
+      setShareToken,
+      clearShareToken,
+      getAccess
     };
 
     if(globalThis.v4BookingState?.bookingId){
