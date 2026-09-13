@@ -12,9 +12,9 @@ const {
   transitionBookingState
 } = require('../src/booking-state.js');
 
-test('booking IDs use the v9 timestamp-plus-entropy format', () => {
+test('booking IDs use the v10 timestamp-plus-entropy format', () => {
   const id=createBookingId(1789176000000,'ABCD');
-  assert.match(id,/^M9[A-Z0-9]{8}$/);
+  assert.match(id,/^M10[A-Z0-9]{8}$/);
   assert.equal(id,createBookingId(1789176000000,'ABCD'));
   assert.notEqual(id,createBookingId(1789176000000,'WXYZ'));
 });
@@ -29,7 +29,7 @@ test('booking state starts idle with normalized defaults', () => {
 
 test('booking follows request-confirm-progress-complete lifecycle', () => {
   let state=createBookingState();
-  state=transitionBookingState(state,PHASES.REQUESTING,{ bookingId:'M9ABC12345', hospitalName:'똑똑연세내과의원' },0);
+  state=transitionBookingState(state,PHASES.REQUESTING,{ bookingId:'M10ABC12345', hospitalName:'똑똑연세내과의원' },0);
   assert.equal(isActiveBooking(state),true);
   state=transitionBookingState(state,PHASES.CONFIRMED,{},1000);
   state=transitionBookingState(state,PHASES.IN_PROGRESS,{},2000);
@@ -55,7 +55,7 @@ test('invalid direct phase jumps are rejected', () => {
 
 test('booking state survives safe serialize and restore', () => {
   let state=createBookingState({ managerIndex:2, managerName:'박성호', amount:45000 });
-  state=transitionBookingState(state,PHASES.REQUESTING,{ bookingId:'M9ABC12345' },0);
+  state=transitionBookingState(state,PHASES.REQUESTING,{ bookingId:'M10ABC12345' },0);
   const restored=restoreBookingState(serializeBookingState(state));
   assert.equal(restored.phase,PHASES.REQUESTING);
   assert.equal(restored.managerIndex,2);

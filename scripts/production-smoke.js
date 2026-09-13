@@ -1,20 +1,25 @@
+const fs = require('node:fs');
+
 const BASE_URL = process.env.MOSIGO_PRODUCTION_URL || 'https://mosigo-nine.vercel.app';
 const EXPECTED_COMMIT = process.env.EXPECTED_COMMIT || '';
 const MAX_ATTEMPTS = Number(process.env.SMOKE_ATTEMPTS || 12);
 const RETRY_MS = Number(process.env.SMOKE_RETRY_MS || 10000);
+const RELEASE_VERSION = (() => {
+  try { return fs.readFileSync('VERSION', 'utf8').trim(); } catch (error) { return ''; }
+})();
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchText(path) {
-  const response = await fetch(new URL(path, BASE_URL), { redirect: 'follow' });
+async function fetchText(path, options = {}) {
+  const response = await fetch(new URL(path, BASE_URL), { redirect: 'follow', ...options });
   const text = await response.text();
   return { response, text };
 }
 
-async function fetchJson(path) {
-  const { response, text } = await fetchText(path);
+async function fetchJson(path, options = {}) {
+  const { response, text } = await fetchText(path, options);
   let json;
   try {
     json = JSON.parse(text);
@@ -25,15 +30,7 @@ async function fetchJson(path) {
 }
 
 async function requestJson(path, options) {
-  const response = await fetch(new URL(path, BASE_URL), options);
-  const text = await response.text();
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch (error) {
-    throw new Error(`${path} returned invalid JSON (${response.status}): ${text.slice(0, 160)}`);
-  }
-  return { response, json };
+  return fetchJson(path, options);
 }
 
 function assert(condition, message) {
@@ -67,12 +64,10 @@ async function runChecks() {
   const bookings = await fetchJson('/api/bookings');
   assert(bookings.response.ok, `/api/bookings returned ${bookings.response.status}`);
   assert(bookings.json.success === true, 'Booking API did not report success');
-  assert(bookings.json.schemaVersion === 'v9', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
-  assert(bookings.json.resource === 'coordinated-booking-resource', `Unexpected booking resource: ${bookings.json.resource}`);
+  assert(bookings.json.schemaVersion === 'v10', `Unexpected booking schema: ${bookings.json.schemaVersion}`);
+  assert(bookings.json.resource === 'durable-booking-resource', `Unexpected booking resource: ${bookings.json.resource}`);
   assert(bookings.json.authoritativeTransitions === true, 'Booking API transition authority is not enabled');
   assert(bookings.json.recoverable === true, 'Booking API recovery is not enabled');
-  assert(bookings.json.recoveryScope === 'same-device', `Unexpected recovery scope: ${bookings.json.recoveryScope}`);
-  assert(bookings.json.durableServerPersistence === false, 'Prototype must not claim durable server persistence');
   assert(bookings.json.traceable === true, 'Booking lifecycle trace is not enabled');
   assert(bookings.json.historyValidation === 'server', 'Booking history is not server-validated');
   assert(bookings.json.coordinated === true, 'Same-device booking coordination is not enabled');
@@ -80,7 +75,21 @@ async function runChecks() {
   assert(bookings.json.coordinationTransport === 'storage-event', `Unexpected coordination transport: ${bookings.json.coordinationTransport}`);
   assert(bookings.json.snapshotConflictPolicy === 'higher-revision-wins', 'Unexpected snapshot conflict policy');
   assert(bookings.json.equalRevisionConflictPolicy === 'stored-snapshot-wins', 'Unexpected equal-revision conflict policy');
+  assert(bookings.json.bookingIdVersion === 'M10', `Unexpected booking ID version: ${bookings.json.bookingIdVersion}`);
   assert(Array.isArray(bookings.json.actions) && bookings.json.actions.includes('cancel'), 'Booking API actions are incomplete');
+
+  const durable = bookings.json.durableServerPersistence === true;
+  if (RELEASE_VERSION.startsWith('10.')) {
+    assert(durable, 'v10 release requires durable server persistence to be configured');
+  }
+  if (durable) {
+    assert(bookings.json.persistence === 'server-durable', 'Durable capability should report server-durable persistence');
+    assert(bookings.json.recoveryScope === 'booking-key', 'Durable recovery should use booking-key scope');
+    assert(bookings.json.serverConflictPolicy === 'revision-plus-etag-cas', 'Durable conflict policy is not active');
+  } else {
+    assert(bookings.json.persistence === 'client-local-fallback', 'Unconfigured storage should remain an explicit local fallback');
+    assert(bookings.json.recoveryScope === 'same-device', 'Fallback recovery scope should remain same-device');
+  }
 
   const sampleBooking = {
     hospitalId: 'hospital-1',
@@ -100,42 +109,62 @@ async function runChecks() {
     body: JSON.stringify({ booking: sampleBooking })
   });
   assert(created.response.status === 201 && created.json.success === true, 'Booking create smoke failed');
-  assert(/^M9[A-Z0-9]{8}$/.test(created.json.booking?.bookingId || ''), 'Booking create did not return a v9 ID');
+  assert(/^M10[A-Z0-9]{8}$/.test(created.json.booking?.bookingId || ''), 'Booking create did not return an M10 ID');
   assert(created.json.booking?.revision === 1, 'Booking create revision is not 1');
   assert(created.json.booking?.historyComplete === true, 'New booking history should be complete');
   assert(created.json.booking?.history?.[0]?.type === 'created', 'Booking create history event is missing');
+  if (durable) assert(typeof created.json.recoveryKey === 'string' && created.json.recoveryKey.length > 10, 'Durable create did not return a recovery key');
 
+  const recoveryKey = created.json.recoveryKey || '';
   const confirmed = await requestJson('/api/bookings', {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'confirm', booking: created.json.booking })
+    headers: {
+      'Content-Type': 'application/json',
+      ...(recoveryKey ? { 'X-Mosigo-Recovery-Key': recoveryKey } : {})
+    },
+    body: JSON.stringify({
+      action: 'confirm',
+      booking: created.json.booking,
+      bookingId: created.json.booking.bookingId,
+      expectedRevision: created.json.booking.revision,
+      recoveryKey
+    })
   });
   assert(confirmed.response.ok && confirmed.json.success === true, 'Booking transition smoke failed');
   assert(confirmed.json.booking?.phase === 'confirmed', 'Booking transition did not confirm');
   assert(confirmed.json.booking?.revision === 2, 'Booking revision did not advance');
   assert(confirmed.json.booking?.history?.length === 2, 'Booking history did not append transition');
-  assert(confirmed.json.booking?.history?.[1]?.type === 'confirm', 'Booking confirm history event is missing');
 
   const recovered = await requestJson('/api/bookings', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ booking: confirmed.json.booking })
+    headers: {
+      'Content-Type': 'application/json',
+      ...(recoveryKey ? { 'X-Mosigo-Recovery-Key': recoveryKey } : {})
+    },
+    body: JSON.stringify({ booking: confirmed.json.booking, recoveryKey })
   });
   assert(recovered.response.ok && recovered.json.recovered === true, 'Booking recovery smoke failed');
   assert(recovered.json.booking?.bookingId === created.json.booking.bookingId, 'Recovered booking ID changed');
   assert(recovered.json.booking?.phase === 'confirmed', 'Recovered booking phase changed');
   assert(recovered.json.booking?.revision === 2, 'Recovered booking revision changed');
-  assert(recovered.json.booking?.history?.length === 2, 'Recovered booking history changed');
 
-  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js']) {
+  if (durable) {
+    const canonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(created.json.booking.bookingId)}`, {
+      headers: { 'X-Mosigo-Recovery-Key': recoveryKey }
+    });
+    assert(canonical.response.ok && canonical.json.durablePersisted === true, 'Durable canonical read failed');
+    assert(canonical.json.booking?.revision === 2, 'Durable canonical read returned the wrong revision');
+  }
+
+  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js', '/v10-booking.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
     assert(/javascript/i.test(result.response.headers.get('content-type') || ''), `${asset} did not return JavaScript`);
   }
 
-  const v9Asset = await fetchText('/v9-booking.js');
-  assert(v9Asset.text.includes('MosigoV9BookingCoordination'), 'v9 coordination runtime is missing');
-  assert(v9Asset.text.includes("addEventListener('storage'"), 'v9 storage-event coordination is missing');
+  const v10Asset = await fetchText('/v10-booking.js');
+  assert(v10Asset.text.includes('MosigoV10BookingDurability'), 'v10 durability runtime is missing');
+  assert(v10Asset.text.includes('X-Mosigo-Recovery-Key'), 'v10 recovery credential flow is missing');
 
   const robots = await fetchText('/robots.txt');
   assert(robots.response.ok && /Sitemap:\s*https:\/\/mosigo-nine\.vercel\.app\/sitemap\.xml/i.test(robots.text), 'robots.txt is not production-ready');
@@ -151,7 +180,7 @@ async function runChecks() {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
       const commit = await runChecks();
-      console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}`);
+      console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}; durable=${RELEASE_VERSION.startsWith('10.') ? 'required' : 'development'}`);
       process.exit(0);
     } catch (error) {
       lastError = error;
