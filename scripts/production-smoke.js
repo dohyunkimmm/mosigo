@@ -77,9 +77,22 @@ async function runChecks() {
   assert(bookings.json.equalRevisionConflictPolicy === 'stored-snapshot-wins', 'Unexpected equal-revision conflict policy');
   assert(bookings.json.bookingIdVersion === 'M10', `Unexpected booking ID version: ${bookings.json.bookingIdVersion}`);
   assert(Array.isArray(bookings.json.actions) && bookings.json.actions.includes('cancel'), 'Booking API actions are incomplete');
+  assert(bookings.json.secureSharing === true, 'v12 secure sharing capability is not enabled');
+  assert(bookings.json.shareCredential === 'opaque-expiring-share-token', 'Unexpected v12 share credential');
+  assert(bookings.json.shareEndpoint === '/api/booking-shares', 'Unexpected v12 share endpoint');
+  assert(bookings.json.shareRevocable === true && bookings.json.shareRotatable === true, 'v12 share revocation/rotation is not enabled');
+
+  const shareCapability = await fetchJson('/api/booking-shares');
+  assert(shareCapability.response.ok, `/api/booking-shares returned ${shareCapability.response.status}`);
+  assert(shareCapability.json.success === true, 'Booking-share API did not report success');
+  assert(shareCapability.json.schemaVersion === 'v12', `Unexpected booking-share schema: ${shareCapability.json.schemaVersion}`);
+  assert(shareCapability.json.resource === 'secure-booking-share-resource', `Unexpected booking-share resource: ${shareCapability.json.resource}`);
+  assert(shareCapability.json.enabled === true, 'Secure booking-share storage is not enabled');
+  assert(shareCapability.json.revocable === true && shareCapability.json.rotatable === true, 'Secure sharing controls are incomplete');
+  assert(shareCapability.json.rawTokenStoredServerSide === false, 'Server must not store raw share tokens');
 
   const durable = bookings.json.durableServerPersistence === true;
-  if (RELEASE_VERSION.startsWith('10.') || RELEASE_VERSION.startsWith('11.')) {
+  if (RELEASE_VERSION.startsWith('10.') || RELEASE_VERSION.startsWith('11.') || RELEASE_VERSION.startsWith('12.')) {
     assert(durable, 'v10+ release requires durable server persistence to be configured');
   }
   if (durable) {
@@ -149,14 +162,70 @@ async function runChecks() {
   assert(recovered.json.booking?.revision === 2, 'Recovered booking revision changed');
 
   if (durable) {
-    const canonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(created.json.booking.bookingId)}`, {
+    const bookingId = created.json.booking.bookingId;
+    const canonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
       headers: { 'X-Mosigo-Recovery-Key': recoveryKey }
     });
     assert(canonical.response.ok && canonical.json.durablePersisted === true, 'Durable canonical read failed');
     assert(canonical.json.booking?.revision === 2, 'Durable canonical read returned the wrong revision');
+
+    const firstShare = await requestJson('/api/booking-shares', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Mosigo-Recovery-Key': recoveryKey
+      },
+      body: JSON.stringify({ bookingId, ttlMinutes: 60 })
+    });
+    assert(firstShare.response.status === 201 && firstShare.json.success === true, 'Secure share issuance failed');
+    assert(typeof firstShare.json.shareToken === 'string' && firstShare.json.shareToken.length >= 24, 'Secure share token is missing');
+    assert(firstShare.json.share?.active === true, 'Secure share should be active after issuance');
+    const firstToken = firstShare.json.shareToken;
+
+    const sharedCanonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
+      headers: { 'X-Mosigo-Share-Token': firstToken }
+    });
+    assert(sharedCanonical.response.ok && sharedCanonical.json.booking?.revision === 2, 'Secure share canonical recovery failed');
+
+    const rotatedShare = await requestJson('/api/booking-shares', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Mosigo-Recovery-Key': recoveryKey
+      },
+      body: JSON.stringify({ bookingId, ttlMinutes: 30 })
+    });
+    assert(rotatedShare.response.status === 201 && rotatedShare.json.share?.generation >= 2, 'Secure share rotation failed');
+    const secondToken = rotatedShare.json.shareToken;
+    assert(secondToken && secondToken !== firstToken, 'Secure share rotation did not replace the token');
+
+    const oldShare = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
+      headers: { 'X-Mosigo-Share-Token': firstToken }
+    });
+    assert(oldShare.response.status === 401 && oldShare.json.success === false, 'Rotated share token should no longer authorize booking access');
+
+    const rotatedCanonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
+      headers: { 'X-Mosigo-Share-Token': secondToken }
+    });
+    assert(rotatedCanonical.response.ok && rotatedCanonical.json.booking?.bookingId === bookingId, 'Rotated share token is not active');
+
+    const revokedShare = await requestJson('/api/booking-shares', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Mosigo-Recovery-Key': recoveryKey
+      },
+      body: JSON.stringify({ bookingId })
+    });
+    assert(revokedShare.response.ok && revokedShare.json.share?.active === false, 'Secure share revocation failed');
+
+    const revokedCanonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
+      headers: { 'X-Mosigo-Share-Token': secondToken }
+    });
+    assert(revokedCanonical.response.status === 401 && revokedCanonical.json.success === false, 'Revoked share token should not authorize booking access');
   }
 
-  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js', '/v10-booking.js', '/v11-booking.js', '/v11-ui.js']) {
+  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js', '/v10-booking.js', '/v11-booking.js', '/v11-ui.js', '/v12-sharing.js', '/v12-ui.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
     assert(/javascript/i.test(result.response.headers.get('content-type') || ''), `${asset} did not return JavaScript`);
@@ -167,6 +236,8 @@ async function runChecks() {
   assert(v10Asset.text.includes('X-Mosigo-Recovery-Key'), 'v10 recovery credential flow is missing');
   assert(v10Asset.text.includes("v11.src='v11-booking.js'"), 'v10 does not load the v11 portable recovery runtime');
   assert(v10Asset.text.includes("v11Ui.src='v11-ui.js'"), 'v10 does not load the v11 portable recovery UI');
+  assert(v10Asset.text.includes("v12.src='v12-sharing.js'"), 'v10 does not load the v12 secure sharing runtime');
+  assert(v10Asset.text.includes("v12Ui.src='v12-ui.js'"), 'v10 does not load the v12 secure sharing UI');
 
   const v11Asset = await fetchText('/v11-booking.js');
   assert(v11Asset.text.includes('MosigoV11BookingHandoff'), 'v11 portable recovery facade is missing');
@@ -177,7 +248,19 @@ async function runChecks() {
   const v11UiAsset = await fetchText('/v11-ui.js');
   assert(v11UiAsset.text.includes('MosigoV11PortableRecoveryUi'), 'v11 portable recovery UI facade is missing');
   assert(v11UiAsset.text.includes('다른 기기의 예약 이어보기'), 'v11 recovery entry point is missing');
-  assert(v11UiAsset.text.includes('mosigo:booking-handoff'), 'v11 recovery success routing is missing');
+  assert(v11UiAsset.text.includes('#mosigo-share='), 'v11 recovery modal does not accept v12 share links');
+
+  const v12Asset = await fetchText('/v12-sharing.js');
+  assert(v12Asset.text.includes('MosigoV12SecureSharing'), 'v12 secure sharing facade is missing');
+  assert(v12Asset.text.includes('#mosigo-share='), 'v12 secure share fragment contract is missing');
+  assert(v12Asset.text.includes('X-Mosigo-Share-Token'), 'v12 secure share credential header is missing');
+  assert(v12Asset.text.includes('history?.replaceState'), 'v12 secure share fragment redaction is missing');
+  assert(!v12Asset.text.includes('?shareToken='), 'v12 must not put share credentials in URL query parameters');
+
+  const v12UiAsset = await fetchText('/v12-ui.js');
+  assert(v12UiAsset.text.includes('MosigoV12SecureSharingUi'), 'v12 secure sharing UI facade is missing');
+  assert(v12UiAsset.text.includes('공유 링크 폐기'), 'v12 share revocation control is missing');
+  assert(v12UiAsset.text.includes('안전한 이어보기 링크 복사'), 'v12 expiring share copy control is missing');
 
   const robots = await fetchText('/robots.txt');
   assert(robots.response.ok && /Sitemap:\s*https:\/\/mosigo-nine\.vercel\.app\/sitemap\.xml/i.test(robots.text), 'robots.txt is not production-ready');
@@ -193,7 +276,7 @@ async function runChecks() {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
       const commit = await runChecks();
-      console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}; durable=${RELEASE_VERSION.startsWith('10.') || RELEASE_VERSION.startsWith('11.') ? 'required' : 'development'}`);
+      console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}; durable=${RELEASE_VERSION.startsWith('10.') || RELEASE_VERSION.startsWith('11.') || RELEASE_VERSION.startsWith('12.') ? 'required' : 'development'}`);
       process.exit(0);
     } catch (error) {
       lastError = error;
