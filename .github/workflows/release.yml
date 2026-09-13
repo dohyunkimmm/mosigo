@@ -1,32 +1,74 @@
 name: Release
 
 on:
+  workflow_run:
+    workflows:
+      - Production Smoke
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.event.workflow_run.head_sha || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Checkout main
+      - name: Resolve release target
+        id: target
+        shell: bash
+        env:
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          TARGET_SHA="${WORKFLOW_RUN_SHA:-$GITHUB_SHA}"
+          echo "sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout release target
         uses: actions/checkout@v4
         with:
+          ref: ${{ steps.target.outputs.sha }}
           fetch-depth: 0
 
+      - name: Ensure target is current main
+        id: current
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          CURRENT_MAIN="$(git rev-parse origin/main)"
+          TARGET_SHA="${{ steps.target.outputs.sha }}"
+          if [[ "$TARGET_SHA" != "$CURRENT_MAIN" ]]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping stale release target $TARGET_SHA; current main is $CURRENT_MAIN."
+            exit 0
+          fi
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
+
       - name: Use Node.js 24
+        if: steps.current.outputs.eligible == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
       - name: Run quality gate
+        if: steps.current.outputs.eligible == 'true'
         run: npm run quality
 
       - name: Resolve release version
+        if: steps.current.outputs.eligible == 'true'
         id: version
         shell: bash
         run: |
@@ -39,24 +81,31 @@ jobs:
           TAG="v${VERSION}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Ensure release does not already exist
+      - name: Check whether release already exists
+        if: steps.current.outputs.eligible == 'true'
+        id: existing
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
         run: |
           set -euo pipefail
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists. Nothing to publish."
-            exit 1
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists; nothing to publish."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish Git tag and GitHub Release
+        if: steps.current.outputs.eligible == 'true' && steps.existing.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
         run: |
           set -euo pipefail
           gh release create "$TAG" \
-            --target "$GITHUB_SHA" \
+            --target "$TARGET_SHA" \
             --title "Mosigo $TAG" \
             --generate-notes
