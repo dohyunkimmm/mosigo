@@ -2,6 +2,31 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v9.0.0 — 2026-09-13
+
+### Coordinated booking beta
+- Advanced `/api/bookings` from the v8 traceable resource to a v9 `coordinated-booking-resource` contract while preserving server-authoritative lifecycle transitions, ordered history/revision validation, and same-device recovery.
+- Added same-device multi-tab coordination through `storage` events so a newer booking snapshot can be revalidated through `PUT /api/bookings` and hydrated into the established booking runtime instead of leaving tabs on divergent state.
+- Added revision-aware local snapshot guards: higher revisions win for the same booking, stale revisions cannot overwrite a newer snapshot, and equal-revision divergence follows an explicit `stored-snapshot-wins` policy before canonical revalidation.
+- Added deterministic cross-booking selection using `updatedAt` followed by booking ID as a tie-break when timestamps are equal.
+- Added clear propagation for snapshot/latest-key removal, plus explicit `invalid-snapshot` handling for malformed JSON and storage key/booking ID mismatches.
+- Split the v9 facade into synchronous local `getSnapshot()` and asynchronous server-revalidated `getCanonical()` reads so the meaning of local versus validated booking state is explicit.
+- Changed newly generated booking IDs to M9 with timestamp material plus entropy to reduce same-millisecond collision risk while preserving compatibility with existing M4/M6/M7/M8/M9 IDs.
+- Added focused behavior coverage for higher-revision adoption, equal-revision divergence, deterministic cross-booking ties, clear propagation, malformed storage events, and canonical revalidation, while retaining booking API and static/runtime regression coverage.
+- Kept persistence and coordination boundaries explicit: `persistence: client-local`, `recoveryScope: same-device`, `coordinationScope: same-device`, and `durableServerPersistence: false`.
+
+### Final QA
+- Passed PR #31 Quality run #57 for the initial v9 coordination implementation and merged it through GitHub server-side squash merge.
+- Passed PR #32 Quality run #59 for coordination hardening and merged it through GitHub server-side squash merge.
+- Verified final app-source `main` Quality run #60 succeeded on GitHub-verified commit `ec9e73e57c51ec2e56821dbdff0ecdd6dbc7ca7a`.
+- Verified Vercel Production deployment `dpl_9YTYKh3KebYBPc6QwGEQVAdCwpjn` is `READY` from that exact verified app-source commit.
+- Confirmed `/api/health` reports commit `ec9e73e57c51ec2e56821dbdff0ecdd6dbc7ca7a`, `/api/bookings` exposes the v9 coordination policies, and `/v9-booking.js` is served successfully.
+- Confirmed automated Production Smoke run #31 completed successfully against the final v9 app source.
+- Confirmed the only runtime warning observed remains the previously known Node 24 `url.parse()` deprecation warning on `/api/hospitals`, with no v9 booking runtime error group.
+
+### Scope
+v9 advances Mosigo from a Traceable Booking Beta to a **Coordinated Booking Beta** by coordinating validated booking snapshots across tabs on the same device and making conflict handling deterministic. It still does not provide durable database persistence, authentication/account ownership, cross-device synchronization, a tamper-proof audit log, or real operational booking storage.
+
 ## v8.0.0 — 2026-09-13
 
 ### Traceable booking beta
@@ -89,7 +114,7 @@ v6 advances Mosigo from a product-ready public demo to a **Pilot-ready Beta** by
 
 ### Final QA
 - Passed the v5 Pull Request and `main` Quality gates after production hardening, Production Smoke automation, accessibility/performance regression coverage, and the main-only Vercel deployment policy.
-- Re-triggered the temporarily rate-limited Production path once with a runtime-neutral `src/vercel.json` formatting change after the quota became available.
+- Re-triggered the temporarily rate-limited Production path once with a runtime-neutral `src/vercel.json` formatting-only change after the quota became available.
 - Verified Vercel Production deployment `dpl_Hme5kDFHHhY7o7NfYZRbAdo48jwz` is `READY` from GitHub-verified `main` commit `f3db1e8d6015ad46c51200fd477f4b5a4b133c07`.
 - Confirmed GitHub Vercel deployment statuses are successful for that exact `main` commit.
 - Confirmed automated `Production Smoke` run #9 completed successfully against the deployed Production surface.
@@ -116,7 +141,7 @@ v5 advances Mosigo from a functional prototype to a product-ready public demo by
 
 ### Final QA
 - Passed the v4 Pull Request and `main` Quality gates after the functional search and booking-state changes.
-- Re-triggered Vercel after the temporary daily deployment limit using a runtime-neutral `src/vercel.json` formatting change.
+- Re-triggered Vercel after the temporary daily deployment limit using a runtime-neutral `src/vercel.json` formatting-only change.
 - Verified Production deployment `dpl_DH2KHqg5mVeTMobUgz1CucvVRzgW` is `READY` from GitHub-verified `main` commit `2acd44d632bfb95005d02e13980daedc8312828e`.
 - Runtime-smoke-tested the public root page plus `v4-functional.js`, `booking-state.js`, and `v4-booking.js` with successful HTTP responses.
 - Runtime-smoke-tested `/api/hospitals?managerAvailable=1&sameDay=1&sort=wait&numOfRows=6` and confirmed the v4 schema marker, filter metadata, and sorted prototype results.
