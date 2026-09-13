@@ -97,6 +97,15 @@
       if(capability?.durableServerPersistence && id && key) await recoverDurable(id,key);
       return capability;
     });
+
+    // v11 adds portable cross-device recovery without changing v10 durable storage semantics.
+    if(typeof document!=='undefined' && !document.querySelector('script[data-mosigo-v11-booking]')){
+      const v11=document.createElement('script');
+      v11.src='v11-booking.js';
+      v11.async=false;
+      v11.dataset.mosigoV11Booking='1';
+      document.head.appendChild(v11);
+    }
   }
 
   initV10BookingDurability();
