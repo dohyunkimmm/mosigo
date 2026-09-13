@@ -106,6 +106,13 @@
       v11.dataset.mosigoV11Booking='1';
       document.head.appendChild(v11);
     }
+    if(typeof document!=='undefined' && !document.querySelector('script[data-mosigo-v11-ui]')){
+      const v11Ui=document.createElement('script');
+      v11Ui.src='v11-ui.js';
+      v11Ui.async=false;
+      v11Ui.dataset.mosigoV11Ui='1';
+      document.head.appendChild(v11Ui);
+    }
   }
 
   initV10BookingDurability();
