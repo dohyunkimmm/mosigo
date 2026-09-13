@@ -51,7 +51,12 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 - Vercel Production deployment: `dpl_EtV9X9buqmzMYhSwJjBtciy749pw`
 - Deployment source verification: GitHub verified `main`
 - Live capability: `server-durable`, `durableServerPersistence: true`, `serverConflictPolicy: revision-plus-etag-cas`
-- Production Smoke #45: success
+- Production Smoke #45: success against the final v10 app source
+- v10 release/tag commit: `09be83e946c0aba4b1f958e24d10c7b22719030b`
+- Final Quality #76: success
+- Final Production Smoke #47: success
+- Automatic Release #20: success
+- GitHub Release `v10.0.0`: Release ID `387877616`, immutable, tag target matches the v10 release/tag commit
 
 ## 이전 버전
 
