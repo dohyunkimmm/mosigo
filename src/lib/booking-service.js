@@ -24,11 +24,11 @@ function createPilotBookingId(now = Date.now(), entropy) {
     .toUpperCase()
     .slice(-4)
     .padStart(4, '0');
-  return `M9${stamp}${entropyToken(entropy)}`;
+  return `M10${stamp}${entropyToken(entropy)}`;
 }
 
 function validBookingId(value) {
-  return /^M[46789][A-Z0-9]{8}$/.test(String(value || '').trim());
+  return /^(?:M[46789][A-Z0-9]{8}|M10[A-Z0-9]{8})$/.test(String(value || '').trim());
 }
 
 function validTimestamp(value) {
@@ -249,16 +249,19 @@ function applyBookingAction(input = {}, action, { now = Date.now() } = {}) {
   };
 }
 
-function capability() {
+function capability({ durableServerPersistence = false } = {}) {
   return {
-    schemaVersion: 'v9',
-    resource: 'coordinated-booking-resource',
+    schemaVersion: 'v10',
+    resource: 'durable-booking-resource',
     authoritativeTransitions: true,
-    persistence: 'client-local',
+    persistence: durableServerPersistence ? 'server-durable' : 'client-local-fallback',
     recoverable: true,
-    recoveryScope: 'same-device',
-    durableServerPersistence: false,
-    recoveryMethod: 'PUT',
+    recoveryScope: durableServerPersistence ? 'booking-key' : 'same-device',
+    durableServerPersistence,
+    durableStorageProvider: 'vercel-blob-private',
+    durableStorageConfigured: durableServerPersistence,
+    recoveryCredential: durableServerPersistence ? 'booking-id-plus-recovery-key' : 'same-device-snapshot',
+    recoveryMethod: durableServerPersistence ? 'GET' : 'PUT',
     traceable: true,
     historyField: 'history',
     revisionField: 'revision',
@@ -271,8 +274,9 @@ function capability() {
     equalRevisionConflictPolicy: 'stored-snapshot-wins',
     crossBookingTieBreakPolicy: 'updated-at-then-booking-id',
     clearPropagation: true,
-    canonicalReadMethod: 'PUT',
-    bookingIdVersion: 'M9',
+    canonicalReadMethod: durableServerPersistence ? 'GET' : 'PUT',
+    serverConflictPolicy: durableServerPersistence ? 'revision-plus-etag-cas' : 'client-local-fallback',
+    bookingIdVersion: 'M10',
     bookingIdGeneration: 'timestamp-plus-entropy',
     actions: Object.keys(ACTION_TO_PHASE)
   };

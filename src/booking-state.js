@@ -52,7 +52,7 @@
 
   function createBookingId(now=Date.now(), entropy) {
     const stamp=Math.max(0,Number(now)||0).toString(36).toUpperCase().slice(-4).padStart(4,'0');
-    return 'M9'+stamp+entropyToken(entropy);
+    return 'M10'+stamp+entropyToken(entropy);
   }
 
   function createBookingState(input={}) {

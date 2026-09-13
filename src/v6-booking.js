@@ -1,4 +1,4 @@
-// v6 Pilot-ready Beta — best-effort server command sync layered over the stable v4 booking UI.
+// v6 Pilot-ready Beta sync layer, extended by v10 with durable recovery credentials.
 (function bootV6BookingSync(){
   function initV6BookingSync(){
     if(globalThis.MosigoV6BookingSync) return;
@@ -9,6 +9,7 @@
 
     const API='/api/bookings';
     const STORAGE_KEY='mosigo-v6-booking';
+    const ACCESS_PREFIX='mosigo-v10-recovery-key:';
     let remoteBooking=null;
     let queue=Promise.resolve();
     let syncStatus={ status:'idle', error:'' };
@@ -26,6 +27,29 @@
     function setStatus(status,error=''){
       syncStatus={ status, error:String(error||'') };
       publish();
+    }
+
+    function accessKeyName(bookingId){
+      return ACCESS_PREFIX+String(bookingId||'').trim();
+    }
+
+    function getRecoveryKey(bookingId=remoteBooking?.bookingId){
+      const id=String(bookingId||'').trim();
+      if(!id) return '';
+      try{return String(localStorage.getItem(accessKeyName(id))||'');}catch(error){return '';}
+    }
+
+    function setRecoveryKey(bookingId,recoveryKey){
+      const id=String(bookingId||'').trim();
+      const key=String(recoveryKey||'').trim();
+      if(!id || !key) return false;
+      try{localStorage.setItem(accessKeyName(id),key); return true;}catch(error){return false;}
+    }
+
+    function clearRecoveryKey(bookingId){
+      const id=String(bookingId||'').trim();
+      if(!id) return;
+      try{localStorage.removeItem(accessKeyName(id));}catch(error){}
     }
 
     function persistRemote(booking){
@@ -48,10 +72,12 @@
       }
     }
 
-    async function command(method,payload){
+    async function command(method,payload,recoveryKey=''){
+      const headers={ 'Content-Type':'application/json' };
+      if(recoveryKey) headers['X-Mosigo-Recovery-Key']=recoveryKey;
       const response=await fetch(API,{
         method,
-        headers:{ 'Content-Type':'application/json' },
+        headers,
         credentials:'same-origin',
         body:payload ? JSON.stringify(payload) : undefined
       });
@@ -66,7 +92,7 @@
     function enqueue(task){
       const run=()=>Promise.resolve().then(task).catch((error)=>{
         setStatus('fallback',error?.message||'booking sync failed');
-        console.warn('[Mosigo v6 booking sync]',error?.message||error);
+        console.warn('[Mosigo booking sync]',error?.message||error);
         return null;
       });
       queue=queue.then(run,run);
@@ -76,7 +102,11 @@
     async function createRemote(local){
       if(!local?.bookingId) return null;
       setStatus('syncing');
-      const data=await command('POST',{ booking:local });
+      const existingKey=getRecoveryKey(local.bookingId);
+      const data=existingKey
+        ? await command('PUT',{ booking:local, recoveryKey:existingKey },existingKey)
+        : await command('POST',{ booking:local });
+      if(data.recoveryKey) setRecoveryKey(data.booking?.bookingId||local.bookingId,data.recoveryKey);
       persistRemote(data.booking);
       return remoteBooking;
     }
@@ -84,7 +114,15 @@
     async function applyAction(action){
       if(!remoteBooking) return null;
       setStatus('syncing');
-      const data=await command('PATCH',{ action, booking:remoteBooking });
+      const recoveryKey=getRecoveryKey(remoteBooking.bookingId);
+      const data=await command('PATCH',{
+        action,
+        booking:remoteBooking,
+        bookingId:remoteBooking.bookingId,
+        expectedRevision:remoteBooking.revision,
+        recoveryKey
+      },recoveryKey);
+      if(data.recoveryKey) setRecoveryKey(data.booking?.bookingId,data.recoveryKey);
       persistRemote(data.booking);
       return remoteBooking;
     }
@@ -148,7 +186,9 @@
 
     const originalResetDemoState=resetDemoState;
     resetDemoState=function(){
+      const currentId=remoteBooking?.bookingId;
       persistRemote(null);
+      if(currentId) clearRecoveryKey(currentId);
       setStatus('idle');
       originalResetDemoState();
     };
@@ -157,14 +197,16 @@
       reconcile:()=>enqueue(()=>reconcileLocal(globalThis.v4BookingState)),
       hydrate,
       getState:()=>remoteBooking,
-      getStatus:()=>syncStatus
+      getStatus:()=>syncStatus,
+      getRecoveryKey,
+      setRecoveryKey,
+      clearRecoveryKey
     };
 
     if(globalThis.v4BookingState?.bookingId){
       enqueue(()=>reconcileLocal(globalThis.v4BookingState));
     }
 
-    // v7 adds same-device recovery on top of the stable v6 command sync contract.
     if(!document.querySelector('script[data-mosigo-v7-booking]')){
       const v7=document.createElement('script');
       v7.src='v7-booking.js';

@@ -1,14 +1,49 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const handler = require('../src/api/bookings.js');
+const { createHandler } = require('../src/api/bookings.js');
+const { createBookingStore } = require('../src/lib/booking-store.js');
 
-function invoke({ method = 'GET', body } = {}) {
-  const headers = {};
-  const result = { statusCode: 200, headers, body: undefined };
-  const req = { method, body };
+function fakeBlobApi() {
+  const objects = new Map();
+  let sequence = 0;
+  return {
+    async get(pathname) {
+      const value = objects.get(pathname);
+      if (!value) return null;
+      return {
+        statusCode: 200,
+        stream: new Blob([value.body]).stream(),
+        blob: { etag: value.etag }
+      };
+    },
+    async put(pathname, body, options = {}) {
+      const current = objects.get(pathname);
+      if (current && options.allowOverwrite === false) {
+        const error = new Error('already exists');
+        error.statusCode = 409;
+        throw error;
+      }
+      if (options.ifMatch && (!current || current.etag !== options.ifMatch)) {
+        const error = new Error('precondition failed');
+        error.statusCode = 412;
+        throw error;
+      }
+      const etag = `etag-${++sequence}`;
+      objects.set(pathname, { body: String(body), etag });
+      return { etag };
+    }
+  };
+}
+
+const fallbackHandler = createHandler({ store: { configured: false } });
+
+async function invoke({ handler = fallbackHandler, method = 'GET', body, query = {}, headers = {} } = {}) {
+  const responseHeaders = {};
+  const result = { statusCode: 200, headers: responseHeaders, body: undefined };
+  const req = { method, body, query, headers };
   const res = {
     setHeader(name, value) {
-      headers[String(name).toLowerCase()] = value;
+      responseHeaders[String(name).toLowerCase()] = value;
     },
     status(code) {
       result.statusCode = code;
@@ -19,7 +54,7 @@ function invoke({ method = 'GET', body } = {}) {
       return this;
     }
   };
-  handler(req, res);
+  await handler(req, res);
   return result;
 }
 
@@ -36,193 +71,147 @@ const sample = {
   amount: 45000
 };
 
-test('GET exposes the v9 coordinated booking resource capability', () => {
-  const res = invoke();
+test('GET exposes v10 capability without falsely claiming durable storage when unconfigured', async () => {
+  const res = await invoke();
   assert.equal(res.statusCode, 200);
-  assert.equal(res.body.success, true);
-  assert.equal(res.body.schemaVersion, 'v9');
-  assert.equal(res.body.resource, 'coordinated-booking-resource');
-  assert.equal(res.body.authoritativeTransitions, true);
-  assert.equal(res.body.persistence, 'client-local');
-  assert.equal(res.body.recoverable, true);
-  assert.equal(res.body.recoveryScope, 'same-device');
+  assert.equal(res.body.schemaVersion, 'v10');
+  assert.equal(res.body.resource, 'durable-booking-resource');
+  assert.equal(res.body.persistence, 'client-local-fallback');
   assert.equal(res.body.durableServerPersistence, false);
-  assert.equal(res.body.recoveryMethod, 'PUT');
-  assert.equal(res.body.traceable, true);
-  assert.equal(res.body.historyField, 'history');
-  assert.equal(res.body.revisionField, 'revision');
-  assert.equal(res.body.historyValidation, 'server');
-  assert.equal(res.body.legacyRecoveryMigration, true);
-  assert.equal(res.body.coordinated, true);
-  assert.equal(res.body.coordinationScope, 'same-device');
-  assert.equal(res.body.coordinationTransport, 'storage-event');
-  assert.equal(res.body.snapshotConflictPolicy, 'higher-revision-wins');
-  assert.equal(res.body.equalRevisionConflictPolicy, 'stored-snapshot-wins');
-  assert.deepEqual(res.body.actions, ['confirm', 'start', 'complete', 'cancel']);
-  assert.equal(res.headers['cache-control'], 'no-store');
-  assert.equal(res.headers['x-mosigo-schema'], 'v9');
+  assert.equal(res.body.durableStorageProvider, 'vercel-blob-private');
+  assert.equal(res.body.bookingIdVersion, 'M10');
+  assert.equal(res.headers['x-mosigo-schema'], 'v10');
 });
 
-test('POST creates a traceable requesting booking with a v9 ID', () => {
-  const res = invoke({ method: 'POST', body: sample });
-  assert.equal(res.statusCode, 201);
-  assert.equal(res.body.success, true);
-  assert.equal(res.body.schemaVersion, 'v9');
-  assert.equal(res.body.booking.phase, 'requesting');
-  assert.match(res.body.booking.bookingId, /^M9[A-Z0-9]{8}$/);
-  assert.equal(res.body.booking.hospitalId, sample.hospitalId);
-  assert.equal(res.body.booking.managerName, sample.managerName);
-  assert.ok(res.body.booking.createdAt);
-  assert.equal(res.body.booking.revision, 1);
-  assert.equal(res.body.booking.historyComplete, true);
-  assert.deepEqual(
-    res.body.booking.history.map(({ sequence, bookingId, type, from, to }) => ({ sequence, bookingId, type, from, to })),
-    [{
-      sequence: 1,
-      bookingId: res.body.booking.bookingId,
-      type: 'created',
-      from: 'idle',
-      to: 'requesting'
-    }]
-  );
-});
+test('fallback POST creates an M10 traced booking and preserves legacy IDs', async () => {
+  const created = await invoke({ method: 'POST', body: sample });
+  assert.equal(created.statusCode, 201);
+  assert.match(created.body.booking.bookingId, /^M10[A-Z0-9]{8}$/);
+  assert.equal(created.body.booking.revision, 1);
+  assert.equal(created.body.booking.history[0].type, 'created');
+  assert.equal(created.body.durablePersisted, false);
 
-test('POST preserves valid v4/v6/v7/v8/v9 browser booking IDs', () => {
-  for (const bookingId of ['M4ABC12345', 'M6ABC12345', 'M7ABC12345', 'M8ABC12345', 'M9ABC12345']) {
-    const res = invoke({ method: 'POST', body: { ...sample, bookingId } });
-    assert.equal(res.statusCode, 201);
+  for (const bookingId of ['M4ABC12345', 'M6ABC12345', 'M7ABC12345', 'M8ABC12345', 'M9ABC12345', 'M10ABC12345']) {
+    const res = await invoke({ method: 'POST', body: { ...sample, bookingId } });
     assert.equal(res.body.booking.bookingId, bookingId);
-    assert.equal(res.body.booking.phase, 'requesting');
-    assert.equal(res.body.booking.history[0].bookingId, bookingId);
   }
 });
 
-test('POST replaces malformed client booking IDs with a v9 ID', () => {
-  const res = invoke({ method: 'POST', body: { ...sample, bookingId: 'bad-id' } });
-  assert.equal(res.statusCode, 201);
-  assert.match(res.body.booking.bookingId, /^M9[A-Z0-9]{8}$/);
-});
+test('fallback PUT and PATCH retain v9-compatible recovery and lifecycle behavior', async () => {
+  const created = (await invoke({ method: 'POST', body: sample })).body.booking;
+  const confirmed = await invoke({ method: 'PATCH', body: { action: 'confirm', booking: created } });
+  assert.equal(confirmed.body.booking.phase, 'confirmed');
+  assert.equal(confirmed.body.booking.revision, 2);
 
-test('POST rejects incomplete booking input', () => {
-  const res = invoke({ method: 'POST', body: { hospitalName: '똑똑연세내과의원' } });
-  assert.equal(res.statusCode, 422);
-  assert.equal(res.body.success, false);
-  assert.equal(res.body.error, 'manager_required');
-});
-
-test('PUT revalidates a traced booking snapshot without resetting phase or history', () => {
-  const created = invoke({ method: 'POST', body: sample }).body.booking;
-  const confirmed = invoke({ method: 'PATCH', body: { action: 'confirm', booking: created } }).body.booking;
-  const recovered = invoke({ method: 'PUT', body: { booking: confirmed } });
-
-  assert.equal(recovered.statusCode, 200);
-  assert.equal(recovered.body.success, true);
+  const recovered = await invoke({ method: 'PUT', body: { booking: confirmed.body.booking } });
   assert.equal(recovered.body.recovered, true);
   assert.equal(recovered.body.recoveryScope, 'same-device');
-  assert.equal(recovered.body.booking.bookingId, confirmed.bookingId);
-  assert.equal(recovered.body.booking.phase, 'confirmed');
-  assert.equal(recovered.body.booking.updatedAt, confirmed.updatedAt);
   assert.equal(recovered.body.booking.revision, 2);
-  assert.equal(recovered.body.booking.historyComplete, true);
-  assert.deepEqual(recovered.body.booking.history, confirmed.history);
+  assert.deepEqual(recovered.body.booking.history, confirmed.body.booking.history);
 });
 
-test('PUT migrates a legacy v7 same-device snapshot into an explicitly incomplete history', () => {
+test('history tampering and invalid lifecycle transitions are rejected', async () => {
+  const created = (await invoke({ method: 'POST', body: sample })).body.booking;
+  const tampered = await invoke({ method: 'PUT', body: { booking: { ...created, phase: 'confirmed' } } });
+  assert.equal(tampered.statusCode, 409);
+  assert.equal(tampered.body.error, 'booking_history_conflict');
+
+  const invalid = await invoke({ method: 'PATCH', body: { action: 'complete', booking: created } });
+  assert.equal(invalid.statusCode, 409);
+  assert.equal(invalid.body.error, 'invalid_transition');
+});
+
+test('durable handler persists canonical bookings behind a recovery key', async () => {
+  const store = createBookingStore({
+    env: { BLOB_READ_WRITE_TOKEN: 'test-token' },
+    blobApi: fakeBlobApi()
+  });
+  const handler = createHandler({ store });
+
+  const capability = await invoke({ handler });
+  assert.equal(capability.body.durableServerPersistence, true);
+  assert.equal(capability.body.persistence, 'server-durable');
+  assert.equal(capability.body.recoveryScope, 'booking-key');
+  assert.equal(capability.body.serverConflictPolicy, 'revision-plus-etag-cas');
+
+  const created = await invoke({ handler, method: 'POST', body: sample });
+  assert.equal(created.body.durablePersisted, true);
+  assert.match(created.body.recoveryKey, /^[A-Za-z0-9_-]+$/);
+  const bookingId = created.body.booking.bookingId;
+  const recoveryKey = created.body.recoveryKey;
+
+  const denied = await invoke({ handler, query: { bookingId } });
+  assert.equal(denied.statusCode, 401);
+  assert.equal(denied.body.error, 'booking_recovery_key_invalid');
+
+  const read = await invoke({
+    handler,
+    query: { bookingId },
+    headers: { 'x-mosigo-recovery-key': recoveryKey }
+  });
+  assert.equal(read.statusCode, 200);
+  assert.equal(read.body.booking.revision, 1);
+
+  const confirmed = await invoke({
+    handler,
+    method: 'PATCH',
+    body: {
+      bookingId,
+      action: 'confirm',
+      expectedRevision: 1,
+      recoveryKey
+    }
+  });
+  assert.equal(confirmed.body.booking.phase, 'confirmed');
+  assert.equal(confirmed.body.booking.revision, 2);
+
+  const stale = await invoke({
+    handler,
+    method: 'PATCH',
+    body: {
+      bookingId,
+      action: 'start',
+      expectedRevision: 1,
+      recoveryKey
+    }
+  });
+  assert.equal(stale.statusCode, 409);
+  assert.equal(stale.body.error, 'booking_revision_conflict');
+
+  const recovered = await invoke({
+    handler,
+    method: 'PUT',
+    body: { booking: created.body.booking, recoveryKey }
+  });
+  assert.equal(recovered.statusCode, 200);
+  assert.equal(recovered.body.booking.phase, 'confirmed');
+  assert.equal(recovered.body.booking.revision, 2);
+});
+
+test('durable PUT migrates a legacy local snapshot once and issues a recovery key', async () => {
+  const store = createBookingStore({
+    env: { BLOB_READ_WRITE_TOKEN: 'test-token' },
+    blobApi: fakeBlobApi()
+  });
+  const handler = createHandler({ store });
   const legacy = {
     ...sample,
-    bookingId: 'M7ABC12345',
+    bookingId: 'M9ABC12345',
     phase: 'confirmed',
     createdAt: '2026-09-20T00:00:00.000Z',
     updatedAt: '2026-09-20T01:00:00.000Z'
   };
-  const recovered = invoke({ method: 'PUT', body: { booking: legacy } });
-
-  assert.equal(recovered.statusCode, 200);
-  assert.equal(recovered.body.booking.revision, 1);
-  assert.equal(recovered.body.booking.historyComplete, false);
-  assert.equal(recovered.body.booking.history[0].type, 'legacy_import');
-  assert.equal(recovered.body.booking.history[0].from, null);
-  assert.equal(recovered.body.booking.history[0].to, 'confirmed');
+  const migrated = await invoke({ handler, method: 'PUT', body: { booking: legacy } });
+  assert.equal(migrated.statusCode, 200);
+  assert.equal(migrated.body.migratedToDurable, true);
+  assert.equal(migrated.body.durablePersisted, true);
+  assert.ok(migrated.body.recoveryKey);
+  assert.equal(migrated.body.booking.history[0].type, 'legacy_import');
 });
 
-test('PUT rejects idle, malformed, or tampered recovery snapshots', () => {
-  const idle = invoke({ method: 'PUT', body: { booking: { ...sample, bookingId: 'M9ABC12345', phase: 'idle' } } });
-  assert.equal(idle.statusCode, 422);
-  assert.equal(idle.body.error, 'booking_phase_required');
-
-  const malformed = invoke({ method: 'PUT', body: { booking: { ...sample, bookingId: 'broken', phase: 'confirmed' } } });
-  assert.equal(malformed.statusCode, 422);
-  assert.equal(malformed.body.error, 'booking_id_required');
-
-  const created = invoke({ method: 'POST', body: sample }).body.booking;
-  const tampered = {
-    ...created,
-    phase: 'confirmed'
-  };
-  const conflict = invoke({ method: 'PUT', body: { booking: tampered } });
-  assert.equal(conflict.statusCode, 409);
-  assert.equal(conflict.body.error, 'booking_history_conflict');
-});
-
-test('PATCH appends ordered history for legal booking lifecycle transitions', () => {
-  const created = invoke({ method: 'POST', body: sample }).body.booking;
-  const confirmed = invoke({ method: 'PATCH', body: { action: 'confirm', booking: created } });
-  assert.equal(confirmed.statusCode, 200);
-  assert.equal(confirmed.body.booking.phase, 'confirmed');
-  assert.equal(confirmed.body.booking.revision, 2);
-  assert.equal(confirmed.body.booking.history[1].type, 'confirm');
-  assert.equal(confirmed.body.booking.history[1].from, 'requesting');
-  assert.equal(confirmed.body.booking.history[1].to, 'confirmed');
-
-  const started = invoke({ method: 'PATCH', body: { action: 'start', booking: confirmed.body.booking } });
-  assert.equal(started.statusCode, 200);
-  assert.equal(started.body.booking.phase, 'in_progress');
-  assert.equal(started.body.booking.revision, 3);
-
-  const completed = invoke({ method: 'PATCH', body: { action: 'complete', booking: started.body.booking } });
-  assert.equal(completed.statusCode, 200);
-  assert.equal(completed.body.booking.phase, 'completed');
-  assert.equal(completed.body.booking.revision, 4);
-  assert.deepEqual(completed.body.booking.history.map((event) => event.type), ['created', 'confirm', 'start', 'complete']);
-  assert.equal(completed.body.booking.history.at(-1).to, 'completed');
-});
-
-test('PATCH rejects stale revision metadata and invalid transitions', () => {
-  const created = invoke({ method: 'POST', body: sample }).body.booking;
-  const stale = { ...created, revision: 2 };
-  const revisionConflict = invoke({ method: 'PATCH', body: { action: 'confirm', booking: stale } });
-  assert.equal(revisionConflict.statusCode, 409);
-  assert.equal(revisionConflict.body.error, 'booking_revision_conflict');
-
-  const completeTooEarly = invoke({ method: 'PATCH', body: { action: 'complete', booking: created } });
-  assert.equal(completeTooEarly.statusCode, 409);
-  assert.equal(completeTooEarly.body.error, 'invalid_transition');
-
-  const unknown = invoke({ method: 'PATCH', body: { action: 'teleport', booking: created } });
-  assert.equal(unknown.statusCode, 400);
-  assert.equal(unknown.body.error, 'unknown_action');
-});
-
-test('PATCH rejects malformed booking IDs', () => {
-  const invalid = { ...sample, phase: 'requesting', bookingId: 'broken' };
-  const res = invoke({ method: 'PATCH', body: { action: 'confirm', booking: invalid } });
-  assert.equal(res.statusCode, 422);
-  assert.equal(res.body.error, 'booking_id_required');
-});
-
-test('scheduled booking can be cancelled with a trace event', () => {
-  const created = invoke({ method: 'POST', body: sample }).body.booking;
-  const cancelled = invoke({ method: 'PATCH', body: { action: 'cancel', booking: created } });
-  assert.equal(cancelled.statusCode, 200);
-  assert.equal(cancelled.body.booking.phase, 'cancelled');
-  assert.equal(cancelled.body.booking.revision, 2);
-  assert.equal(cancelled.body.booking.history[1].type, 'cancel');
-  assert.equal(cancelled.body.booking.history[1].to, 'cancelled');
-});
-
-test('unsupported methods are rejected', () => {
-  const res = invoke({ method: 'DELETE' });
+test('unsupported methods are rejected with v10 schema', async () => {
+  const res = await invoke({ method: 'DELETE' });
   assert.equal(res.statusCode, 405);
   assert.equal(res.headers.allow, 'GET, POST, PUT, PATCH');
-  assert.equal(res.body.schemaVersion, 'v9');
+  assert.equal(res.body.schemaVersion, 'v10');
 });

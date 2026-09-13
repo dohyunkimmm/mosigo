@@ -113,16 +113,20 @@
     }
 
     async function validateSnapshot(snapshot){
+      const recoveryKey=sync.getRecoveryKey?.(snapshot?.bookingId)||'';
+      const headers={ 'Content-Type':'application/json' };
+      if(recoveryKey) headers['X-Mosigo-Recovery-Key']=recoveryKey;
       const response=await fetch(API,{
         method:'PUT',
-        headers:{ 'Content-Type':'application/json' },
+        headers,
         credentials:'same-origin',
-        body:JSON.stringify({ booking:snapshot })
+        body:JSON.stringify({ booking:snapshot, recoveryKey })
       });
       const data=await response.json().catch(()=>null);
       if(!response.ok || !data?.success || !data?.recovered){
         throw new Error(data?.message || data?.error || ('HTTP '+response.status));
       }
+      if(data.recoveryKey && data.booking?.bookingId) sync.setRecoveryKey?.(data.booking.bookingId,data.recoveryKey);
       return data.booking;
     }
 
@@ -183,7 +187,6 @@
       publish('empty');
     }
 
-    // v8 adds validated lifecycle history on top of the recoverable v7 booking resource.
     if(!document.querySelector('script[data-mosigo-v8-booking]')){
       const v8=document.createElement('script');
       v8.src='v8-booking.js';

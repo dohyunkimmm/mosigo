@@ -1,4 +1,4 @@
-// v9 Coordinated Booking Beta — keeps same-device tabs aligned without claiming durable server state.
+// v9 Coordinated Booking Beta — keeps same-device tabs aligned; v10 layers durable server recovery on top.
 (function bootV9BookingCoordination(){
   function initV9BookingCoordination(){
     const sync=globalThis.MosigoV6BookingSync;
@@ -13,13 +13,7 @@
     const LATEST_KEY='mosigo-v7-booking-latest';
     const PREFIX='mosigo-v7-booking:';
     let queue=Promise.resolve();
-    let coordinationState={
-      status:'idle',
-      bookingId:'',
-      revision:0,
-      source:'',
-      conflict:''
-    };
+    let coordinationState={ status:'idle', bookingId:'', revision:0, source:'', conflict:'' };
 
     function revisionOf(booking){
       const revision=Number(booking?.revision);
@@ -59,13 +53,11 @@
     function compareStoredToCurrent(snapshot,current){
       if(!snapshot?.bookingId) return -1;
       if(!current?.bookingId) return 1;
-
       if(snapshot.bookingId===current.bookingId){
         const revisionDiff=revisionOf(snapshot)-revisionOf(current);
         if(revisionDiff!==0) return revisionDiff>0 ? 1 : -1;
         return serialize(snapshot)===serialize(current) ? 0 : 1;
       }
-
       const timestampDiff=updatedAtOf(snapshot)-updatedAtOf(current);
       if(timestampDiff!==0) return timestampDiff>0 ? 1 : -1;
       const bookingIdDiff=String(snapshot.bookingId).localeCompare(String(current.bookingId));
@@ -80,13 +72,7 @@
     }
 
     function equalRevisionDivergence(snapshot,current){
-      return Boolean(
-        snapshot?.bookingId &&
-        current?.bookingId &&
-        snapshot.bookingId===current.bookingId &&
-        revisionOf(snapshot)===revisionOf(current) &&
-        serialize(snapshot)!==serialize(current)
-      );
+      return Boolean(snapshot?.bookingId && current?.bookingId && snapshot.bookingId===current.bookingId && revisionOf(snapshot)===revisionOf(current) && serialize(snapshot)!==serialize(current));
     }
 
     async function revalidateStored(bookingId,source='canonical',conflict=''){
@@ -97,7 +83,6 @@
         publish('missing-snapshot',sync.getState(),source,'Stored booking snapshot is missing.');
         return null;
       }
-
       publish('coordinating',snapshot,source,conflict);
       const booking=await recovery.recover(id);
       if(booking){
@@ -121,7 +106,6 @@
         publish('current',current,source);
         return current;
       }
-
       const conflict=equalRevisionDivergence(snapshot,current) ? 'equal-revision-divergence' : '';
       return revalidateStored(id,source,conflict);
     }
@@ -136,7 +120,6 @@
     async function reconcileRemoval(removedId,source){
       const latestId=String(recovery.getLatestId()||'').trim();
       if(latestId && latestId!==removedId) return adoptStored(latestId,source);
-
       const current=sync.getState();
       if(!current?.bookingId){
         publish(source.includes('clear')?'cleared':'idle',null,source);
@@ -149,23 +132,17 @@
 
     function handleStorage(event){
       if(event.storageArea && event.storageArea!==localStorage) return;
-
       if(event.key===LATEST_KEY){
-        if(event.newValue){
-          enqueue(()=>adoptStored(event.newValue,'latest-key'));
-        }else{
-          enqueue(()=>reconcileRemoval(String(event.oldValue||'').trim(),'latest-clear'));
-        }
+        if(event.newValue) enqueue(()=>adoptStored(event.newValue,'latest-key'));
+        else enqueue(()=>reconcileRemoval(String(event.oldValue||'').trim(),'latest-clear'));
         return;
       }
-
       if(!event.key?.startsWith(PREFIX)) return;
       const keyBookingId=event.key.slice(PREFIX.length);
       if(!event.newValue){
         enqueue(()=>reconcileRemoval(keyBookingId,'snapshot-clear'));
         return;
       }
-
       try{
         const snapshot=JSON.parse(event.newValue);
         if(!snapshot || typeof snapshot!=='object' || !snapshot.bookingId || snapshot.bookingId!==keyBookingId){
@@ -206,6 +183,14 @@
       else publish(current?.bookingId?'current':'idle',current,'startup');
     }else{
       publish(current?.bookingId?'current':'idle',current,'startup');
+    }
+
+    if(typeof document!=='undefined' && !document.querySelector('script[data-mosigo-v10-booking]')){
+      const v10=document.createElement('script');
+      v10.src='v10-booking.js';
+      v10.async=false;
+      v10.dataset.mosigoV10Booking='1';
+      document.head.appendChild(v10);
     }
   }
 
