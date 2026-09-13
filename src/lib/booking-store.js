@@ -1,5 +1,7 @@
 const { createHash, randomBytes, timingSafeEqual } = require('node:crypto');
 
+const DEFAULT_BLOB_STORE_ID = 'store_eZ1r1Ofm1v8N0Ahj';
+
 class BookingStoreError extends Error {
   constructor(code, message, status = 500) {
     super(message);
@@ -9,10 +11,14 @@ class BookingStoreError extends Error {
   }
 }
 
+function resolveBlobStoreId(env = process.env) {
+  return String(env.MOSIGO_BLOB_STORE_ID || DEFAULT_BLOB_STORE_ID).trim();
+}
+
 function isConfigured(env = process.env) {
   if (String(env.MOSIGO_DISABLE_DURABLE_STORE || '') === '1') return false;
   if (env.BLOB_READ_WRITE_TOKEN) return true;
-  return Boolean(env.VERCEL_OIDC_TOKEN && env.MOSIGO_BLOB_STORE_ID);
+  return Boolean(env.VERCEL_OIDC_TOKEN && resolveBlobStoreId(env));
 }
 
 function bookingPath(bookingId) {
@@ -46,6 +52,7 @@ function isConflictError(error) {
 
 function createBookingStore({ env = process.env, blobApi = null, now = () => Date.now() } = {}) {
   const configured = isConfigured(env);
+  const storeId = resolveBlobStoreId(env);
   let loadedBlobApi = blobApi;
 
   async function getBlobApi() {
@@ -56,10 +63,10 @@ function createBookingStore({ env = process.env, blobApi = null, now = () => Dat
 
   function authOptions() {
     if (env.BLOB_READ_WRITE_TOKEN) return { token: env.BLOB_READ_WRITE_TOKEN };
-    if (env.VERCEL_OIDC_TOKEN && env.MOSIGO_BLOB_STORE_ID) {
+    if (env.VERCEL_OIDC_TOKEN && storeId) {
       return {
         oidcToken: env.VERCEL_OIDC_TOKEN,
-        storeId: env.MOSIGO_BLOB_STORE_ID
+        storeId
       };
     }
     return {};
@@ -157,6 +164,7 @@ function createBookingStore({ env = process.env, blobApi = null, now = () => Dat
   return {
     configured,
     provider: 'vercel-blob-private',
+    storeId,
     create,
     read,
     update
@@ -165,10 +173,12 @@ function createBookingStore({ env = process.env, blobApi = null, now = () => Dat
 
 module.exports = {
   BookingStoreError,
+  DEFAULT_BLOB_STORE_ID,
   bookingPath,
   createBookingStore,
   createRecoveryKey,
   hashRecoveryKey,
   isConfigured,
-  recoveryKeyMatches
+  recoveryKeyMatches,
+  resolveBlobStoreId
 };

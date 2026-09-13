@@ -2,9 +2,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   BookingStoreError,
+  DEFAULT_BLOB_STORE_ID,
   createBookingStore,
   createRecoveryKey,
-  recoveryKeyMatches
+  recoveryKeyMatches,
+  resolveBlobStoreId
 } = require('../src/lib/booking-store.js');
 
 function fakeBlobApi() {
@@ -51,6 +53,14 @@ test('durable booking store is disabled without Blob credentials', () => {
   const store = createBookingStore({ env: {} });
   assert.equal(store.configured, false);
   assert.equal(store.provider, 'vercel-blob-private');
+  assert.equal(store.storeId, DEFAULT_BLOB_STORE_ID);
+});
+
+test('Vercel OIDC uses the project Blob store by default with env override support', () => {
+  const oidc = createBookingStore({ env: { VERCEL_OIDC_TOKEN: 'oidc-token' } });
+  assert.equal(oidc.configured, true);
+  assert.equal(oidc.storeId, DEFAULT_BLOB_STORE_ID);
+  assert.equal(resolveBlobStoreId({ MOSIGO_BLOB_STORE_ID: 'store_override' }), 'store_override');
 });
 
 test('durable store creates private canonical records without storing the raw recovery key', async () => {
