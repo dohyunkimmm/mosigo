@@ -41,6 +41,18 @@
       setTimeout(()=>input?.focus?.(),50);
     }
 
+    let lastPresentedBookingId='';
+
+    function presentRecoveredBooking(detail={}){
+      const bookingId=String(detail.bookingId||'').trim();
+      if(detail.status!=='recovered' || !bookingId || bookingId===lastPresentedBookingId) return;
+      lastPresentedBookingId=bookingId;
+      close();
+      try{ globalThis.showToast?.('예약을 이어서 불러왔습니다'); }catch(error){}
+      if(typeof globalThis.goTo==='function') globalThis.goTo('s-order');
+      else if(typeof globalThis.go==='function') globalThis.go('s-order');
+    }
+
     async function submit(){
       const error=getError();
       const fragment=normalizeInput(getInput()?.value||'');
@@ -55,9 +67,6 @@
         return null;
       }
       close();
-      try{ globalThis.showToast?.('예약을 이어서 불러왔습니다'); }catch(error){}
-      if(typeof globalThis.goTo==='function') globalThis.goTo('s-order');
-      else if(typeof globalThis.go==='function') globalThis.go('s-order');
       return booking;
     }
 
@@ -109,6 +118,11 @@
         landing.appendChild(button);
       }
     }
+
+    try{
+      window.addEventListener('mosigo:booking-handoff',(event)=>presentRecoveredBooking(event?.detail||{}));
+    }catch(error){}
+    presentRecoveredBooking(handoff.getState?.()||{});
 
     globalThis.MosigoV11PortableRecoveryUi={ open, close, submit };
   }
