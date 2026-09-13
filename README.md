@@ -92,7 +92,7 @@ v5는 v4의 기능 흐름을 유지하면서 공개 데모의 운영 신뢰도�
 - MP4 전체/개별 용량 budget, 접근성, lazy extension surface를 자동 regression QA에 포함했습니다.
 - `VERSION`, `package.json`, README, CHANGELOG의 안정 버전 일치 여부를 자동 검사합니다.
 - `main` Quality 이후 실제 Production을 기다려 public surface를 재검증하는 `Production Smoke` workflow를 추가했습니다.
-- Vercel Git 자동 배포는 verified `main`에만 허용해 feature/PR branch가 배포 quota를 소모하지 않도록 했습니다.
+- GitHub-verified `main`을 Production 기준으로 삼고, PR/main Quality와 post-deploy Production Smoke로 변경 전후를 검증합니다.
 
 v4에서 구축한 병원 검색 상태, API fallback/retry, booking state machine, 세션 복원과 v3의 구조 분리/공통 품질 게이트는 그대로 유지됩니다.
 
@@ -123,7 +123,7 @@ v4는 검색과 예약을 명시적인 데이터·상태 기반으로 확장한 
 ├── .github/workflows/
 │   ├── quality.yml              # PR/main 자동 품질 게이트
 │   ├── production-smoke.yml     # main QA 뒤 실제 Production smoke 검증
-│   └── release.yml              # 최종 QA 후 수동 Tag/Release 발행
+│   └── release.yml              # Production Smoke 성공 후 자동 Tag/Release 발행
 ├── scripts/
 │   ├── source-audit.js          # index 구조·asset 크기 감사
 │   └── production-smoke.js      # 공개 Production runtime smoke runner
@@ -175,7 +175,7 @@ v4는 검색과 예약을 명시적인 데이터·상태 기반으로 확장한 
 - **Vercel Root Directory:** `src`
 - **Production URL:** https://mosigo-nine.vercel.app/
 
-GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩니다. Vercel Git 자동 배포는 `main`에만 허용하고 feature/PR branch는 GitHub Quality로 검증해 불필요한 Preview build를 만들지 않습니다.
+GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩니다. PR과 `main` 변경은 GitHub Quality로 검증하고, `main` 반영 후 Production Smoke가 실제 공개 runtime을 확인합니다.
 
 저장소 루트의 테스트·문서·audit 파일은 Vercel Root Directory(`src`) 밖에 있어 앱 런타임에 영향을 주지 않습니다.
 
@@ -194,7 +194,7 @@ npm run quality
 - 예약 상태의 정상/비정상 전이, 직렬화와 복원
 - v9 booking resource API의 필수값 검증, M4/M6/M7/M8/M9 ID 호환, 합법/비합법 전이, PUT recovery, revision/history integrity와 coordination capability
 - v4 runtime hydration, v6 booking sync event, v7 localStorage recovery, v8 trace facade, v9 same-device coordination asset 존재·실행 순서·JavaScript syntax
-- health endpoint, crawler discovery 파일, Vercel Production 보안 헤더와 main-only 배포 정책
+- health endpoint, crawler discovery 파일, Vercel Production 설정과 보안 헤더
 - 키보드 focus, reduced-motion, lazy extension iframe과 MP4 footprint budget
 - `VERSION` / package / README / CHANGELOG stable-version 일치
 - 필수 페이지/API/data/lib/Vercel 설정 및 runtime 파일 존재 여부
@@ -209,7 +209,7 @@ npm run quality
 
 ## Release
 
-GitHub Release는 `.github/workflows/release.yml`을 통해 최종 QA 이후에만 수동 발행합니다. Release workflow는 `main`에서 `npm run quality`를 다시 실행하고 `VERSION` 값을 읽어 동일 버전 Release가 없는지 확인한 뒤 Git tag와 GitHub Release를 함께 생성합니다.
+GitHub Release는 `main`의 Production Smoke가 성공한 뒤 `.github/workflows/release.yml`을 통해 자동 발행됩니다. Release workflow는 검증된 `main` commit에서 `npm run quality`를 다시 실행하고 `VERSION` 값을 읽어 동일 버전의 중복 발행을 방지한 뒤 Git tag와 GitHub Release를 생성합니다.
 
 저장소 전체 Actions 기본 권한은 read-only로 유지하며, Release workflow에만 `contents: write` 권한을 제한적으로 부여합니다.
 
@@ -226,7 +226,7 @@ python -m http.server 8000
 
 ## 버전 전략
 
-Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → README/CHANGELOG/VERSION sync → Tag/Release → Notion sync` 흐름으로 마감하며, 변경 내용은 `CHANGELOG.md`에 누적합니다.
+Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → README/CHANGELOG/VERSION sync → 자동 Tag/Release → Notion sync` 흐름으로 마감하며, 변경 내용은 `CHANGELOG.md`에 누적합니다.
 
 ## 상태
 
@@ -238,7 +238,7 @@ Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 �
 - `v7.0.0` — same-device booking snapshot 복구와 서버 재검증을 추가한 Recoverable Booking Beta 완료
 - `v8.0.0` — booking revision·server-validated lifecycle history를 추가한 Traceable Booking Beta 완료
 - `v9.0.0` — same-device multi-tab booking coordination과 deterministic conflict handling을 추가한 Coordinated Booking Beta 완료
-- verified `main` 전용 Vercel 배포 정책 및 공개 Production readiness 검증 적용
-- PR/main/Release 공통 `npm run quality`와 post-deploy Production Smoke 적용
+- GitHub-verified `main` 기반 Vercel Production 배포 및 공개 runtime readiness 검증 적용
+- PR/main/Release 공통 `npm run quality`, post-deploy Production Smoke, 자동 Release 적용
 
 마지막 문서 동기화: 2026-09-13
