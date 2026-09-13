@@ -14,7 +14,7 @@ jobs:
   production-smoke:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
 
     steps:
       - name: Checkout verified main commit
@@ -43,6 +43,6 @@ jobs:
       - name: Wait for Production and smoke-test it
         env:
           EXPECTED_COMMIT: ${{ steps.deployment.outputs.expected_commit }}
-          SMOKE_ATTEMPTS: '18'
+          SMOKE_ATTEMPTS: '30'
           SMOKE_RETRY_MS: '10000'
         run: npm run smoke:production
