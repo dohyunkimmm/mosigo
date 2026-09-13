@@ -39,7 +39,7 @@ test('Vercel config applies low-risk production security headers', () => {
 test('Vercel Git deployment policy spends builds on verified main only', () => {
   const config = JSON.parse(read('vercel.json'));
   assert.deepEqual(config.git?.deploymentEnabled, {
-    '*': false,
+    '**': false,
     main: true
   });
 });
