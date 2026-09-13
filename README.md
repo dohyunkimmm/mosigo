@@ -2,7 +2,7 @@
 
 자녀가 부모님의 병원 이용을 대신 준비하고, 병원 탐색부터 동행 매니저 매칭·동의/결제·실시간 동행·건강 리포트·재예약까지 이어지는 흐름을 검증하기 위한 인터랙티브 병원동행 서비스 프로토타입입니다.
 
-- **Current stable version:** `v8.0.0`
+- **Current stable version:** `v9.0.0`
 - **Live Demo:** https://mosigo-nine.vercel.app/
 
 ## 프로젝트 개요
@@ -26,8 +26,22 @@
 - 서버 검증 기반 예약 lifecycle command API
 - 동일 기기에서 예약 ID 기반으로 복구 가능한 local booking snapshot
 - 서버 검증을 거치는 booking revision·lifecycle history trace
+- 동일 기기 탭 간 최신 booking snapshot coordination 및 conflict recovery
 
-> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v8의 booking history도 제출된 booking resource 내부의 정합성을 검증하는 trace이며, 실제 DB 기반 영속 저장·계정 인증·cross-device 복구·변조 불가능한 audit log를 제공하지 않습니다.
+> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v9은 같은 기기 내 탭 간 booking snapshot을 revision과 storage event로 조정하지만 persistence는 여전히 `client-local`, recovery/coordination 범위는 `same-device`입니다. 실제 DB 기반 영속 저장·계정 인증·cross-device 동기화·변조 불가능한 audit log를 제공하지 않습니다.
+
+## v9 동기화 기반
+
+v9은 v8의 traceable booking resource와 v7의 same-device recovery를 유지하면서 여러 탭에서 예약 상태가 엇갈리지 않도록 조정하는 **Coordinated Booking Beta** 버전입니다.
+
+- `/api/bookings`를 v9 `coordinated-booking-resource` 계약으로 확장하고 `coordinated: true`, `coordinationScope: same-device`, `coordinationTransport: storage-event`를 명시했습니다.
+- 동일 booking에서는 더 높은 `revision`을 우선하고, 같은 revision인데 내용이 다르면 `stored-snapshot-wins` 정책으로 localStorage에 이미 저장된 snapshot을 서버 `PUT` 재검증한 뒤 hydrate합니다.
+- 서로 다른 booking의 `updatedAt`이 같은 경우 booking ID를 deterministic tie-break로 사용해 탭마다 다른 latest booking을 선택하는 상황을 막았습니다.
+- snapshot 또는 latest-key 삭제도 다른 탭으로 전파해 오래된 예약 UI가 남지 않도록 했고, malformed JSON이나 key/bookingId 불일치는 `invalid-snapshot` 상태로 노출합니다.
+- `MosigoV9BookingCoordination.getSnapshot()`은 local snapshot을 동기적으로 읽고, `getCanonical()`은 같은 snapshot을 `/api/bookings`의 `PUT` 경로로 재검증하는 async canonical read로 분리했습니다.
+- 브라우저와 서버의 신규 booking ID 생성은 M9 형식을 사용하며 timestamp material + entropy 조합으로 같은 millisecond 생성 충돌 가능성을 낮췄습니다. 기존 M4/M6/M7/M8/M9 ID는 계속 수용합니다.
+- `v9-coordination.test.js`에서 higher revision, equal-revision divergence, same-timestamp tie-break, clear propagation, malformed snapshot, canonical revalidation을 실제 multi-tab storage event 형태로 검증합니다.
+- 앱 소스 Production은 GitHub-verified `main` commit `ec9e73e57c51ec2e56821dbdff0ecdd6dbc7ca7a`의 Vercel deployment `dpl_9YTYKh3KebYBPc6QwGEQVAdCwpjn`이며 Quality #60과 Production Smoke #31을 통과했습니다.
 
 ## v8 고도화
 
@@ -115,13 +129,15 @@ v4는 검색과 예약을 명시적인 데이터·상태 기반으로 확장한 
 │   └── production-smoke.js      # 공개 Production runtime smoke runner
 ├── tests/
 │   ├── booking-state.test.js    # 예약 상태 전이·복원 검증
-│   ├── bookings.test.js         # v8 booking trace·recovery 계약 검증
+│   ├── bookings.test.js         # v9 booking resource·trace·recovery 계약 검증
 │   ├── health.test.js           # health endpoint 계약 검증
 │   ├── hospital-query.test.js   # 병원 검색·필터·정렬 단위 검증
 │   ├── hospitals.test.js        # 병원 API 계약·v4 metadata 검증
 │   ├── product-readiness.test.js
 │   ├── production-readiness.test.js
 │   ├── static-site.test.js      # 정적 구조·asset·JS 검증
+│   ├── v9-coordination.test.js  # same-device multi-tab coordination 동작 검증
+│   ├── v9-hardening.test.js     # v9 capability·M9 ID hardening 검증
 │   └── version-consistency.test.js
 ├── CHANGELOG.md                 # 버전별 누적 변경 기록
 ├── VERSION                      # 현재 안정 버전
@@ -137,15 +153,16 @@ v4는 검색과 예약을 명시적인 데이터·상태 기반으로 확장한 
     ├── v6-booking.js            # booking command API 동기화·event 레이어
     ├── v7-booking.js            # same-device booking snapshot·recovery 레이어
     ├── v8-booking.js            # booking revision·history trace facade
+    ├── v9-booking.js            # same-device tab coordination·canonical revalidation facade
     ├── data/
     │   └── hospitals.js         # 프로토타입 병원 데이터
     ├── lib/
     │   ├── hospital-query.js    # 병원 검색/필터/정렬 로직
-    │   └── booking-service.js   # v8 예약 검증·복구·history·서버 전이 서비스
+    │   └── booking-service.js   # v9 예약 검증·history·recovery·coordination capability 서비스
     ├── api/
     │   ├── health.js            # Production readiness/commit 확인
     │   ├── hospitals.js         # 병원 데이터 API handler
-    │   └── bookings.js          # v8 traceable booking resource API handler
+    │   └── bookings.js          # v9 coordinated booking resource API handler
     ├── robots.txt
     ├── sitemap.xml
     ├── vercel.json
@@ -175,8 +192,8 @@ npm run quality
 - 병원 API 기본 응답, 진료과·이름·전문 분야 검색, 결과 수 제한, HTTP method 처리
 - v4 병원 API의 매니저/당일접수 필터, 추천·평점·대기시간 정렬, query metadata와 schema marker
 - 예약 상태의 정상/비정상 전이, 직렬화와 복원
-- v8 booking resource API의 필수값 검증, M4/M6/M7/M8 ID 호환, 합법/비합법 전이, PUT recovery, revision/history integrity와 오류 계약
-- v4 runtime hydration, v6 booking sync event, v7 localStorage recovery, v8 trace facade asset 존재·실행 순서·JavaScript syntax
+- v9 booking resource API의 필수값 검증, M4/M6/M7/M8/M9 ID 호환, 합법/비합법 전이, PUT recovery, revision/history integrity와 coordination capability
+- v4 runtime hydration, v6 booking sync event, v7 localStorage recovery, v8 trace facade, v9 same-device coordination asset 존재·실행 순서·JavaScript syntax
 - health endpoint, crawler discovery 파일, Vercel Production 보안 헤더와 main-only 배포 정책
 - 키보드 focus, reduced-motion, lazy extension iframe과 MP4 footprint budget
 - `VERSION` / package / README / CHANGELOG stable-version 일치
@@ -185,10 +202,10 @@ npm run quality
 - HTML/CSS가 참조하는 로컬 asset 누락 여부
 - 외부화된 JavaScript 및 남은 inline JavaScript syntax validity
 - `index.html`의 HTML comment balance와 CSS/JavaScript 외부화 유지 여부
-- `index-core.js → new_ext-pages.js → index-post.js` 실행 순서 및 v4/v6/v7/v8 예약 레이어 로딩
+- `index-core.js → new_ext-pages.js → index-post.js` 실행 순서 및 v4/v6/v7/v8/v9 예약 레이어 로딩
 - `index.html` 200 KB 구조 size guard
 
-동일한 품질 게이트는 Pull Request와 `main` push, GitHub Release 발행 직전에도 실행됩니다. `main` Quality 성공 뒤에는 `Production Smoke`가 실제 배포된 public surface와 v8 booking capability/create/transition/recovery history 및 runtime assets를 추가 확인합니다.
+동일한 품질 게이트는 Pull Request와 `main` push, GitHub Release 발행 직전에도 실행됩니다. `main` Quality 성공 뒤에는 `Production Smoke`가 실제 배포된 public surface와 v9 booking capability/create/transition/recovery history 및 coordination runtime assets를 추가 확인합니다.
 
 ## Release
 
@@ -209,7 +226,7 @@ python -m http.server 8000
 
 ## 버전 전략
 
-Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → Tag/Release → README/Notion sync` 흐름으로 마감하며, 변경 내용은 `CHANGELOG.md`에 누적합니다.
+Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → README/CHANGELOG/VERSION sync → Tag/Release → Notion sync` 흐름으로 마감하며, 변경 내용은 `CHANGELOG.md`에 누적합니다.
 
 ## 상태
 
@@ -220,6 +237,7 @@ Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 �
 - `v6.0.0` — 서버 예약 command contract와 browser sync를 추가한 Pilot-ready Beta 완료
 - `v7.0.0` — same-device booking snapshot 복구와 서버 재검증을 추가한 Recoverable Booking Beta 완료
 - `v8.0.0` — booking revision·server-validated lifecycle history를 추가한 Traceable Booking Beta 완료
+- `v9.0.0` — same-device multi-tab booking coordination과 deterministic conflict handling을 추가한 Coordinated Booking Beta 완료
 - verified `main` 전용 Vercel 배포 정책 및 공개 Production readiness 검증 적용
 - PR/main/Release 공통 `npm run quality`와 post-deploy Production Smoke 적용
 
