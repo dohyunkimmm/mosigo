@@ -12,6 +12,10 @@ const {
   createRecoveryKey,
   recoveryKeyMatches
 } = require('../lib/booking-store.js');
+const {
+  BookingShareStoreError,
+  createBookingShareStore
+} = require('../lib/booking-share-store.js');
 
 function readBody(req) {
   if (!req || req.body == null) return {};
@@ -35,6 +39,11 @@ function readRecoveryKey(req, body = {}) {
   return String(body.recoveryKey || header || '').trim();
 }
 
+function readShareToken(req) {
+  const header = req?.headers?.['x-mosigo-share-token'] || req?.headers?.['X-Mosigo-Share-Token'];
+  return String(header || '').trim();
+}
+
 function writeCommonHeaders(res) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Mosigo-Schema', 'v10');
@@ -42,7 +51,10 @@ function writeCommonHeaders(res) {
 }
 
 function writeError(res, error) {
-  const known = error instanceof BookingServiceError || error instanceof BookingStoreError;
+  const known =
+    error instanceof BookingServiceError ||
+    error instanceof BookingStoreError ||
+    error instanceof BookingShareStoreError;
   const status = known ? error.status : 500;
   return res.status(status).json({
     success: false,
@@ -52,13 +64,26 @@ function writeError(res, error) {
   });
 }
 
-function assertRecoveryKey(current, recoveryKey) {
-  if (!recoveryKey || !recoveryKeyMatches(current?.record, recoveryKey)) {
-    throw new BookingServiceError('booking_recovery_key_invalid', 'A valid recovery key is required for this durable booking.', 401);
+async function assertBookingAccess(current, req, body, bookingId, shareStore) {
+  const recoveryKey = readRecoveryKey(req, body);
+  if (recoveryKey && recoveryKeyMatches(current?.record, recoveryKey)) {
+    return { type: 'recovery-key' };
   }
+  const shareToken = readShareToken(req);
+  if (shareToken) {
+    if (!shareStore?.configured) {
+      throw new BookingShareStoreError('booking_share_storage_unavailable', 'Secure booking-share storage is not configured for this deployment.', 503);
+    }
+    await shareStore.validate(bookingId, shareToken);
+    return { type: 'share-token' };
+  }
+  throw new BookingServiceError('booking_recovery_key_invalid', 'A valid recovery key or active share token is required for this durable booking.', 401);
 }
 
-function createHandler({ store = createBookingStore() } = {}) {
+function createHandler({
+  store = createBookingStore(),
+  shareStore = createBookingShareStore()
+} = {}) {
   return async function handler(req, res) {
     writeCommonHeaders(res);
 
@@ -66,10 +91,18 @@ function createHandler({ store = createBookingStore() } = {}) {
       if (req.method === 'GET') {
         const bookingId = readQuery(req, 'bookingId');
         if (!bookingId) {
+          const secureSharing = Boolean(store.configured && shareStore.configured);
           return res.status(200).json({
             success: true,
             source: 'prototype',
-            ...capability({ durableServerPersistence: store.configured })
+            ...capability({ durableServerPersistence: store.configured }),
+            secureSharing,
+            shareCredential: secureSharing ? 'opaque-expiring-share-token' : 'unavailable',
+            shareTransport: secureSharing ? 'url-fragment' : 'unavailable',
+            shareEndpoint: secureSharing ? '/api/booking-shares' : null,
+            shareRevocable: secureSharing,
+            shareRotatable: secureSharing,
+            shareServerValidation: secureSharing
           });
         }
         if (!store.configured) {
@@ -82,7 +115,7 @@ function createHandler({ store = createBookingStore() } = {}) {
         if (!current) {
           throw new BookingServiceError('booking_not_found', 'No durable booking was found for this ID.', 404);
         }
-        assertRecoveryKey(current, readRecoveryKey(req));
+        await assertBookingAccess(current, req, {}, bookingId, shareStore);
         return res.status(200).json({
           success: true,
           source: 'prototype',
@@ -148,7 +181,7 @@ function createHandler({ store = createBookingStore() } = {}) {
           });
         }
 
-        assertRecoveryKey(current, readRecoveryKey(req, body));
+        await assertBookingAccess(current, req, body, submitted.bookingId, shareStore);
         const canonical = current.record.booking;
         if (Number(submitted.revision) > Number(canonical.revision)) {
           throw new BookingServiceError('booking_revision_conflict', 'Client snapshot is ahead of the durable canonical revision.', 409);
@@ -158,7 +191,7 @@ function createHandler({ store = createBookingStore() } = {}) {
           source: 'prototype',
           schemaVersion: 'v10',
           recovered: true,
-          recoveryScope: 'booking-key',
+          recoveryScope: readShareToken(req) ? 'temporary-share' : 'booking-key',
           durablePersisted: true,
           booking: canonical
         });
@@ -185,7 +218,7 @@ function createHandler({ store = createBookingStore() } = {}) {
         if (!current) {
           throw new BookingServiceError('booking_not_found', 'No durable booking was found for this ID.', 404);
         }
-        assertRecoveryKey(current, readRecoveryKey(req, body));
+        await assertBookingAccess(current, req, body, bookingId, shareStore);
 
         const expectedRevision = Number(body.expectedRevision ?? body.booking?.revision);
         const canonicalRevision = Number(current.record.booking?.revision);

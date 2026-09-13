@@ -113,6 +113,22 @@
       v11Ui.dataset.mosigoV11Ui='1';
       document.head.appendChild(v11Ui);
     }
+
+    // v12 layers expiring/revocable share capabilities over the stable v10 durable booking contract.
+    if(typeof document!=='undefined' && !document.querySelector('script[data-mosigo-v12-sharing]')){
+      const v12=document.createElement('script');
+      v12.src='v12-sharing.js';
+      v12.async=false;
+      v12.dataset.mosigoV12Sharing='1';
+      document.head.appendChild(v12);
+    }
+    if(typeof document!=='undefined' && !document.querySelector('script[data-mosigo-v12-ui]')){
+      const v12Ui=document.createElement('script');
+      v12Ui.src='v12-ui.js';
+      v12Ui.async=false;
+      v12Ui.dataset.mosigoV12Ui='1';
+      document.head.appendChild(v12Ui);
+    }
   }
 
   initV10BookingDurability();
