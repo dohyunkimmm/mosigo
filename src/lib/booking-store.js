@@ -12,7 +12,11 @@ class BookingStoreError extends Error {
 }
 
 function resolveBlobStoreId(env = process.env) {
-  return String(env.MOSIGO_BLOB_STORE_ID || DEFAULT_BLOB_STORE_ID).trim();
+  return String(
+    env.MOSIGO_BLOB_STORE_ID ||
+    env.BLOB_STORE_ID ||
+    DEFAULT_BLOB_STORE_ID
+  ).trim();
 }
 
 function isConfigured(env = process.env) {
