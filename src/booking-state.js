@@ -32,8 +32,27 @@
     return Number.isFinite(parsed) ? parsed : fallback;
   }
 
-  function createBookingId(now=Date.now()) {
-    return 'M4'+Math.max(0,Number(now)||0).toString(36).toUpperCase().slice(-8).padStart(8,'0');
+  function entropyToken(value) {
+    if (value != null) {
+      const token=String(value).toUpperCase().replace(/[^A-Z0-9]/g,'');
+      if (token) return token.slice(-4).padStart(4,'0');
+    }
+
+    let randomValue;
+    try {
+      if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
+        const buffer=new Uint32Array(1);
+        globalThis.crypto.getRandomValues(buffer);
+        randomValue=buffer[0];
+      }
+    } catch(error) {}
+    if (!Number.isFinite(randomValue)) randomValue=Math.floor(Math.random()*0x100000000);
+    return Math.max(0,randomValue).toString(36).toUpperCase().slice(-4).padStart(4,'0');
+  }
+
+  function createBookingId(now=Date.now(), entropy) {
+    const stamp=Math.max(0,Number(now)||0).toString(36).toUpperCase().slice(-4).padStart(4,'0');
+    return 'M9'+stamp+entropyToken(entropy);
   }
 
   function createBookingState(input={}) {
