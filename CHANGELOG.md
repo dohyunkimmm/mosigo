@@ -2,6 +2,31 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v11.0.0 — 2026-09-14
+
+### Portable Recovery Beta
+- Added accountless cross-device booking handoff on top of the v10 durable recovery contract using `#mosigo-recovery=...` URL fragments.
+- Added portable recovery link creation and parsing in `src/v11-booking.js` through `MosigoV11BookingHandoff`, carrying the booking ID plus recovery key as the booking capability.
+- Redacted the recovery fragment with `history.replaceState` before durable recovery so the recovery credential is removed from the visible URL before the v10 recovery request runs.
+- Kept recovery credentials out of query strings and delegated canonical recovery to `MosigoV10BookingDurability.recover(...)` instead of introducing a new server-side ownership or account model.
+- Added a booking-status action to copy a portable recovery link and a landing entry point labeled `다른 기기의 예약 이어보기`.
+- Added `src/v11-ui.js` and `MosigoV11PortableRecoveryUi` for an in-app recovery sheet with labeled input, explicit error state, keyboard handling, and successful routing to the existing `s-order` booking status screen.
+- Preserved the v10 server contract without a schema bump: `/api/bookings` remains `schemaVersion: v10`, `resource: durable-booking-resource`, newly created bookings remain M10, and Private Vercel Blob plus revision + ETag CAS semantics remain unchanged.
+- Added `tests/v11-handoff.test.js`, `tests/v11-static.test.js`, and Production Smoke coverage for v11 asset wiring, fragment redaction, no query-secret transport, recovery UI entry points, successful handoff routing, and continued v10 durable API behavior.
+- Tightened Vercel Git deployment policy from `*` to `**` branch matching so slash-named non-main branches do not consume Preview deployments while `main` remains deployable.
+
+### Production QA
+- Passed PR #41 Quality #80 for the Portable Recovery Beta implementation and merged it as `c73e939a6ed178f0ce349ece95ad88af89028fb0`.
+- Passed main Quality #81 after the v11 feature merge.
+- Passed PR #42 Quality #82 and main Quality #83 for the Production Smoke retry-window hardening without changing v11 application source.
+- Passed PR #43 Quality #85 for the Vercel preview-branch guard and merged it as `b402aa16ad4f3217f506e423a10b34c7aa25f71d`.
+- Verified Vercel Production deployment `dpl_HH1M8gqpF4ECfF1nyciLmUdKbuhv` reached `READY` from GitHub-verified `main` commit `b402aa16ad4f3217f506e423a10b34c7aa25f71d`.
+- Confirmed live `/v11-booking.js` and `/v11-ui.js` return HTTP 200 and live `/api/health` reports commit `b402aa16ad4f3217f506e423a10b34c7aa25f71d`.
+- Confirmed Production Smoke #59 completed successfully against the v11 Production deployment while preserving the durable v10/M10 booking contract.
+
+### Scope
+v11 advances Mosigo from a **Durable Booking Beta** to a **Portable Recovery Beta** by letting a booking capability move between devices without adding accounts. It still does not provide user-account authentication, identity ownership, broad booking listing/search, a tamper-proof audit system, or real operational healthcare booking infrastructure. The recovery link is a bearer capability and must only be shared with the intended recipient.
+
 ## v10.0.0 — 2026-09-13
 
 ### Durable Booking Beta
