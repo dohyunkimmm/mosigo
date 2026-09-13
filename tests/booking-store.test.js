@@ -56,11 +56,25 @@ test('durable booking store is disabled without Blob credentials', () => {
   assert.equal(store.storeId, DEFAULT_BLOB_STORE_ID);
 });
 
-test('Vercel OIDC uses the project Blob store by default with env override support', () => {
-  const oidc = createBookingStore({ env: { VERCEL_OIDC_TOKEN: 'oidc-token' } });
-  assert.equal(oidc.configured, true);
-  assert.equal(oidc.storeId, DEFAULT_BLOB_STORE_ID);
-  assert.equal(resolveBlobStoreId({ MOSIGO_BLOB_STORE_ID: 'store_override' }), 'store_override');
+test('Vercel OIDC recognizes connected BLOB_STORE_ID with explicit override support', () => {
+  const connected = createBookingStore({
+    env: { VERCEL_OIDC_TOKEN: 'oidc-token', BLOB_STORE_ID: 'store_connected' }
+  });
+  assert.equal(connected.configured, true);
+  assert.equal(connected.storeId, 'store_connected');
+
+  assert.equal(
+    resolveBlobStoreId({ BLOB_STORE_ID: 'store_connected' }),
+    'store_connected'
+  );
+  assert.equal(
+    resolveBlobStoreId({ BLOB_STORE_ID: 'store_connected', MOSIGO_BLOB_STORE_ID: 'store_override' }),
+    'store_override'
+  );
+
+  const fallback = createBookingStore({ env: { VERCEL_OIDC_TOKEN: 'oidc-token' } });
+  assert.equal(fallback.configured, true);
+  assert.equal(fallback.storeId, DEFAULT_BLOB_STORE_ID);
 });
 
 test('durable store creates private canonical records without storing the raw recovery key', async () => {
