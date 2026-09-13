@@ -24,6 +24,9 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 - Verified final app-source `main` commit `00c2fad6d35f39eddce86ac01a28750e183eec1a` is GitHub-verified and deployed to Vercel Production as `dpl_EtV9X9buqmzMYhSwJjBtciy749pw` in `READY` state.
 - Confirmed live `/api/bookings` reports `schemaVersion: v10`, `resource: durable-booking-resource`, `persistence: server-durable`, `durableServerPersistence: true`, `recoveryScope: booking-key`, and `serverConflictPolicy: revision-plus-etag-cas`.
 - Confirmed Production Smoke #45 completed successfully against the final v10 app source, including live durable booking creation, lifecycle transition, recovery, and canonical GET verification.
+- Finalized v10 release metadata on GitHub-verified commit `09be83e946c0aba4b1f958e24d10c7b22719030b`, preserving `00c2fad6d35f39eddce86ac01a28750e183eec1a` as the final application-source commit.
+- Confirmed final Quality #76 and Production Smoke #47 succeeded for the v10 release-finalization path.
+- Confirmed Automatic Release #20 succeeded and created immutable GitHub Release `v10.0.0` (Release ID `387877616`) with the tag targeting `09be83e946c0aba4b1f958e24d10c7b22719030b`.
 
 ### Scope
 v10 advances Mosigo from a **Coordinated Booking Beta** to a **Durable Booking Beta** by moving the canonical booking resource from client-local persistence to private server durable storage. It still does not provide user-account authentication, account ownership, broad booking listing/search, a tamper-proof audit system, or real operational healthcare booking infrastructure. The recovery key is a prototype booking credential, not a user identity system.
