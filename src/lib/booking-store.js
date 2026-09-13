@@ -22,7 +22,7 @@ function resolveBlobStoreId(env = process.env) {
 function isConfigured(env = process.env) {
   if (String(env.MOSIGO_DISABLE_DURABLE_STORE || '') === '1') return false;
   if (env.BLOB_READ_WRITE_TOKEN) return true;
-  return Boolean(env.VERCEL_OIDC_TOKEN && resolveBlobStoreId(env));
+  return Boolean(env.MOSIGO_BLOB_STORE_ID || env.BLOB_STORE_ID);
 }
 
 function bookingPath(bookingId) {
@@ -67,13 +67,9 @@ function createBookingStore({ env = process.env, blobApi = null, now = () => Dat
 
   function authOptions() {
     if (env.BLOB_READ_WRITE_TOKEN) return { token: env.BLOB_READ_WRITE_TOKEN };
-    if (env.VERCEL_OIDC_TOKEN && storeId) {
-      return {
-        oidcToken: env.VERCEL_OIDC_TOKEN,
-        storeId
-      };
-    }
-    return {};
+    const options = storeId ? { storeId } : {};
+    if (env.VERCEL_OIDC_TOKEN) options.oidcToken = env.VERCEL_OIDC_TOKEN;
+    return options;
   }
 
   function assertConfigured() {

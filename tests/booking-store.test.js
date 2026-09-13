@@ -49,16 +49,16 @@ const booking = {
   history: [{ sequence: 1, type: 'created' }]
 };
 
-test('durable booking store is disabled without Blob credentials', () => {
+test('durable booking store is disabled without a connected Blob store or token', () => {
   const store = createBookingStore({ env: {} });
   assert.equal(store.configured, false);
   assert.equal(store.provider, 'vercel-blob-private');
   assert.equal(store.storeId, DEFAULT_BLOB_STORE_ID);
 });
 
-test('Vercel OIDC recognizes connected BLOB_STORE_ID with explicit override support', () => {
+test('connected BLOB_STORE_ID enables implicit Vercel runtime OIDC', () => {
   const connected = createBookingStore({
-    env: { VERCEL_OIDC_TOKEN: 'oidc-token', BLOB_STORE_ID: 'store_connected' }
+    env: { BLOB_STORE_ID: 'store_connected' }
   });
   assert.equal(connected.configured, true);
   assert.equal(connected.storeId, 'store_connected');
@@ -72,9 +72,10 @@ test('Vercel OIDC recognizes connected BLOB_STORE_ID with explicit override supp
     'store_override'
   );
 
-  const fallback = createBookingStore({ env: { VERCEL_OIDC_TOKEN: 'oidc-token' } });
-  assert.equal(fallback.configured, true);
-  assert.equal(fallback.storeId, DEFAULT_BLOB_STORE_ID);
+  const explicitOidc = createBookingStore({
+    env: { VERCEL_OIDC_TOKEN: 'oidc-token', BLOB_STORE_ID: 'store_connected' }
+  });
+  assert.equal(explicitOidc.configured, true);
 });
 
 test('durable store creates private canonical records without storing the raw recovery key', async () => {
