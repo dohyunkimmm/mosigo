@@ -3,7 +3,8 @@
   function initV9BookingCoordination(){
     const sync=globalThis.MosigoV6BookingSync;
     const recovery=globalThis.MosigoV7BookingRecovery;
-    if(!sync || !recovery){
+    const runtime=globalThis.MosigoV4BookingRuntime;
+    if(!sync || !recovery || !runtime){
       setTimeout(initV9BookingCoordination,25);
       return;
     }
@@ -30,6 +31,10 @@
       return Number.isFinite(value) ? value : 0;
     }
 
+    function serialize(booking){
+      try{return JSON.stringify(booking)||'';}catch(error){return '';}
+    }
+
     function publish(status,booking=null,source='',conflict=''){
       coordinationState={
         status,
@@ -51,59 +56,135 @@
       return queue;
     }
 
+    function compareStoredToCurrent(snapshot,current){
+      if(!snapshot?.bookingId) return -1;
+      if(!current?.bookingId) return 1;
+
+      if(snapshot.bookingId===current.bookingId){
+        const revisionDiff=revisionOf(snapshot)-revisionOf(current);
+        if(revisionDiff!==0) return revisionDiff>0 ? 1 : -1;
+        return serialize(snapshot)===serialize(current) ? 0 : 1;
+      }
+
+      const timestampDiff=updatedAtOf(snapshot)-updatedAtOf(current);
+      if(timestampDiff!==0) return timestampDiff>0 ? 1 : -1;
+      const bookingIdDiff=String(snapshot.bookingId).localeCompare(String(current.bookingId));
+      return bookingIdDiff===0 ? 0 : (bookingIdDiff>0 ? 1 : -1);
+    }
+
     function shouldAdopt(snapshot,current){
       if(!snapshot?.bookingId) return false;
       if(!current?.bookingId) return true;
-      if(snapshot.bookingId===current.bookingId){
-        return revisionOf(snapshot)>revisionOf(current);
+      if(snapshot.bookingId===current.bookingId && revisionOf(snapshot)>revisionOf(current)) return true;
+      return compareStoredToCurrent(snapshot,current)>0;
+    }
+
+    function equalRevisionDivergence(snapshot,current){
+      return Boolean(
+        snapshot?.bookingId &&
+        current?.bookingId &&
+        snapshot.bookingId===current.bookingId &&
+        revisionOf(snapshot)===revisionOf(current) &&
+        serialize(snapshot)!==serialize(current)
+      );
+    }
+
+    async function revalidateStored(bookingId,source='canonical',conflict=''){
+      const id=String(bookingId||'').trim();
+      if(!id) return null;
+      const snapshot=recovery.getSnapshot(id);
+      if(!snapshot){
+        publish('missing-snapshot',sync.getState(),source,'Stored booking snapshot is missing.');
+        return null;
       }
-      return updatedAtOf(snapshot)>updatedAtOf(current);
+
+      publish('coordinating',snapshot,source,conflict);
+      const booking=await recovery.recover(id);
+      if(booking){
+        publish('coordinated',booking,source,conflict);
+        return booking;
+      }
+      publish('fallback',snapshot,source,conflict||'Stored booking could not be revalidated.');
+      return null;
     }
 
     async function adoptStored(bookingId,source='storage'){
       const id=String(bookingId||'').trim();
       if(!id) return null;
       const snapshot=recovery.getSnapshot(id);
-      if(!snapshot) return null;
+      if(!snapshot){
+        publish('missing-snapshot',sync.getState(),source,'Stored booking snapshot is missing.');
+        return null;
+      }
       const current=sync.getState();
       if(!shouldAdopt(snapshot,current)){
         publish('current',current,source);
         return current;
       }
 
-      publish('coordinating',snapshot,source);
-      const booking=await recovery.recover(id);
-      if(booking){
-        publish('coordinated',booking,source);
-        return booking;
-      }
-      publish('fallback',snapshot,source,'Stored booking could not be revalidated.');
+      const conflict=equalRevisionDivergence(snapshot,current) ? 'equal-revision-divergence' : '';
+      return revalidateStored(id,source,conflict);
+    }
+
+    function clearCurrent(source='storage-clear'){
+      runtime.hydrate({});
+      sync.hydrate(null);
+      publish('cleared',null,source);
       return null;
     }
 
+    async function reconcileRemoval(removedId,source){
+      const latestId=String(recovery.getLatestId()||'').trim();
+      if(latestId && latestId!==removedId) return adoptStored(latestId,source);
+
+      const current=sync.getState();
+      if(!current?.bookingId){
+        publish(source.includes('clear')?'cleared':'idle',null,source);
+        return null;
+      }
+      if(!removedId || current.bookingId===removedId || !latestId) return clearCurrent(source);
+      publish('current',current,source);
+      return current;
+    }
+
     function handleStorage(event){
-      if(event.storageArea!==localStorage) return;
-      if(event.key===LATEST_KEY && event.newValue){
-        enqueue(()=>adoptStored(event.newValue,'latest-key'));
+      if(event.storageArea && event.storageArea!==localStorage) return;
+
+      if(event.key===LATEST_KEY){
+        if(event.newValue){
+          enqueue(()=>adoptStored(event.newValue,'latest-key'));
+        }else{
+          enqueue(()=>reconcileRemoval(String(event.oldValue||'').trim(),'latest-clear'));
+        }
         return;
       }
-      if(!event.key?.startsWith(PREFIX) || !event.newValue) return;
+
+      if(!event.key?.startsWith(PREFIX)) return;
+      const keyBookingId=event.key.slice(PREFIX.length);
+      if(!event.newValue){
+        enqueue(()=>reconcileRemoval(keyBookingId,'snapshot-clear'));
+        return;
+      }
+
       try{
         const snapshot=JSON.parse(event.newValue);
-        if(snapshot?.bookingId) enqueue(()=>adoptStored(snapshot.bookingId,'snapshot'));
-      }catch(error){}
+        if(!snapshot || typeof snapshot!=='object' || !snapshot.bookingId || snapshot.bookingId!==keyBookingId){
+          publish('invalid-snapshot',sync.getState(),'snapshot','booking-id-mismatch');
+          return;
+        }
+        enqueue(()=>adoptStored(snapshot.bookingId,'snapshot'));
+      }catch(error){
+        publish('invalid-snapshot',sync.getState(),'snapshot','invalid-json');
+      }
     }
 
     function handleSnapshotConflict(event){
       const detail=event?.detail || {};
       const stored=detail.stored;
       if(!stored?.bookingId) return;
-      publish('conflict',stored,'local-write',detail.kind||'snapshot-conflict');
-      enqueue(async()=>{
-        const booking=await recovery.recover(stored.bookingId);
-        if(booking) publish('coordinated',booking,'conflict-recovery',detail.kind||'snapshot-conflict');
-        return booking;
-      });
+      const kind=detail.kind||'snapshot-conflict';
+      publish('conflict',stored,'local-write',kind);
+      enqueue(()=>revalidateStored(stored.bookingId,'conflict-recovery',kind));
     }
 
     window.addEventListener('storage',handleStorage);
@@ -112,14 +193,16 @@
     globalThis.MosigoV9BookingCoordination={
       reconcile:(bookingId=recovery.getLatestId())=>enqueue(()=>adoptStored(bookingId,'manual')),
       getState:()=>({ ...coordinationState }),
-      getCanonical:(bookingId=recovery.getLatestId())=>recovery.getSnapshot(bookingId)
+      getSnapshot:(bookingId=recovery.getLatestId())=>recovery.getSnapshot(bookingId),
+      getCanonical:(bookingId=recovery.getLatestId())=>enqueue(()=>revalidateStored(bookingId,'canonical'))
     };
 
     const current=sync.getState();
     const latestId=recovery.getLatestId();
     if(latestId){
       const latest=recovery.getSnapshot(latestId);
-      if(shouldAdopt(latest,current)) enqueue(()=>adoptStored(latestId,'startup'));
+      if(latest && shouldAdopt(latest,current)) enqueue(()=>adoptStored(latestId,'startup'));
+      else if(!latest) publish('missing-snapshot',current,'startup','Stored booking snapshot is missing.');
       else publish(current?.bookingId?'current':'idle',current,'startup');
     }else{
       publish(current?.bookingId?'current':'idle',current,'startup');

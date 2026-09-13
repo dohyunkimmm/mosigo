@@ -1,3 +1,4 @@
+const { randomInt } = require('node:crypto');
 const Booking = require('../booking-state.js');
 
 class BookingServiceError extends Error {
@@ -9,13 +10,21 @@ class BookingServiceError extends Error {
   }
 }
 
-function createPilotBookingId(now = Date.now()) {
+function entropyToken(value) {
+  if (value != null) {
+    const token = String(value).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (token) return token.slice(-4).padStart(4, '0');
+  }
+  return randomInt(0, 36 ** 4).toString(36).toUpperCase().padStart(4, '0');
+}
+
+function createPilotBookingId(now = Date.now(), entropy) {
   const stamp = Math.max(0, Number(now) || 0)
     .toString(36)
     .toUpperCase()
-    .slice(-8)
-    .padStart(8, '0');
-  return `M9${stamp}`;
+    .slice(-4)
+    .padStart(4, '0');
+  return `M9${stamp}${entropyToken(entropy)}`;
 }
 
 function validBookingId(value) {
@@ -156,14 +165,14 @@ function traceBooking(input = {}, booking = Booking.createBookingState(input), {
   };
 }
 
-function createBookingRequest(input = {}, { now = Date.now(), bookingId } = {}) {
+function createBookingRequest(input = {}, { now = Date.now(), bookingId, entropy } = {}) {
   const normalized = validateBookingRequest(input);
   const state = Booking.createBookingState();
   const requestedId = validBookingId(bookingId)
     ? bookingId
     : validBookingId(normalized.bookingId)
       ? normalized.bookingId
-      : createPilotBookingId(now);
+      : createPilotBookingId(now, entropy);
   const booking = Booking.transitionBookingState(
     state,
     Booking.PHASES.REQUESTING,
@@ -260,6 +269,11 @@ function capability() {
     coordinationTransport: 'storage-event',
     snapshotConflictPolicy: 'higher-revision-wins',
     equalRevisionConflictPolicy: 'stored-snapshot-wins',
+    crossBookingTieBreakPolicy: 'updated-at-then-booking-id',
+    clearPropagation: true,
+    canonicalReadMethod: 'PUT',
+    bookingIdVersion: 'M9',
+    bookingIdGeneration: 'timestamp-plus-entropy',
     actions: Object.keys(ACTION_TO_PHASE)
   };
 }

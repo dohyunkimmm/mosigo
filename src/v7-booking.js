@@ -73,7 +73,11 @@
       if(!currentId || currentId===booking.bookingId) return true;
       const current=readSnapshot(currentId);
       if(!current) return true;
-      return snapshotUpdatedAt(booking)>=snapshotUpdatedAt(current);
+
+      const incomingAt=snapshotUpdatedAt(booking);
+      const currentAt=snapshotUpdatedAt(current);
+      if(incomingAt!==currentAt) return incomingAt>currentAt;
+      return String(booking.bookingId).localeCompare(String(current.bookingId))>0;
     }
 
     function saveSnapshot(booking){
