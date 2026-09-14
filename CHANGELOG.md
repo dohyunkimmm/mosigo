@@ -2,6 +2,26 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v13.0.0 — 2026-09-15
+
+### Account Ownership Beta
+- Added `/api/account` as a v13 account-ownership resource with email/password authentication, scrypt password hashing, and HttpOnly/Secure/SameSite=Lax session cookies.
+- Added single-account ownership binding for durable bookings and recovery-key claim for existing bookings.
+- Added account-scoped booking listing and cookie-authenticated canonical booking access for cross-device continuation.
+- Integrated account owners with the existing v12 secure-share issue/status/revoke flow without exposing account session credentials to browser storage.
+- Added `src/v13-account.js` and `src/v13-ui.js` for login/register, owned booking listing/opening, current-booking claim, logout, and integrated share management.
+- Added account store/API/runtime/static tests and extended Production Smoke with register → owned booking create → list/read → share issue/revoke → logout denial.
+
+### Production QA
+- Passed PR #49 Quality #97 for the pre-deployment v13 candidate.
+- Merged v13 application source to `main` as `a256090be1be886623ac9b61ddca2ef052167259`.
+- Verified Vercel Production deployment `dpl_GRSVQAij38unaGM1rn3WWdm3gXrV` reached `READY` from that GitHub-verified main commit.
+- Confirmed live `/api/health` reports `a256090be1be886623ac9b61ddca2ef052167259`, live `/api/account` reports the enabled v13 ownership contract, and live `/v13-account.js` plus `/v13-ui.js` return HTTP 200.
+- Passed Production Smoke #69 including account registration, owned booking creation, cross-device-style account listing/read, v12 share management by account owner, logout, and post-logout denial.
+
+### Scope
+v13 advances Mosigo from **Secure Sharing Beta** to **Account Ownership Beta**. It introduces prototype account authentication and booking ownership, but it is not a production identity platform and does not provide real operational healthcare booking infrastructure, payment settlement, or broad back-office administration.
+
 ## v12.0.0 — 2026-09-15
 
 ### Secure Sharing Beta
