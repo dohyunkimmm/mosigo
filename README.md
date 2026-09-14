@@ -2,7 +2,7 @@
 
 자녀가 부모님의 병원 이용을 대신 준비하고, 병원 탐색부터 동행 매니저 매칭·동의/결제·실시간 동행·건강 리포트·재예약까지 이어지는 흐름을 검증하기 위한 인터랙티브 병원동행 서비스 프로토타입입니다.
 
-- **Current stable version:** `v11.0.0`
+- **Current stable version:** `v12.0.0`
 - **Live Demo:** https://mosigo-nine.vercel.app/
 
 ## 프로젝트 개요
@@ -28,9 +28,38 @@
 - Private Vercel Blob 기반 durable canonical booking persistence
 - booking ID + recovery key 기반 durable recovery
 - URL fragment 기반 cross-device portable recovery handoff
+- 만료·폐기·회전 가능한 server-validated secure share capability
 - revision + ETag compare-and-swap 기반 stale write 충돌 방지
 
-> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v11은 v10의 durable booking 계약을 유지하면서 recovery link를 통한 cross-device handoff를 추가하지만 계정 인증·사용자 소유권 모델·예약 목록/검색·실운영 의료 예약 인프라는 제공하지 않습니다. recovery key는 계정이 아니라 예약 리소스에 접근하기 위한 프로토타입 credential입니다.
+> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v12는 v10의 durable booking 계약과 v11의 cross-device recovery 흐름을 유지하면서, 영구 recovery key를 직접 공유하지 않고 만료·폐기 가능한 임시 share token으로 예약을 이어볼 수 있게 합니다. 계정 인증·사용자 소유권 모델·예약 목록/검색·실운영 의료 예약 인프라는 제공하지 않습니다. recovery key와 share token은 계정이 아니라 예약 리소스에 접근하기 위한 프로토타입 credential입니다.
+
+## v12 Secure Sharing Beta
+
+v12는 v11 Portable Recovery를 확장해 다른 사람이나 다른 기기와 예약을 이어볼 때 영구 recovery key 대신 **만료·폐기·회전 가능한 임시 share token**을 사용하는 **Secure Sharing Beta**입니다.
+
+- `/api/booking-shares`는 `schemaVersion: v12`, `resource: secure-booking-share-resource` capability를 제공하며 기본 60분, 최소 5분, 최대 24시간 TTL을 사용합니다.
+- share token은 24-byte random base64url 값으로 발급되고 서버에는 raw token이 아니라 SHA-256 hash만 Private Vercel Blob에 저장됩니다.
+- 한 예약에는 한 개의 active share grant만 유지되며 새 링크를 발급하면 이전 token은 즉시 무효화됩니다. owner recovery key로 명시적 revoke도 가능합니다.
+- 공유 링크는 `#mosigo-share=...` URL fragment를 사용하고, recipient는 서버 요청 전에 `history.replaceState`로 fragment를 제거한 뒤 `X-Mosigo-Share-Token` 헤더로 접근합니다.
+- recipient share token은 `sessionStorage`에만 보관하며 localStorage에 저장하지 않습니다. owner recovery key가 있으면 owner credential이 우선합니다.
+- 공유받은 사용자는 owner 전용 링크 복사/폐기 컨트롤을 보지 않고 `공유받은 예약 · 임시 접근 중` 상태로 표시됩니다.
+- 클립보드 복사가 실패하면 새로 발급된 share capability를 즉시 폐기해 사용자가 받지 못한 active link가 남지 않도록 했습니다.
+- persisted share record는 version, booking ID, token hash, issued/expiry time, generation을 검증하고 손상된 레코드는 fail-closed로 거부합니다.
+- `/api/bookings`의 durable contract는 그대로 `schemaVersion: v10`, `bookingIdVersion: M10`, `resource: durable-booking-resource`를 유지하면서 temporary share token을 alternate access credential로 수용합니다.
+- v12 UI/UX polish에서 데스크톱 포트폴리오 설명 패널과 실제 인터랙티브 앱의 CTA 역할을 분리하고, 홈/마이페이지의 시각 순서와 실제 DOM 순서를 일치시켰습니다.
+
+### Production verification
+
+- v12 feature merge commit: `4495db5d2bc868dfe5e2cd82dee3bc5fcaa4fe2f`
+- v12 hardened app-source `main` commit: `b5494fe5b71d0af0c3d70c52d0afc8f1f19302f8`
+- Vercel Production deployment: `dpl_8ukUTSmncjMDntPG7gAUq9nwcFM8` (`READY`)
+- Live `/api/health` commit: `b5494fe5b71d0af0c3d70c52d0afc8f1f19302f8`
+- Live `/api/bookings`: `schemaVersion: v10`, M10 durable resource, `secureSharing: true`
+- Live `/api/booking-shares`: `schemaVersion: v12`, secure sharing enabled, raw token storage disabled, revocation/rotation enabled
+- Live `/v12-sharing.js` and `/v12-ui.js`: HTTP 200
+- PR #47 Quality #93: success
+- Main Quality #94: success
+- Production Smoke #65: success, including share issue → shared read → rotate → old token deny → new token allow → revoke → deny
 
 ## v11 Portable Recovery Beta
 
@@ -83,6 +112,7 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 
 ## 이전 버전
 
+- `v11.0.0` — URL fragment 기반 cross-device recovery를 추가한 Portable Recovery Beta
 - `v10.0.0` — Private Vercel Blob durable persistence와 booking-key recovery를 추가한 Durable Booking Beta
 - `v9.0.0` — same-device multi-tab booking coordination과 deterministic conflict handling을 추가한 Coordinated Booking Beta
 - `v8.0.0` — booking revision과 server-validated lifecycle history를 추가한 Traceable Booking Beta
@@ -101,7 +131,7 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 - Leaflet
 - Vercel
 - Vercel Serverless Functions
-- Vercel Blob (private durable booking storage)
+- Vercel Blob (private durable booking and secure-share storage)
 - Node.js built-in test runner
 - GitHub Actions
 
@@ -119,9 +149,13 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 ├── tests/
 │   ├── booking-state.test.js
 │   ├── booking-store.test.js    # durable store·ETag CAS 검증
+│   ├── booking-share-store.test.js
+│   ├── booking-shares.test.js
 │   ├── bookings.test.js         # v10 booking API contract 검증
 │   ├── v11-handoff.test.js      # portable recovery handoff 검증
 │   ├── v11-static.test.js       # v11 runtime/static wiring 검증
+│   ├── v12-sharing.test.js      # secure sharing browser runtime 검증
+│   ├── v12-static.test.js       # v12 runtime/static wiring 검증
 │   ├── v10-static.test.js       # v10 runtime/static wiring 검증
 │   ├── v9-coordination.test.js
 │   └── ...
@@ -137,13 +171,17 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
     ├── v10-booking.js           # durable recovery/canonical facade
     ├── v11-booking.js           # portable recovery handoff facade
     ├── v11-ui.js                # in-app portable recovery UI
+    ├── v12-sharing.js           # expiring/revocable share runtime
+    ├── v12-ui.js                # owner/recipient secure-share UI
     ├── lib/
     │   ├── booking-service.js    # lifecycle/history/revision service
-    │   └── booking-store.js      # private Blob durable store adapter
+    │   ├── booking-store.js      # private Blob durable store adapter
+    │   └── booking-share-store.js # private Blob share capability store
     ├── api/
     │   ├── health.js
     │   ├── hospitals.js
-    │   └── bookings.js           # v10 durable booking resource handler
+    │   ├── bookings.js           # v10 durable booking resource handler
+    │   └── booking-shares.js     # v12 secure share management handler
     ├── package.json              # runtime dependency boundary
     ├── vercel.json
     └── ...
@@ -163,9 +201,9 @@ GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩
 npm run quality
 ```
 
-핵심 검증 범위는 병원 API, booking lifecycle/history/revision, durable Blob store, recovery credential, ETag conflict handling, portable recovery handoff, v4~v11 runtime wiring, 보안 헤더, crawler discovery, 접근성, asset integrity, JavaScript syntax, stable-version consistency입니다.
+핵심 검증 범위는 병원 API, booking lifecycle/history/revision, durable Blob store, recovery credential, ETag conflict handling, portable recovery handoff, secure sharing capability, v4~v12 runtime wiring, 보안 헤더, crawler discovery, 접근성, asset integrity, JavaScript syntax, stable-version consistency입니다.
 
-Production Smoke는 실제 Production에서 `/api/health`, `/api/hospitals`, `/api/bookings`, v4~v11 runtime assets를 확인하고, v10 durable create/transition/recovery/canonical read와 v11 portable-recovery wiring을 함께 검증합니다.
+Production Smoke는 실제 Production에서 `/api/health`, `/api/hospitals`, `/api/bookings`, `/api/booking-shares`, v4~v12 runtime assets를 확인하고, v10 durable create/transition/recovery/canonical read와 v12 secure-share issue/read/rotate/revoke 흐름을 함께 검증합니다.
 
 ## Release
 
@@ -182,10 +220,10 @@ cd src
 python -m http.server 8000
 ```
 
-`/api/hospitals`, `/api/health`, `/api/bookings`와 durable Blob path까지 동일하게 확인하려면 Vercel 개발 환경과 연결된 Storage 설정이 필요합니다.
+`/api/hospitals`, `/api/health`, `/api/bookings`, `/api/booking-shares`와 durable Blob path까지 동일하게 확인하려면 Vercel 개발 환경과 연결된 Storage 설정이 필요합니다.
 
 ## 버전 전략
 
 Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → README/CHANGELOG/VERSION sync → 자동 Tag/Release → Notion sync` 흐름으로 마감합니다.
 
-마지막 문서 동기화: 2026-09-14
+마지막 문서 동기화: 2026-09-15
