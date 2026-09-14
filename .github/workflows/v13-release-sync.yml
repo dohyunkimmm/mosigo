@@ -1,0 +1,64 @@
+name: v13 release docs sync
+
+on:
+  push:
+    branches:
+      - release/v13.0.0-account-ownership
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v13.0.0-account-ownership
+          fetch-depth: 0
+      - name: Sync v13 release surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          readme = Path('README.md')
+          text = readme.read_text()
+          text = text.replace('**Current stable version:** `v12.0.0`', '**Current stable version:** `v13.0.0`', 1)
+          text = text.replace(
+              '- 만료·폐기·회전 가능한 server-validated secure share capability\n',
+              '- 만료·폐기·회전 가능한 server-validated secure share capability\n- HttpOnly/Secure 계정 세션 기반 booking ownership 및 cross-device 내 예약 목록\n',
+              1,
+          )
+          text = text.replace(
+              '계정 인증·사용자 소유권 모델·예약 목록/검색·실운영 의료 예약 인프라는 제공하지 않습니다.',
+              'v13은 프로토타입 계정 인증·예약 소유권·계정 기반 내 예약 목록을 제공하지만, 실운영 의료 예약 인프라와 광범위한 운영자용 예약 검색/관리 기능은 제공하지 않습니다.',
+              1,
+          )
+          marker = '## v12 Secure Sharing Beta\n'
+          section = '''## v13 Account Ownership Beta\n\nv13은 v12 Secure Sharing 위에 **계정 세션과 예약 소유권**을 추가해 로그인만으로 다른 기기에서 자신의 예약을 이어볼 수 있게 하는 Account Ownership Beta입니다.\n\n- `/api/account`는 `schemaVersion: v13`, `resource: account-ownership-resource`를 제공하고 이메일/비밀번호 인증과 HttpOnly·Secure·SameSite=Lax 세션 쿠키를 사용합니다.\n- 비밀번호는 scrypt hash로 저장하며 브라우저 JavaScript에는 계정 세션 토큰을 노출하지 않습니다.\n- durable booking은 한 계정에 단일 소유권으로 연결되며 기존 예약은 booking ID + recovery key로 계정에 claim할 수 있습니다.\n- 로그인 계정은 `내 예약` 목록에서 계정 소유 예약을 조회하고 다른 기기에서 canonical booking을 다시 열 수 있습니다.\n- 계정 소유자는 기존 v12 secure share를 발급·상태 확인·폐기할 수 있고 임시 share recipient 권한과 owner 권한은 분리됩니다.\n- 로그아웃 시 서버 세션을 폐기하고 이후 동일 쿠키로 소유 예약에 접근할 수 없도록 검증합니다.\n\n### Production verification\n\n- v13 app-source `main` commit: `a256090be1be886623ac9b61ddca2ef052167259`\n- Vercel Production deployment: `dpl_GRSVQAij38unaGM1rn3WWdm3gXrV` (`READY`)\n- Live `/api/health` commit: `a256090be1be886623ac9b61ddca2ef052167259`\n- Live `/api/account`: `schemaVersion: v13`, account ownership enabled, HttpOnly/Secure cookie session\n- Live `/v13-account.js` and `/v13-ui.js`: HTTP 200\n- PR #49 Quality #97: success\n- Production Smoke #69: success, including register → account-owned booking → list/read → v12 share issue/revoke → logout denial\n\n'''
+          if '## v13 Account Ownership Beta\n' not in text:
+              text = text.replace(marker, section + marker, 1)
+          text = text.replace(
+              '## 이전 버전\n\n- `v11.0.0`',
+              '## 이전 버전\n\n- `v12.0.0` — 만료·폐기·회전 가능한 임시 공유 capability를 추가한 Secure Sharing Beta\n- `v11.0.0`',
+              1,
+          )
+          readme.write_text(text)
+
+          changelog = Path('CHANGELOG.md')
+          ctext = changelog.read_text()
+          marker = '## v12.0.0 — 2026-09-15\n'
+          entry = '''## v13.0.0 — 2026-09-15\n\n### Account Ownership Beta\n- Added `/api/account` as a v13 account-ownership resource with email/password authentication, scrypt password hashing, and HttpOnly/Secure/SameSite=Lax session cookies.\n- Added single-account ownership binding for durable bookings and recovery-key claim for existing bookings.\n- Added account-scoped booking listing and cookie-authenticated canonical booking access for cross-device continuation.\n- Integrated account owners with the existing v12 secure-share issue/status/revoke flow without exposing account session credentials to browser storage.\n- Added `src/v13-account.js` and `src/v13-ui.js` for login/register, owned booking listing/opening, current-booking claim, logout, and integrated share management.\n- Added account store/API/runtime/static tests and extended Production Smoke with register → owned booking create → list/read → share issue/revoke → logout denial.\n\n### Production QA\n- Passed PR #49 Quality #97 for the pre-deployment v13 candidate.\n- Merged v13 application source to `main` as `a256090be1be886623ac9b61ddca2ef052167259`.\n- Verified Vercel Production deployment `dpl_GRSVQAij38unaGM1rn3WWdm3gXrV` reached `READY` from that GitHub-verified main commit.\n- Confirmed live `/api/health` reports `a256090be1be886623ac9b61ddca2ef052167259`, live `/api/account` reports the enabled v13 ownership contract, and live `/v13-account.js` plus `/v13-ui.js` return HTTP 200.\n- Passed Production Smoke #69 including account registration, owned booking creation, cross-device-style account listing/read, v12 share management by account owner, logout, and post-logout denial.\n\n### Scope\nv13 advances Mosigo from **Secure Sharing Beta** to **Account Ownership Beta**. It introduces prototype account authentication and booking ownership, but it is not a production identity platform and does not provide real operational healthcare booking infrastructure, payment settlement, or broad back-office administration.\n\n'''
+          if '## v13.0.0 —' not in ctext:
+              ctext = ctext.replace(marker, entry + marker, 1)
+          changelog.write_text(ctext)
+          PY
+          git rm .github/workflows/v13-release-sync.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md CHANGELOG.md
+          git commit -m "release(v13): sync README and changelog"
+          git push origin HEAD:release/v13.0.0-account-ownership
