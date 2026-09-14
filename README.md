@@ -2,7 +2,7 @@
 
 자녀가 부모님의 병원 이용을 대신 준비하고, 병원 탐색부터 동행 매니저 매칭·동의/결제·실시간 동행·건강 리포트·재예약까지 이어지는 흐름을 검증하기 위한 인터랙티브 병원동행 서비스 프로토타입입니다.
 
-- **Current stable version:** `v12.0.0`
+- **Current stable version:** `v13.0.0`
 - **Live Demo:** https://mosigo-nine.vercel.app/
 
 ## 프로젝트 개요
@@ -29,9 +29,31 @@
 - booking ID + recovery key 기반 durable recovery
 - URL fragment 기반 cross-device portable recovery handoff
 - 만료·폐기·회전 가능한 server-validated secure share capability
+- HttpOnly/Secure 계정 세션 기반 booking ownership 및 cross-device 내 예약 목록
 - revision + ETag compare-and-swap 기반 stale write 충돌 방지
 
-> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v12는 v10의 durable booking 계약과 v11의 cross-device recovery 흐름을 유지하면서, 영구 recovery key를 직접 공유하지 않고 만료·폐기 가능한 임시 share token으로 예약을 이어볼 수 있게 합니다. 계정 인증·사용자 소유권 모델·예약 목록/검색·실운영 의료 예약 인프라는 제공하지 않습니다. recovery key와 share token은 계정이 아니라 예약 리소스에 접근하기 위한 프로토타입 credential입니다.
+> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v12는 v10의 durable booking 계약과 v11의 cross-device recovery 흐름을 유지하면서, 영구 recovery key를 직접 공유하지 않고 만료·폐기 가능한 임시 share token으로 예약을 이어볼 수 있게 합니다. v13은 프로토타입 계정 인증·예약 소유권·계정 기반 내 예약 목록을 제공하지만, 실운영 의료 예약 인프라와 광범위한 운영자용 예약 검색/관리 기능은 제공하지 않습니다. recovery key와 share token은 계정이 아니라 예약 리소스에 접근하기 위한 프로토타입 credential입니다.
+
+## v13 Account Ownership Beta
+
+v13은 v12 Secure Sharing 위에 **계정 세션과 예약 소유권**을 추가해 로그인만으로 다른 기기에서 자신의 예약을 이어볼 수 있게 하는 Account Ownership Beta입니다.
+
+- `/api/account`는 `schemaVersion: v13`, `resource: account-ownership-resource`를 제공하고 이메일/비밀번호 인증과 HttpOnly·Secure·SameSite=Lax 세션 쿠키를 사용합니다.
+- 비밀번호는 scrypt hash로 저장하며 브라우저 JavaScript에는 계정 세션 토큰을 노출하지 않습니다.
+- durable booking은 한 계정에 단일 소유권으로 연결되며 기존 예약은 booking ID + recovery key로 계정에 claim할 수 있습니다.
+- 로그인 계정은 `내 예약` 목록에서 계정 소유 예약을 조회하고 다른 기기에서 canonical booking을 다시 열 수 있습니다.
+- 계정 소유자는 기존 v12 secure share를 발급·상태 확인·폐기할 수 있고 임시 share recipient 권한과 owner 권한은 분리됩니다.
+- 로그아웃 시 서버 세션을 폐기하고 이후 동일 쿠키로 소유 예약에 접근할 수 없도록 검증합니다.
+
+### Production verification
+
+- v13 app-source `main` commit: `a256090be1be886623ac9b61ddca2ef052167259`
+- Vercel Production deployment: `dpl_GRSVQAij38unaGM1rn3WWdm3gXrV` (`READY`)
+- Live `/api/health` commit: `a256090be1be886623ac9b61ddca2ef052167259`
+- Live `/api/account`: `schemaVersion: v13`, account ownership enabled, HttpOnly/Secure cookie session
+- Live `/v13-account.js` and `/v13-ui.js`: HTTP 200
+- PR #49 Quality #97: success
+- Production Smoke #69: success, including register → account-owned booking → list/read → v12 share issue/revoke → logout denial
 
 ## v12 Secure Sharing Beta
 
@@ -112,6 +134,7 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 
 ## 이전 버전
 
+- `v12.0.0` — 만료·폐기·회전 가능한 임시 공유 capability를 추가한 Secure Sharing Beta
 - `v11.0.0` — URL fragment 기반 cross-device recovery를 추가한 Portable Recovery Beta
 - `v10.0.0` — Private Vercel Blob durable persistence와 booking-key recovery를 추가한 Durable Booking Beta
 - `v9.0.0` — same-device multi-tab booking coordination과 deterministic conflict handling을 추가한 Coordinated Booking Beta
