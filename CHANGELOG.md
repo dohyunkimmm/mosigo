@@ -2,6 +2,34 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v12.0.0 — 2026-09-15
+
+### Secure Sharing Beta
+- Added `/api/booking-shares` as a v12 secure share management resource layered over the stable v10 durable booking contract.
+- Added expiring, revocable, rotatable single-booking share capabilities with a 60-minute default TTL, 5-minute minimum, and 24-hour maximum.
+- Generated opaque share tokens from 24 random bytes and persisted only SHA-256 token hashes in Private Vercel Blob. Raw share tokens are returned to the client only when issued and are not stored server-side.
+- Enforced one active share grant per booking. Issuing or rotating a new link invalidates the prior token, while owner recovery credentials can explicitly revoke the active grant.
+- Added temporary share-token authorization to `/api/bookings` through `X-Mosigo-Share-Token` while preserving `schemaVersion: v10`, `resource: durable-booking-resource`, M10 IDs, durable recovery, lifecycle authority, and revision + ETag CAS behavior.
+- Added `src/v12-sharing.js` and `MosigoV12SecureSharing` for secure share issuance, rotation, revocation, URL-fragment handoff, fragment redaction, recipient recovery, and session-scoped share access.
+- Added `src/v12-ui.js` for owner copy/revoke controls, recipient temporary-access status, successful shared-booking routing, and owner/recipient UI separation.
+- Kept share credentials out of query strings and persisted recipient share tokens only in `sessionStorage`, never `localStorage`.
+- Added fail-closed validation for persisted share records including version, booking ID, token hash, issue/expiry timestamps, revocation timestamp, and generation.
+- Added clipboard fallback and immediate rollback revocation when a newly issued secure share link cannot be delivered to the clipboard.
+- Added UI/UX polish that separates the desktop portfolio guide from the interactive app, removes duplicate demo CTA competition, and aligns home/settings visual priority with actual DOM order.
+- Added `tests/booking-share-store.test.js`, `tests/booking-shares.test.js`, `tests/v12-sharing.test.js`, `tests/v12-static.test.js`, and Production Smoke coverage for issue/read/rotate/revoke behavior, token storage rules, fragment redaction, owner/recipient controls, malformed-record rejection, and v12 asset wiring.
+
+### Production QA
+- Merged the initial v12 Secure Sharing implementation to `main` as `4495db5d2bc868dfe5e2cd82dee3bc5fcaa4fe2f` while keeping `VERSION` at `11.0.0` until Production could be verified.
+- Passed PR #47 Quality #93 for the pre-deployment security and UI/UX hardening changes.
+- Merged the hardened app source to `main` as `b5494fe5b71d0af0c3d70c52d0afc8f1f19302f8`.
+- Verified Vercel Production deployment `dpl_8ukUTSmncjMDntPG7gAUq9nwcFM8` reached `READY` from the hardened GitHub-verified `main` commit.
+- Confirmed live `/api/health` reports `b5494fe5b71d0af0c3d70c52d0afc8f1f19302f8`, live `/api/bookings` reports secure sharing enabled while remaining v10/M10, and live `/api/booking-shares` reports the enabled v12 secure-share capability.
+- Confirmed live `/v12-sharing.js` and `/v12-ui.js` return HTTP 200 with the hardened share-delivery and recipient UX logic.
+- Passed main Quality #94 and Production Smoke #65, including secure share issuance, shared canonical read, token rotation with old-token denial, new-token authorization, revocation, and post-revoke denial.
+
+### Scope
+v12 advances Mosigo from **Portable Recovery Beta** to **Secure Sharing Beta** by replacing raw permanent recovery-link sharing as the primary handoff flow with temporary server-validated bearer capabilities. It still does not provide user-account authentication, identity ownership, broad booking listing/search, a tamper-proof audit system, or real operational healthcare booking infrastructure. Share tokens are temporary booking capabilities and should only be shared with intended recipients.
+
 ## v11.0.0 — 2026-09-14
 
 ### Portable Recovery Beta
