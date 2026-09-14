@@ -129,6 +129,22 @@
       v12Ui.dataset.mosigoV12Ui='1';
       document.head.appendChild(v12Ui);
     }
+
+    // v13 adds authenticated account ownership and cross-device owned-booking listing.
+    if(typeof document!=='undefined' && !document.querySelector('script[data-mosigo-v13-account]')){
+      const v13=document.createElement('script');
+      v13.src='v13-account.js';
+      v13.async=false;
+      v13.dataset.mosigoV13Account='1';
+      document.head.appendChild(v13);
+    }
+    if(typeof document!=='undefined' && !document.querySelector('script[data-mosigo-v13-ui]')){
+      const v13Ui=document.createElement('script');
+      v13Ui.src='v13-ui.js';
+      v13Ui.async=false;
+      v13Ui.dataset.mosigoV13Ui='1';
+      document.head.appendChild(v13Ui);
+    }
   }
 
   initV10BookingDurability();

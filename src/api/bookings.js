@@ -10,12 +10,17 @@ const {
   BookingStoreError,
   createBookingStore,
   createRecoveryKey,
+  isOwnedByAccount,
   recoveryKeyMatches
 } = require('../lib/booking-store.js');
 const {
   BookingShareStoreError,
   createBookingShareStore
 } = require('../lib/booking-share-store.js');
+const {
+  AccountStoreError,
+  createAccountStore
+} = require('../lib/account-store.js');
 
 function readBody(req) {
   if (!req || req.body == null) return {};
@@ -54,7 +59,8 @@ function writeError(res, error) {
   const known =
     error instanceof BookingServiceError ||
     error instanceof BookingStoreError ||
-    error instanceof BookingShareStoreError;
+    error instanceof BookingShareStoreError ||
+    error instanceof AccountStoreError;
   const status = known ? error.status : 500;
   return res.status(status).json({
     success: false,
@@ -64,25 +70,37 @@ function writeError(res, error) {
   });
 }
 
-async function assertBookingAccess(current, req, body, bookingId, shareStore) {
+async function optionalAccountSession(accountStore, req) {
+  if (!accountStore?.configured || typeof accountStore.sessionFromRequest !== 'function') return null;
+  return accountStore.sessionFromRequest(req);
+}
+
+async function assertBookingAccess(current, req, body, bookingId, shareStore, accountStore) {
   const recoveryKey = readRecoveryKey(req, body);
   if (recoveryKey && recoveryKeyMatches(current?.record, recoveryKey)) {
-    return { type: 'recovery-key' };
+    return { type: 'recovery-key', account: null };
   }
+
+  const session = await optionalAccountSession(accountStore, req);
+  if (session?.account?.accountId && isOwnedByAccount(current?.record, session.account.accountId)) {
+    return { type: 'account-session', account: session.account };
+  }
+
   const shareToken = readShareToken(req);
   if (shareToken) {
     if (!shareStore?.configured) {
       throw new BookingShareStoreError('booking_share_storage_unavailable', 'Secure booking-share storage is not configured for this deployment.', 503);
     }
     await shareStore.validate(bookingId, shareToken);
-    return { type: 'share-token' };
+    return { type: 'share-token', account: null };
   }
-  throw new BookingServiceError('booking_recovery_key_invalid', 'A valid recovery key or active share token is required for this durable booking.', 401);
+  throw new BookingServiceError('booking_recovery_key_invalid', 'A valid recovery key, owner account session, or active share token is required for this durable booking.', 401);
 }
 
 function createHandler({
   store = createBookingStore(),
-  shareStore = createBookingShareStore()
+  shareStore = createBookingShareStore(),
+  accountStore = createAccountStore()
 } = {}) {
   return async function handler(req, res) {
     writeCommonHeaders(res);
@@ -92,6 +110,7 @@ function createHandler({
         const bookingId = readQuery(req, 'bookingId');
         if (!bookingId) {
           const secureSharing = Boolean(store.configured && shareStore.configured);
+          const accountOwnership = Boolean(store.configured && accountStore.configured);
           return res.status(200).json({
             success: true,
             source: 'prototype',
@@ -102,7 +121,11 @@ function createHandler({
             shareEndpoint: secureSharing ? '/api/booking-shares' : null,
             shareRevocable: secureSharing,
             shareRotatable: secureSharing,
-            shareServerValidation: secureSharing
+            shareServerValidation: secureSharing,
+            accountOwnership,
+            accountEndpoint: accountOwnership ? '/api/account' : null,
+            accountSessionCredential: accountOwnership ? 'http-only-secure-cookie' : 'unavailable',
+            accountBookingScope: accountOwnership ? 'owner-account' : 'unavailable'
           });
         }
         if (!store.configured) {
@@ -115,12 +138,14 @@ function createHandler({
         if (!current) {
           throw new BookingServiceError('booking_not_found', 'No durable booking was found for this ID.', 404);
         }
-        await assertBookingAccess(current, req, {}, bookingId, shareStore);
+        const access = await assertBookingAccess(current, req, {}, bookingId, shareStore, accountStore);
         return res.status(200).json({
           success: true,
           source: 'prototype',
           schemaVersion: 'v10',
           durablePersisted: true,
+          accessType: access.type,
+          accountOwned: Boolean(current.record.ownerAccountId),
           booking: current.record.booking
         });
       }
@@ -137,14 +162,18 @@ function createHandler({
             booking
           });
         }
+        const session = await optionalAccountSession(accountStore, req);
+        const ownerAccountId = session?.account?.accountId || '';
         const recoveryKey = createRecoveryKey();
-        await store.create(booking, recoveryKey);
+        if (ownerAccountId) await accountStore.addBooking(ownerAccountId, booking.bookingId);
+        await store.create(booking, recoveryKey, { ownerAccountId: ownerAccountId || null });
         return res.status(201).json({
           success: true,
           source: 'prototype',
           schemaVersion: 'v10',
           durablePersisted: true,
           recoveryKey,
+          accountOwned: Boolean(ownerAccountId),
           booking
         });
       }
@@ -166,22 +195,26 @@ function createHandler({
 
         const current = await store.read(submitted.bookingId);
         if (!current) {
+          const session = await optionalAccountSession(accountStore, req);
+          const ownerAccountId = session?.account?.accountId || '';
           const recoveryKey = createRecoveryKey();
-          await store.create(submitted, recoveryKey);
+          if (ownerAccountId) await accountStore.addBooking(ownerAccountId, submitted.bookingId);
+          await store.create(submitted, recoveryKey, { ownerAccountId: ownerAccountId || null });
           return res.status(200).json({
             success: true,
             source: 'prototype',
             schemaVersion: 'v10',
             recovered: true,
             migratedToDurable: true,
-            recoveryScope: 'booking-key',
+            recoveryScope: ownerAccountId ? 'owner-account' : 'booking-key',
             durablePersisted: true,
             recoveryKey,
+            accountOwned: Boolean(ownerAccountId),
             booking: submitted
           });
         }
 
-        await assertBookingAccess(current, req, body, submitted.bookingId, shareStore);
+        const access = await assertBookingAccess(current, req, body, submitted.bookingId, shareStore, accountStore);
         const canonical = current.record.booking;
         if (Number(submitted.revision) > Number(canonical.revision)) {
           throw new BookingServiceError('booking_revision_conflict', 'Client snapshot is ahead of the durable canonical revision.', 409);
@@ -191,8 +224,10 @@ function createHandler({
           source: 'prototype',
           schemaVersion: 'v10',
           recovered: true,
-          recoveryScope: readShareToken(req) ? 'temporary-share' : 'booking-key',
+          recoveryScope: access.type === 'account-session' ? 'owner-account' : (access.type === 'share-token' ? 'temporary-share' : 'booking-key'),
           durablePersisted: true,
+          accessType: access.type,
+          accountOwned: Boolean(current.record.ownerAccountId),
           booking: canonical
         });
       }
@@ -218,7 +253,7 @@ function createHandler({
         if (!current) {
           throw new BookingServiceError('booking_not_found', 'No durable booking was found for this ID.', 404);
         }
-        await assertBookingAccess(current, req, body, bookingId, shareStore);
+        const access = await assertBookingAccess(current, req, body, bookingId, shareStore, accountStore);
 
         const expectedRevision = Number(body.expectedRevision ?? body.booking?.revision);
         const canonicalRevision = Number(current.record.booking?.revision);
@@ -233,6 +268,8 @@ function createHandler({
           source: 'prototype',
           schemaVersion: 'v10',
           durablePersisted: true,
+          accessType: access.type,
+          accountOwned: Boolean(current.record.ownerAccountId),
           booking
         });
       }
@@ -253,3 +290,4 @@ function createHandler({
 const handler = createHandler();
 module.exports = handler;
 module.exports.createHandler = createHandler;
+module.exports.assertBookingAccess = assertBookingAccess;

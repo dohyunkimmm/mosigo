@@ -37,6 +37,10 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function cookieFromResponse(response) {
+  return String(response.headers.get('set-cookie') || '').split(';')[0];
+}
+
 async function runChecks() {
   const root = await fetchText('/');
   assert(root.response.ok, `/ returned ${root.response.status}`);
@@ -81,6 +85,9 @@ async function runChecks() {
   assert(bookings.json.shareCredential === 'opaque-expiring-share-token', 'Unexpected v12 share credential');
   assert(bookings.json.shareEndpoint === '/api/booking-shares', 'Unexpected v12 share endpoint');
   assert(bookings.json.shareRevocable === true && bookings.json.shareRotatable === true, 'v12 share revocation/rotation is not enabled');
+  assert(bookings.json.accountOwnership === true, 'v13 account ownership capability is not enabled');
+  assert(bookings.json.accountEndpoint === '/api/account', 'Unexpected v13 account endpoint');
+  assert(bookings.json.accountSessionCredential === 'http-only-secure-cookie', 'Unexpected v13 account session credential');
 
   const shareCapability = await fetchJson('/api/booking-shares');
   assert(shareCapability.response.ok, `/api/booking-shares returned ${shareCapability.response.status}`);
@@ -90,9 +97,19 @@ async function runChecks() {
   assert(shareCapability.json.enabled === true, 'Secure booking-share storage is not enabled');
   assert(shareCapability.json.revocable === true && shareCapability.json.rotatable === true, 'Secure sharing controls are incomplete');
   assert(shareCapability.json.rawTokenStoredServerSide === false, 'Server must not store raw share tokens');
+  assert(shareCapability.json.ownerAccountSession === true, 'v13 account owners should be able to manage v12 sharing');
+
+  const accountCapability = await fetchJson('/api/account');
+  assert(accountCapability.response.ok, `/api/account returned ${accountCapability.response.status}`);
+  assert(accountCapability.json.success === true, 'Account API did not report success');
+  assert(accountCapability.json.schemaVersion === 'v13', `Unexpected account schema: ${accountCapability.json.schemaVersion}`);
+  assert(accountCapability.json.resource === 'account-ownership-resource', `Unexpected account resource: ${accountCapability.json.resource}`);
+  assert(accountCapability.json.enabled === true, 'Account ownership storage is not enabled');
+  assert(accountCapability.json.sessionCredential === 'http-only-secure-cookie', 'Account session is not cookie-backed');
+  assert(accountCapability.json.bookingOwnership === true && accountCapability.json.bookingListing === true, 'Account ownership/listing capability is incomplete');
 
   const durable = bookings.json.durableServerPersistence === true;
-  if (RELEASE_VERSION.startsWith('10.') || RELEASE_VERSION.startsWith('11.') || RELEASE_VERSION.startsWith('12.')) {
+  if (['10.','11.','12.','13.'].some((prefix) => RELEASE_VERSION.startsWith(prefix))) {
     assert(durable, 'v10+ release requires durable server persistence to be configured');
   }
   if (durable) {
@@ -223,9 +240,54 @@ async function runChecks() {
       headers: { 'X-Mosigo-Share-Token': secondToken }
     });
     assert(revokedCanonical.response.status === 401 && revokedCanonical.json.success === false, 'Revoked share token should not authorize booking access');
+
+    const unique = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    const accountEmail = `smoke-${unique}@example.com`;
+    const accountPassword = `Mosigo-${unique}-Pass!`;
+    const registered = await requestJson('/api/account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'register', email: accountEmail, password: accountPassword })
+    });
+    assert(registered.response.status === 201 && registered.json.authenticated === true, 'v13 account registration failed');
+    const accountCookie = cookieFromResponse(registered.response);
+    assert(/^mosigo_v13_session=/.test(accountCookie), 'v13 registration did not return a session cookie');
+
+    const ownedCreated = await requestJson('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: accountCookie },
+      body: JSON.stringify({ booking: sampleBooking })
+    });
+    assert(ownedCreated.response.status === 201 && ownedCreated.json.accountOwned === true, 'v13 account-owned booking creation failed');
+    const ownedBookingId = ownedCreated.json.booking?.bookingId;
+
+    const ownedList = await fetchJson('/api/account?resource=bookings', { headers: { Cookie: accountCookie } });
+    assert(ownedList.response.ok && ownedList.json.bookings?.some((item) => item.bookingId === ownedBookingId), 'v13 owned booking listing failed');
+
+    const ownedCanonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(ownedBookingId)}`, { headers: { Cookie: accountCookie } });
+    assert(ownedCanonical.response.ok && ownedCanonical.json.accessType === 'account-session', 'v13 account session did not authorize owned booking');
+
+    const accountShare = await requestJson('/api/booking-shares', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: accountCookie },
+      body: JSON.stringify({ bookingId: ownedBookingId, ttlMinutes: 60 })
+    });
+    assert(accountShare.response.status === 201 && accountShare.json.ownerAccessType === 'account-session', 'v13 account owner could not issue v12 share');
+
+    const accountRevoke = await requestJson('/api/booking-shares', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Cookie: accountCookie },
+      body: JSON.stringify({ bookingId: ownedBookingId })
+    });
+    assert(accountRevoke.response.ok && accountRevoke.json.share?.active === false, 'v13 account owner could not revoke v12 share');
+
+    const loggedOut = await requestJson('/api/account', { method: 'DELETE', headers: { Cookie: accountCookie } });
+    assert(loggedOut.response.ok && loggedOut.json.authenticated === false, 'v13 logout failed');
+    const afterLogout = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(ownedBookingId)}`, { headers: { Cookie: accountCookie } });
+    assert(afterLogout.response.status === 401, 'revoked v13 session should not authorize owned booking');
   }
 
-  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js', '/v10-booking.js', '/v11-booking.js', '/v11-ui.js', '/v12-sharing.js', '/v12-ui.js']) {
+  for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js', '/v10-booking.js', '/v11-booking.js', '/v11-ui.js', '/v12-sharing.js', '/v12-ui.js', '/v13-account.js', '/v13-ui.js']) {
     const result = await fetchText(asset);
     assert(result.response.ok, `${asset} returned ${result.response.status}`);
     assert(/javascript/i.test(result.response.headers.get('content-type') || ''), `${asset} did not return JavaScript`);
@@ -238,6 +300,8 @@ async function runChecks() {
   assert(v10Asset.text.includes("v11Ui.src='v11-ui.js'"), 'v10 does not load the v11 portable recovery UI');
   assert(v10Asset.text.includes("v12.src='v12-sharing.js'"), 'v10 does not load the v12 secure sharing runtime');
   assert(v10Asset.text.includes("v12Ui.src='v12-ui.js'"), 'v10 does not load the v12 secure sharing UI');
+  assert(v10Asset.text.includes("v13.src='v13-account.js'"), 'v10 does not load the v13 account ownership runtime');
+  assert(v10Asset.text.includes("v13Ui.src='v13-ui.js'"), 'v10 does not load the v13 account ownership UI');
 
   const v11Asset = await fetchText('/v11-booking.js');
   assert(v11Asset.text.includes('MosigoV11BookingHandoff'), 'v11 portable recovery facade is missing');
@@ -255,12 +319,25 @@ async function runChecks() {
   assert(v12Asset.text.includes('#mosigo-share='), 'v12 secure share fragment contract is missing');
   assert(v12Asset.text.includes('X-Mosigo-Share-Token'), 'v12 secure share credential header is missing');
   assert(v12Asset.text.includes('history?.replaceState'), 'v12 secure share fragment redaction is missing');
-  assert(!v12Asset.text.includes('?shareToken='), 'v12 must not put share credentials in URL query parameters');
+  assert(v12Asset.text.includes('setOwnerAccessProvider'), 'v12 sharing is not wired for v13 account owners');
+  assert(!v12Asset.text.includes('?shareToken='), 'v12 must not put share credentials in query parameters');
 
   const v12UiAsset = await fetchText('/v12-ui.js');
   assert(v12UiAsset.text.includes('MosigoV12SecureSharingUi'), 'v12 secure sharing UI facade is missing');
   assert(v12UiAsset.text.includes('공유 링크 폐기'), 'v12 share revocation control is missing');
   assert(v12UiAsset.text.includes('안전한 이어보기 링크 복사'), 'v12 expiring share copy control is missing');
+
+  const v13Asset = await fetchText('/v13-account.js');
+  assert(v13Asset.text.includes('MosigoV13AccountOwnership'), 'v13 account ownership facade is missing');
+  assert(v13Asset.text.includes("ACCOUNT_API='/api/account'"), 'v13 account endpoint wiring is missing');
+  assert(v13Asset.text.includes("credentials:'same-origin'"), 'v13 account requests must use same-origin cookie credentials');
+  assert(!v13Asset.text.includes('localStorage'), 'v13 account session must not be stored in localStorage');
+  assert(!v13Asset.text.includes('sessionStorage'), 'v13 account session must not be stored in sessionStorage');
+
+  const v13UiAsset = await fetchText('/v13-ui.js');
+  assert(v13UiAsset.text.includes('계정 로그인 · 예약 이어보기'), 'v13 account login entry is missing');
+  assert(v13UiAsset.text.includes('내 예약 보기'), 'v13 owned booking list UI is missing');
+  assert(v13UiAsset.text.includes('현재 예약을 내 계정에 연결'), 'v13 booking claim UI is missing');
 
   const robots = await fetchText('/robots.txt');
   assert(robots.response.ok && /Sitemap:\s*https:\/\/mosigo-nine\.vercel\.app\/sitemap\.xml/i.test(robots.text), 'robots.txt is not production-ready');
@@ -276,7 +353,8 @@ async function runChecks() {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
       const commit = await runChecks();
-      console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}; durable=${RELEASE_VERSION.startsWith('10.') || RELEASE_VERSION.startsWith('11.') || RELEASE_VERSION.startsWith('12.') ? 'required' : 'development'}`);
+      const durableRequired = ['10.','11.','12.','13.'].some((prefix) => RELEASE_VERSION.startsWith(prefix));
+      console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}; durable=${durableRequired ? 'required' : 'development'}`);
       process.exit(0);
     } catch (error) {
       lastError = error;

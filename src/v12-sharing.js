@@ -18,6 +18,7 @@
     const SHARE_TOKEN_PATTERN=/^[A-Za-z0-9_-]{24,}$/;
     const DEFAULT_TTL_MINUTES=60;
     let queue=Promise.resolve();
+    let ownerAccessProvider=()=>false;
     let state={ status:'ready', bookingId:'', active:false, expiresAt:'', redacted:false, error:'' };
 
     function currentBookingId(){
@@ -133,17 +134,28 @@
       return String(durability.getRecoveryKey?.(bookingId) || sync.getRecoveryKey?.(bookingId) || '').trim();
     }
 
+    function accountOwnerAccess(bookingId){
+      try{return ownerAccessProvider(String(bookingId||'').trim().toUpperCase())===true;}catch(error){return false;}
+    }
+
     function hasOwnerAccess(bookingId=currentBookingId()){
       const id=String(bookingId||'').trim().toUpperCase();
-      return BOOKING_ID_PATTERN.test(id) && Boolean(recoveryKeyFor(id));
+      return BOOKING_ID_PATTERN.test(id) && Boolean(recoveryKeyFor(id) || accountOwnerAccess(id));
     }
 
     function ensureOwnerAccess(bookingId){
       const id=String(bookingId||'').trim().toUpperCase();
       if(!BOOKING_ID_PATTERN.test(id)) throw new Error('공유할 예약 번호를 찾을 수 없습니다.');
       const recoveryKey=recoveryKeyFor(id);
-      if(!recoveryKey) throw new Error('이 예약의 소유자 복구 키를 찾을 수 없습니다.');
+      if(!recoveryKey && !accountOwnerAccess(id)) throw new Error('이 예약의 소유자 권한을 확인할 수 없습니다.');
       return { bookingId:id, recoveryKey };
+    }
+
+    function ownerHeaders(owner,includeContentType=false){
+      const headers={};
+      if(includeContentType) headers['Content-Type']='application/json';
+      if(owner.recoveryKey) headers['X-Mosigo-Recovery-Key']=owner.recoveryKey;
+      return headers;
     }
 
     async function issueShare({ bookingId=currentBookingId(), ttlMinutes=DEFAULT_TTL_MINUTES }={}){
@@ -151,10 +163,7 @@
       publish('issuing',{ bookingId:owner.bookingId });
       const data=await requestJson(SHARE_API,{
         method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'X-Mosigo-Recovery-Key':owner.recoveryKey
-        },
+        headers:ownerHeaders(owner,true),
         body:JSON.stringify({ bookingId:owner.bookingId, ttlMinutes })
       });
       const shareToken=String(data.shareToken||'').trim();
@@ -198,7 +207,7 @@
     async function getShareStatus(bookingId=currentBookingId()){
       const owner=ensureOwnerAccess(bookingId);
       const data=await requestJson(SHARE_API+'?bookingId='+encodeURIComponent(owner.bookingId),{
-        headers:{ 'X-Mosigo-Recovery-Key':owner.recoveryKey }
+        headers:ownerHeaders(owner,false)
       });
       publish('status',{
         bookingId:owner.bookingId,
@@ -213,10 +222,7 @@
       publish('revoking',{ bookingId:owner.bookingId });
       const data=await requestJson(SHARE_API,{
         method:'DELETE',
-        headers:{
-          'Content-Type':'application/json',
-          'X-Mosigo-Recovery-Key':owner.recoveryKey
-        },
+        headers:ownerHeaders(owner,true),
         body:JSON.stringify({ bookingId:owner.bookingId })
       });
       publish('revoked',{ bookingId:owner.bookingId, active:false, expiresAt:data.share?.expiresAt||'' });
@@ -260,6 +266,7 @@
       buildShareFragment,
       redactShareFragment,
       hasOwnerAccess,
+      setOwnerAccessProvider:(provider)=>{ ownerAccessProvider=typeof provider==='function' ? provider : ()=>false; publish('ready',{ bookingId:currentBookingId() }); },
       getState:()=>({ ...state })
     };
 
