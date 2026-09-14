@@ -61,6 +61,34 @@
       return data;
     }
 
+    async function copyText(text){
+      const value=String(text||'');
+      if(!value) return false;
+      if(globalThis.navigator?.clipboard?.writeText){
+        try{
+          await globalThis.navigator.clipboard.writeText(value);
+          return true;
+        }catch(error){}
+      }
+
+      const doc=globalThis.document;
+      if(!doc?.body || typeof doc.createElement!=='function' || typeof doc.execCommand!=='function') return false;
+      const textarea=doc.createElement('textarea');
+      textarea.value=value;
+      textarea.setAttribute('readonly','');
+      textarea.style.position='fixed';
+      textarea.style.opacity='0';
+      textarea.style.pointerEvents='none';
+      doc.body.appendChild(textarea);
+      textarea.select?.();
+      textarea.setSelectionRange?.(0,value.length);
+      let copied=false;
+      try{ copied=doc.execCommand('copy')===true; }catch(error){}
+      if(typeof textarea.remove==='function') textarea.remove();
+      else doc.body.removeChild?.(textarea);
+      return copied;
+    }
+
     function parseShareFragment(fragment=globalThis.location?.hash||''){
       const raw=String(fragment||'').trim();
       if(!raw.startsWith(FRAGMENT_PREFIX)) return null;
@@ -105,6 +133,11 @@
       return String(durability.getRecoveryKey?.(bookingId) || sync.getRecoveryKey?.(bookingId) || '').trim();
     }
 
+    function hasOwnerAccess(bookingId=currentBookingId()){
+      const id=String(bookingId||'').trim().toUpperCase();
+      return BOOKING_ID_PATTERN.test(id) && Boolean(recoveryKeyFor(id));
+    }
+
     function ensureOwnerAccess(bookingId){
       const id=String(bookingId||'').trim().toUpperCase();
       if(!BOOKING_ID_PATTERN.test(id)) throw new Error('공유할 예약 번호를 찾을 수 없습니다.');
@@ -137,12 +170,23 @@
       return { ...data, link };
     }
 
+    async function rollbackIssuedShare(bookingId){
+      try{
+        await revokeShare(bookingId);
+        return true;
+      }catch(error){
+        console.warn('[Mosigo v12 secure sharing] failed to revoke un-copied share',error?.message||error);
+        return false;
+      }
+    }
+
     async function copyShareLink(options={}){
       const issued=await issueShare(options);
-      if(!globalThis.navigator?.clipboard?.writeText){
-        throw new Error('이 브라우저에서는 링크 복사를 지원하지 않습니다.');
+      const copied=await copyText(issued.link);
+      if(!copied){
+        await rollbackIssuedShare(issued.bookingId);
+        throw new Error('링크를 복사하지 못해 새 공유 링크를 즉시 폐기했습니다.');
       }
-      await globalThis.navigator.clipboard.writeText(issued.link);
       publish('copied',{
         bookingId:issued.bookingId,
         active:true,
@@ -215,6 +259,7 @@
       parseShareFragment,
       buildShareFragment,
       redactShareFragment,
+      hasOwnerAccess,
       getState:()=>({ ...state })
     };
 
