@@ -38,6 +38,37 @@ function clampTtlMinutes(value) {
   return Math.min(MAX_SHARE_TTL_MINUTES, Math.max(MIN_SHARE_TTL_MINUTES, Math.round(parsed)));
 }
 
+function assertValidShareRecord(record, expectedBookingId = '') {
+  const issuedAtMs = Date.parse(String(record?.issuedAt || ''));
+  const expiresAtMs = Date.parse(String(record?.expiresAt || ''));
+  const revokedAtMs = record?.revokedAt == null ? null : Date.parse(String(record.revokedAt));
+  const generation = Number(record?.generation);
+  const bookingId = String(record?.bookingId || '').trim();
+  const expected = String(expectedBookingId || '').trim();
+  const valid = Boolean(
+    record &&
+    typeof record === 'object' &&
+    record.version === 1 &&
+    bookingId &&
+    (!expected || bookingId === expected) &&
+    /^[a-f0-9]{64}$/i.test(String(record.shareTokenHash || '')) &&
+    Number.isFinite(issuedAtMs) &&
+    Number.isFinite(expiresAtMs) &&
+    expiresAtMs > issuedAtMs &&
+    (revokedAtMs == null || (Number.isFinite(revokedAtMs) && revokedAtMs >= issuedAtMs)) &&
+    Number.isInteger(generation) &&
+    generation >= 1
+  );
+  if (!valid) {
+    throw new BookingShareStoreError(
+      'booking_share_record_invalid',
+      'Stored booking-share record failed integrity validation.',
+      500
+    );
+  }
+  return record;
+}
+
 function isConflictError(error) {
   return (
     error?.name === 'BlobPreconditionFailedError' ||
@@ -61,7 +92,7 @@ function publicShareState(record, now = Date.now()) {
     };
   }
   const expiresAtMs = Date.parse(record.expiresAt || '');
-  const expired = Number.isFinite(expiresAtMs) && expiresAtMs <= Number(now);
+  const expired = !Number.isFinite(expiresAtMs) || expiresAtMs <= Number(now);
   const revoked = Boolean(record.revokedAt);
   return {
     exists: true,
@@ -123,6 +154,7 @@ function createBookingShareStore({ env = process.env, blobApi = null, now = () =
     } catch (error) {
       throw new BookingShareStoreError('booking_share_record_invalid', 'Stored booking-share record is not valid JSON.', 500);
     }
+    assertValidShareRecord(record, bookingId);
     return {
       record,
       etag: result.blob?.etag || result.etag || ''
@@ -131,6 +163,7 @@ function createBookingShareStore({ env = process.env, blobApi = null, now = () =
 
   async function write(current, record) {
     assertConfigured();
+    assertValidShareRecord(record, record?.bookingId);
     const blob = await getBlobApi();
     const options = {
       access: 'private',
@@ -226,6 +259,7 @@ module.exports = {
   DEFAULT_SHARE_TTL_MINUTES,
   MIN_SHARE_TTL_MINUTES,
   MAX_SHARE_TTL_MINUTES,
+  assertValidShareRecord,
   clampTtlMinutes,
   createBookingShareStore,
   createShareToken,

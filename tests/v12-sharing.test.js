@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(ROOT, 'src', 'v12-sharing.js'), 'utf8');
 
-function createRuntime() {
+function createRuntime({ clipboardFails = false, ownerAccess = true } = {}) {
   const bookingId = 'M10ABCD1234';
   const recoveryKey = 'owner_recovery_key_1234567890';
   const shareToken = 'share_token_abcdefghijklmnopqrstuvwxyz';
@@ -31,7 +31,10 @@ function createRuntime() {
     },
     navigator: {
       clipboard: {
-        async writeText(value) { calls.push(['clipboard', value]); }
+        async writeText(value) {
+          calls.push(['clipboard', value]);
+          if (clipboardFails) throw new Error('clipboard denied');
+        }
       }
     },
     async fetch(url, options = {}) {
@@ -68,11 +71,11 @@ function createRuntime() {
       throw new Error(`Unexpected fetch: ${url}`);
     },
     MosigoV10BookingDurability: {
-      getRecoveryKey: (id) => id === bookingId ? recoveryKey : ''
+      getRecoveryKey: (id) => ownerAccess && id === bookingId ? recoveryKey : ''
     },
     MosigoV6BookingSync: {
       getState: () => ({ bookingId }),
-      getRecoveryKey: () => recoveryKey,
+      getRecoveryKey: () => ownerAccess ? recoveryKey : '',
       setShareToken(id, token) { calls.push(['setShareToken', id, token]); },
       hydrate(booking) { calls.push(['syncHydrate', booking.bookingId]); }
     },
@@ -103,6 +106,8 @@ test('v12 runtime is syntax-valid and exposes secure sharing facade', () => {
   assert.equal(typeof sandbox.MosigoV12SecureSharing.copyShareLink, 'function');
   assert.equal(typeof sandbox.MosigoV12SecureSharing.revokeShare, 'function');
   assert.equal(typeof sandbox.MosigoV12SecureSharing.recoverFromShareFragment, 'function');
+  assert.equal(typeof sandbox.MosigoV12SecureSharing.hasOwnerAccess, 'function');
+  assert.equal(sandbox.MosigoV12SecureSharing.hasOwnerAccess(), true);
 });
 
 test('secure share link uses an expiring server token in the URL fragment only', async () => {
@@ -116,6 +121,22 @@ test('secure share link uses an expiring server token in the URL fragment only',
   assert.equal(post[2].headers['X-Mosigo-Recovery-Key'], 'owner_recovery_key_1234567890');
   const copied = calls.find((call) => call[0] === 'clipboard');
   assert.equal(copied[1], issued.link);
+});
+
+test('newly issued share is revoked when clipboard delivery fails', async () => {
+  const { sandbox, calls } = createRuntime({ clipboardFails: true });
+  const issued = await sandbox.MosigoV12SecureSharing.copyShareLink({ ttlMinutes: 60 });
+  assert.equal(issued, null);
+  const postIndex = calls.findIndex((call) => call[0] === 'fetch' && call[1] === '/api/booking-shares' && call[2]?.method === 'POST');
+  const deleteIndex = calls.findIndex((call) => call[0] === 'fetch' && call[1] === '/api/booking-shares' && call[2]?.method === 'DELETE');
+  assert.ok(postIndex >= 0 && deleteIndex > postIndex, 'failed copy should revoke the newly issued capability');
+  assert.equal(sandbox.MosigoV12SecureSharing.getState().status, 'error');
+  assert.match(sandbox.MosigoV12SecureSharing.getState().error, /즉시 폐기/);
+});
+
+test('owner access detection distinguishes temporary share recipients', () => {
+  const { sandbox } = createRuntime({ ownerAccess: false });
+  assert.equal(sandbox.MosigoV12SecureSharing.hasOwnerAccess(), false);
 });
 
 test('share recovery redacts the fragment before sending the server-validated token header', async () => {

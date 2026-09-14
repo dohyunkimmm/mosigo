@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const {
   createBookingShareStore,
   hashShareToken,
+  publicShareState,
   sharePath
 } = require('../src/lib/booking-share-store.js');
 
@@ -90,4 +91,36 @@ test('share TTL is clamped to the supported server window', async () => {
   assert.equal(Date.parse(short.record.expiresAt) - Date.parse(short.record.issuedAt), 5 * 60 * 1000);
   const long = await store.issue('M10BBB12345', 99999);
   assert.equal(Date.parse(long.record.expiresAt) - Date.parse(long.record.issuedAt), 24 * 60 * 60 * 1000);
+});
+
+test('malformed persisted share records fail closed', async () => {
+  const now = Date.parse('2026-09-14T00:00:00.000Z');
+  const blobApi = fakeBlobApi();
+  const store = createBookingShareStore({
+    env: { BLOB_READ_WRITE_TOKEN: 'test-token' },
+    blobApi,
+    now: () => now
+  });
+  const bookingId = 'M10BAD12345';
+  const token = 'share_token_abcdefghijklmnopqrstuvwxyz';
+  const malformed = {
+    version: 1,
+    bookingId,
+    shareTokenHash: hashShareToken(token),
+    issuedAt: '2026-09-14T00:00:00.000Z',
+    expiresAt: 'not-a-date',
+    revokedAt: null,
+    generation: 1
+  };
+  blobApi.objects.set(sharePath(bookingId), {
+    body: JSON.stringify(malformed),
+    etag: 'etag-corrupt'
+  });
+
+  await assert.rejects(
+    () => store.validate(bookingId, token),
+    (error) => error.code === 'booking_share_record_invalid'
+  );
+  assert.equal(publicShareState(malformed, now).active, false);
+  assert.equal(publicShareState(malformed, now).expired, true);
 });
