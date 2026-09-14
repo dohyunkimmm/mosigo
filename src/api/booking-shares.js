@@ -2,6 +2,7 @@ const { BookingServiceError, validBookingId } = require('../lib/booking-service.
 const {
   BookingStoreError,
   createBookingStore,
+  isOwnedByAccount,
   recoveryKeyMatches
 } = require('../lib/booking-store.js');
 const {
@@ -12,6 +13,10 @@ const {
   clampTtlMinutes,
   createBookingShareStore
 } = require('../lib/booking-share-store.js');
+const {
+  AccountStoreError,
+  createAccountStore
+} = require('../lib/account-store.js');
 
 function readBody(req) {
   if (!req || req.body == null) return {};
@@ -45,7 +50,8 @@ function writeError(res, error) {
   const known =
     error instanceof BookingServiceError ||
     error instanceof BookingStoreError ||
-    error instanceof BookingShareStoreError;
+    error instanceof BookingShareStoreError ||
+    error instanceof AccountStoreError;
   const status = known ? error.status : 500;
   return res.status(status).json({
     success: false,
@@ -55,7 +61,7 @@ function writeError(res, error) {
   });
 }
 
-function capability({ enabled = false } = {}) {
+function capability({ enabled = false, accountOwnership = false } = {}) {
   return {
     schemaVersion: 'v12',
     resource: 'secure-booking-share-resource',
@@ -70,11 +76,12 @@ function capability({ enabled = false } = {}) {
     singleActiveGrantPerBooking: enabled,
     defaultTtlMinutes: DEFAULT_SHARE_TTL_MINUTES,
     minTtlMinutes: MIN_SHARE_TTL_MINUTES,
-    maxTtlMinutes: MAX_SHARE_TTL_MINUTES
+    maxTtlMinutes: MAX_SHARE_TTL_MINUTES,
+    ownerAccountSession: Boolean(enabled && accountOwnership)
   };
 }
 
-async function assertOwner(store, bookingId, recoveryKey) {
+async function assertOwner(store, bookingId, recoveryKey, accountStore, req) {
   if (!store.configured) {
     throw new BookingStoreError('durable_storage_unavailable', 'Durable booking storage is not configured for this deployment.', 503);
   }
@@ -85,38 +92,47 @@ async function assertOwner(store, bookingId, recoveryKey) {
   if (!current) {
     throw new BookingServiceError('booking_not_found', 'No durable booking was found for this ID.', 404);
   }
-  if (!recoveryKey || !recoveryKeyMatches(current.record, recoveryKey)) {
-    throw new BookingServiceError('booking_recovery_key_invalid', 'A valid recovery key is required to manage booking sharing.', 401);
+  if (recoveryKey && recoveryKeyMatches(current.record, recoveryKey)) {
+    return { current, accessType: 'recovery-key' };
   }
-  return current;
+  if (accountStore?.configured) {
+    const session = await accountStore.sessionFromRequest(req);
+    if (session?.account?.accountId && isOwnedByAccount(current.record, session.account.accountId)) {
+      return { current, accessType: 'account-session', account: session.account };
+    }
+  }
+  throw new BookingServiceError('booking_recovery_key_invalid', 'A valid recovery key or owner account session is required to manage booking sharing.', 401);
 }
 
 function createHandler({
   store = createBookingStore(),
-  shareStore = createBookingShareStore()
+  shareStore = createBookingShareStore(),
+  accountStore = createAccountStore()
 } = {}) {
   return async function handler(req, res) {
     writeCommonHeaders(res);
 
     try {
       const enabled = Boolean(store.configured && shareStore.configured);
+      const accountOwnership = Boolean(enabled && accountStore.configured);
       if (req.method === 'GET') {
         const bookingId = readQuery(req, 'bookingId');
         if (!bookingId) {
           return res.status(200).json({
             success: true,
             source: 'prototype',
-            ...capability({ enabled })
+            ...capability({ enabled, accountOwnership })
           });
         }
         const body = readBody(req);
-        await assertOwner(store, bookingId, readRecoveryKey(req, body));
+        const owner = await assertOwner(store, bookingId, readRecoveryKey(req, body), accountStore, req);
         const share = await shareStore.status(bookingId);
         return res.status(200).json({
           success: true,
           source: 'prototype',
           schemaVersion: 'v12',
           bookingId,
+          ownerAccessType: owner.accessType,
           share
         });
       }
@@ -124,7 +140,7 @@ function createHandler({
       if (req.method === 'POST') {
         const body = readBody(req);
         const bookingId = String(body.bookingId || '').trim();
-        await assertOwner(store, bookingId, readRecoveryKey(req, body));
+        const owner = await assertOwner(store, bookingId, readRecoveryKey(req, body), accountStore, req);
         if (!shareStore.configured) {
           throw new BookingShareStoreError('booking_share_storage_unavailable', 'Secure booking-share storage is not configured for this deployment.', 503);
         }
@@ -135,6 +151,7 @@ function createHandler({
           source: 'prototype',
           schemaVersion: 'v12',
           bookingId,
+          ownerAccessType: owner.accessType,
           shareToken: issued.shareToken,
           share: {
             active: true,
@@ -150,7 +167,7 @@ function createHandler({
       if (req.method === 'DELETE') {
         const body = readBody(req);
         const bookingId = String(body.bookingId || readQuery(req, 'bookingId') || '').trim();
-        await assertOwner(store, bookingId, readRecoveryKey(req, body));
+        const owner = await assertOwner(store, bookingId, readRecoveryKey(req, body), accountStore, req);
         if (!shareStore.configured) {
           throw new BookingShareStoreError('booking_share_storage_unavailable', 'Secure booking-share storage is not configured for this deployment.', 503);
         }
@@ -179,6 +196,7 @@ function createHandler({
           source: 'prototype',
           schemaVersion: 'v12',
           bookingId,
+          ownerAccessType: owner.accessType,
           share
         });
       }

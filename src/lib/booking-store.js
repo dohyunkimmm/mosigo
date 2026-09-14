@@ -43,6 +43,16 @@ function recoveryKeyMatches(record, recoveryKey) {
   return expected.length === actual.length && expected.length > 0 && timingSafeEqual(expected, actual);
 }
 
+function validOwnerAccountId(value) {
+  return /^A13[A-F0-9]{16}$/.test(String(value || '').trim());
+}
+
+function isOwnedByAccount(record, accountId) {
+  const owner = String(record?.ownerAccountId || '').trim();
+  const candidate = String(accountId || '').trim();
+  return Boolean(owner && candidate && owner === candidate);
+}
+
 function isConflictError(error) {
   return (
     error?.name === 'BlobPreconditionFailedError' ||
@@ -108,13 +118,18 @@ function createBookingStore({ env = process.env, blobApi = null, now = () => Dat
     };
   }
 
-  async function create(booking, recoveryKey) {
+  async function create(booking, recoveryKey, { ownerAccountId = null } = {}) {
     assertConfigured();
+    const owner = String(ownerAccountId || '').trim();
+    if (owner && !validOwnerAccountId(owner)) {
+      throw new BookingStoreError('booking_owner_account_invalid', 'A valid owner account ID is required.', 422);
+    }
     const blob = await getBlobApi();
     const record = {
       version: 1,
       booking,
       recoveryKeyHash: hashRecoveryKey(recoveryKey),
+      ownerAccountId: owner || null,
       storedAt: new Date(now()).toISOString()
     };
     try {
@@ -133,19 +148,14 @@ function createBookingStore({ env = process.env, blobApi = null, now = () => Dat
     }
   }
 
-  async function update(current, booking) {
+  async function writeCurrent(current, record) {
     assertConfigured();
     if (!current?.etag) {
       throw new BookingStoreError('durable_record_etag_missing', 'Stored booking revision token is missing.', 409);
     }
     const blob = await getBlobApi();
-    const record = {
-      ...current.record,
-      booking,
-      storedAt: new Date(now()).toISOString()
-    };
     try {
-      const result = await blob.put(bookingPath(booking.bookingId), JSON.stringify(record), {
+      const result = await blob.put(bookingPath(record.booking?.bookingId), JSON.stringify(record), {
         access: 'private',
         contentType: 'application/json',
         allowOverwrite: true,
@@ -161,13 +171,41 @@ function createBookingStore({ env = process.env, blobApi = null, now = () => Dat
     }
   }
 
+  async function update(current, booking) {
+    const record = {
+      ...current.record,
+      booking,
+      storedAt: new Date(now()).toISOString()
+    };
+    return writeCurrent(current, record);
+  }
+
+  async function claimOwner(current, accountId) {
+    const owner = String(accountId || '').trim();
+    if (!validOwnerAccountId(owner)) {
+      throw new BookingStoreError('booking_owner_account_invalid', 'A valid owner account ID is required.', 422);
+    }
+    const existing = String(current?.record?.ownerAccountId || '').trim();
+    if (existing && existing !== owner) {
+      throw new BookingStoreError('booking_already_owned', 'This booking already belongs to another account.', 409);
+    }
+    if (existing === owner) return current;
+    const record = {
+      ...current.record,
+      ownerAccountId: owner,
+      storedAt: new Date(now()).toISOString()
+    };
+    return writeCurrent(current, record);
+  }
+
   return {
     configured,
     provider: 'vercel-blob-private',
     storeId,
     create,
     read,
-    update
+    update,
+    claimOwner
   };
 }
 
@@ -179,6 +217,8 @@ module.exports = {
   createRecoveryKey,
   hashRecoveryKey,
   isConfigured,
+  isOwnedByAccount,
   recoveryKeyMatches,
-  resolveBlobStoreId
+  resolveBlobStoreId,
+  validOwnerAccountId
 };
