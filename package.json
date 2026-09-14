@@ -1,6 +1,6 @@
 {
   "name": "mosigo-repository-quality",
-  "version": "12.0.0",
+  "version": "13.0.0",
   "private": true,
   "description": "Quality and source-structure checks for the Mosigo prototype repository.",
   "scripts": {
