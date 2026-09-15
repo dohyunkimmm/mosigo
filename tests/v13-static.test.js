@@ -51,6 +51,19 @@ test('v13 UI exposes login, owned booking list, claim, and integrated share mana
   assert.doesNotThrow(() => new Function(ui), 'v13 UI should be syntax-valid');
 });
 
+test('v13 account UI refinement keeps visual states and dialog accessibility in a scoped stylesheet', () => {
+  const ui = read('v13-ui.js');
+  const css = read('v13-ui.css');
+  assert.match(ui, /href:'v13-ui\.css'/, 'v13 UI should load its scoped polish stylesheet');
+  assert.match(ui, /'aria-modal':'true'/, 'account surfaces should be exposed as modal dialogs');
+  assert.match(ui, /aria-hidden','false'/, 'opening a v13 dialog should update its accessibility state');
+  assert.match(ui, /event\.key!=='Escape'/, 'v13 dialogs should support Escape dismissal');
+  assert.match(css, /#v13-account-card\.v13-account-card/, 'account card styling should remain scoped to v13');
+  assert.match(css, /\.v13-empty/, 'owned-booking empty states should have a dedicated visual treatment');
+  assert.match(css, /:focus-visible/, 'interactive v13 controls should expose keyboard focus');
+  assert.match(css, /prefers-reduced-motion/, 'v13 polish should respect reduced-motion preferences');
+});
+
 test('v12 secure sharing accepts v13 account owner access without exposing session tokens to JS', () => {
   const sharing = read('v12-sharing.js');
   assert.match(sharing, /setOwnerAccessProvider/, 'v12 sharing should accept an account owner access provider');
