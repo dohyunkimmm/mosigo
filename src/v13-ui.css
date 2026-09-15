@@ -1,0 +1,501 @@
+/* v13 Account Ownership UI polish
+   Keeps the existing Mosigo design tokens and interaction model while giving
+   account, owned-booking, claim, and share surfaces one coherent visual system. */
+
+#v13-account-entry.v13-account-entry {
+  margin:0 0 10px;
+  min-height:48px;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:700;
+}
+
+.v13-modal {
+  backdrop-filter:blur(2px);
+}
+
+.v13-modal .v13-modal-sheet {
+  padding:16px 18px max(24px, env(safe-area-inset-bottom));
+  border-radius:24px 24px 0 0;
+  box-shadow:0 -12px 36px rgba(17,24,39,.12);
+}
+
+.v13-modal-head {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.v13-modal-copy {
+  min-width:0;
+  flex:1;
+}
+
+.v13-modal-eyebrow {
+  margin-bottom:5px;
+  color:var(--teal);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.v13-modal-title {
+  margin:0;
+  color:var(--g900);
+  font-size:19px;
+  font-weight:800;
+  line-height:1.35;
+  letter-spacing:-.45px;
+}
+
+.v13-modal-sub {
+  margin:7px 0 0;
+  color:var(--g600);
+  font-size:12.5px;
+  line-height:1.6;
+  word-break:keep-all;
+}
+
+.v13-icon-btn {
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  border-radius:50%;
+  background:var(--g100);
+  color:var(--g600);
+  font-family:var(--font);
+  font-size:18px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.v13-field {
+  margin-top:12px;
+}
+
+.v13-field:first-of-type {
+  margin-top:0;
+}
+
+.v13-field-label {
+  display:block;
+  margin:0 2px 7px;
+  color:var(--g900);
+  font-size:12px;
+  font-weight:700;
+}
+
+.v13-field .input.v13-input {
+  min-height:50px;
+  margin:0;
+  padding:0 14px;
+  border:1px solid transparent;
+  border-radius:12px;
+  background:var(--g100);
+  color:var(--g900);
+  cursor:text;
+  transition:border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.v13-field .input.v13-input::placeholder {
+  color:var(--g400);
+}
+
+.v13-field .input.v13-input:focus {
+  outline:none;
+  border-color:var(--teal-m);
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(31,178,74,.10);
+}
+
+.v13-login-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:16px;
+}
+
+.v13-login-actions .btn {
+  min-height:48px;
+  padding:0 12px;
+  border-radius:12px;
+  font-size:14px;
+}
+
+.v13-security-note {
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  margin-top:14px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#F5F8F6;
+  color:var(--g600);
+  font-size:10.5px;
+  line-height:1.5;
+}
+
+.v13-security-note::before {
+  content:'✓';
+  flex:0 0 auto;
+  width:18px;
+  height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:var(--teal-l);
+  color:var(--teal);
+  font-size:10px;
+  font-weight:800;
+}
+
+#v13-account-card.v13-account-card {
+  margin-top:12px;
+  padding:15px;
+  border:0;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 1px 0 rgba(17,24,39,.03);
+}
+
+.v13-account-top {
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+}
+
+.v13-account-mark {
+  flex:0 0 auto;
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+  background:var(--teal-l);
+  color:var(--teal);
+  font-size:14px;
+  font-weight:900;
+}
+
+.v13-account-copy {
+  min-width:0;
+  flex:1;
+}
+
+.v13-account-title {
+  color:var(--g900);
+  font-size:15px;
+  font-weight:800;
+  line-height:1.35;
+  letter-spacing:-.3px;
+}
+
+.v13-account-desc {
+  margin-top:4px;
+  color:var(--g600);
+  font-size:11.5px;
+  line-height:1.55;
+  word-break:keep-all;
+}
+
+.v13-account-email {
+  max-width:100%;
+  display:inline-flex;
+  margin-top:8px;
+  padding:5px 8px;
+  border-radius:999px;
+  background:var(--g100);
+  color:var(--g600);
+  font-size:10.5px;
+  line-height:1.2;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.v13-account-actions {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+  margin-top:13px;
+}
+
+.v13-account-actions.single {
+  grid-template-columns:1fr;
+}
+
+.v13-account-actions .btn {
+  min-height:44px;
+  padding:0 13px;
+  border-radius:11px;
+  font-size:12.5px;
+}
+
+.v13-account-actions .v13-logout {
+  width:auto;
+  min-width:82px;
+  background:var(--g100);
+  color:var(--g600);
+}
+
+.v13-claim-callout {
+  margin-top:10px;
+  padding:12px;
+  border-radius:13px;
+  background:var(--teal-l);
+}
+
+.v13-claim-title {
+  color:var(--teal);
+  font-size:11.5px;
+  font-weight:800;
+}
+
+.v13-claim-desc {
+  margin-top:3px;
+  color:var(--g600);
+  font-size:10.5px;
+  line-height:1.5;
+}
+
+.v13-claim-callout .btn {
+  min-height:40px;
+  margin-top:9px;
+  padding:0 12px;
+  border-radius:10px;
+  background:#fff;
+  color:var(--teal);
+  font-size:11.5px;
+}
+
+.v13-bookings-sheet {
+  max-height:86%;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+
+.v13-bookings-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.v13-bookings-head-copy {
+  min-width:0;
+}
+
+.v13-bookings-head .v13-modal-title {
+  font-size:18px;
+}
+
+.v13-bookings-tools {
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.v13-refresh-btn {
+  min-height:34px;
+  width:auto;
+  padding:0 10px;
+  border:0;
+  border-radius:10px;
+  background:var(--g100);
+  color:var(--g600);
+  font-family:var(--font);
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.v13-booking-list {
+  min-height:0;
+  overflow:auto;
+  margin-top:6px;
+  padding:2px 1px max(6px, env(safe-area-inset-bottom));
+  scrollbar-width:none;
+}
+
+.v13-booking-list::-webkit-scrollbar {
+  display:none;
+}
+
+.v13-empty {
+  padding:30px 14px;
+  border-radius:14px;
+  background:var(--g100);
+  text-align:center;
+}
+
+.v13-empty-title {
+  color:var(--g900);
+  font-size:13px;
+  font-weight:800;
+}
+
+.v13-empty-desc {
+  margin-top:5px;
+  color:var(--g600);
+  font-size:11px;
+  line-height:1.55;
+}
+
+.v13-booking-card {
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:15px;
+  background:#fff;
+}
+
+.v13-booking-card + .v13-booking-card {
+  margin-top:9px;
+}
+
+.v13-booking-card-head {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.v13-booking-hospital {
+  min-width:0;
+  color:var(--g900);
+  font-size:14px;
+  font-weight:800;
+  line-height:1.35;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.v13-phase {
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:0 8px;
+  border-radius:999px;
+  background:var(--teal-l);
+  color:var(--teal);
+  font-size:9.5px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.v13-booking-meta {
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 8px;
+  margin-top:7px;
+  color:var(--g600);
+  font-size:10.5px;
+  line-height:1.45;
+}
+
+.v13-booking-meta span + span::before {
+  content:'·';
+  margin-right:8px;
+  color:var(--g400);
+}
+
+.v13-booking-id {
+  margin-top:6px;
+  color:var(--g400);
+  font-size:9px;
+  line-height:1.3;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.v13-booking-actions {
+  display:grid;
+  grid-template-columns:1.25fr 1fr 1fr;
+  gap:6px;
+  margin-top:12px;
+}
+
+.v13-booking-actions .btn {
+  min-height:40px;
+  padding:0 7px;
+  border-radius:10px;
+  font-size:10.5px;
+  white-space:nowrap;
+}
+
+.v13-booking-actions .v13-open-booking {
+  background:var(--teal);
+  color:#fff;
+}
+
+.v13-booking-actions .v13-revoke-share {
+  background:#FFF1F2;
+  color:#BE123C;
+}
+
+.v13-modal button:focus-visible,
+#v13-account-card button:focus-visible,
+#v13-account-entry:focus-visible {
+  outline:3px solid rgba(31,178,74,.22);
+  outline-offset:2px;
+}
+
+.v13-modal button:disabled,
+#v13-account-card button:disabled {
+  opacity:.48;
+  cursor:wait;
+  transform:none;
+}
+
+@media (max-width:360px) {
+  .v13-login-actions {
+    grid-template-columns:1fr;
+  }
+
+  .v13-booking-actions {
+    grid-template-columns:1fr 1fr;
+  }
+
+  .v13-booking-actions .v13-open-booking {
+    grid-column:1 / -1;
+  }
+}
+
+@media (max-height:680px) {
+  .v13-modal .v13-modal-sheet {
+    padding-top:12px;
+  }
+
+  .v13-modal-head {
+    margin-bottom:12px;
+  }
+
+  .v13-modal-sub {
+    font-size:11.5px;
+  }
+
+  .v13-bookings-sheet {
+    max-height:90%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v13-modal,
+  .v13-modal .modal-sheet,
+  .v13-field .v13-input {
+    transition:none !important;
+  }
+}
