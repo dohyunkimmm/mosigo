@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>Mosigo Operations · v14</title>
+  <link rel="stylesheet" href="v14-ops.css">
+</head>
+<body>
+  <div class="ops-app" id="ops-app">
+    <aside class="ops-sidebar" aria-label="Operations navigation">
+      <a class="ops-brand" href="/" aria-label="Mosigo 사용자 앱으로 이동">
+        <span class="ops-brand-mark" aria-hidden="true">M</span>
+        <span><b>Mosigo</b><small>Operations</small></span>
+      </a>
+      <div class="ops-workspace-label">PERSONAL WORKSPACE</div>
+      <nav class="ops-nav" aria-label="Workspace">
+        <button class="ops-nav-item is-active" type="button" data-view="overview" aria-current="page">
+          <span aria-hidden="true">⌂</span><span>개요</span>
+        </button>
+        <button class="ops-nav-item" type="button" data-view="bookings">
+          <span aria-hidden="true">▤</span><span>예약 운영</span><span class="ops-nav-count" id="nav-booking-count">0</span>
+        </button>
+        <button class="ops-nav-item" type="button" data-view="security">
+          <span aria-hidden="true">◎</span><span>계정 · 보안</span>
+        </button>
+      </nav>
+      <div class="ops-sidebar-foot">
+        <span class="ops-system-dot" aria-hidden="true"></span>
+        <div><b>v14 workspace</b><small>v13 ownership 기반 운영 UI</small></div>
+      </div>
+    </aside>
+
+    <main class="ops-main">
+      <header class="ops-topbar">
+        <div class="ops-title-wrap">
+          <div class="ops-eyebrow">MOSIGO OPERATIONS</div>
+          <h1 id="ops-page-title">운영 개요</h1>
+          <p id="ops-page-subtitle">내 계정 소유 예약의 상태와 다음 액션을 한 화면에서 확인합니다.</p>
+        </div>
+        <div class="ops-topbar-actions">
+          <button class="ops-icon-button" id="ops-refresh" type="button" aria-label="데이터 새로고침">↻</button>
+          <a class="ops-secondary-link" href="/">사용자 앱</a>
+          <button class="ops-account-chip" id="ops-account-chip" type="button" data-view-jump="security" aria-label="계정 및 보안 열기">
+            <span class="ops-avatar" aria-hidden="true">M</span>
+            <span class="ops-account-copy"><b id="ops-account-name">로그인 필요</b><small id="ops-account-meta">Operations</small></span>
+          </button>
+        </div>
+      </header>
+
+      <section class="ops-auth-gate" id="ops-auth-gate">
+        <div class="ops-auth-copy">
+          <div class="ops-kicker">OPERATIONAL WORKSPACE</div>
+          <h2>예약을 관리하는 화면도<br>서비스처럼 단단해야 합니다.</h2>
+          <p>v14 Operations는 기존 v13 계정 소유권을 그대로 사용합니다. 로그인하면 내 예약을 운영형 테이블, 상태 요약, 공유 제어 화면으로 확인할 수 있습니다.</p>
+          <div class="ops-auth-points" aria-label="Workspace characteristics">
+            <span>실제 계정 세션</span><span>소유 예약만 표시</span><span>서버 검증 공유</span>
+          </div>
+        </div>
+        <form class="ops-auth-card" id="ops-auth-form">
+          <div class="ops-card-head"><div><span>Account access</span><h3>Operations 로그인</h3></div><span class="ops-secure-badge">Secure cookie</span></div>
+          <label class="ops-field"><span>이메일</span><input id="ops-email" type="email" autocomplete="email" inputmode="email" placeholder="name@example.com" required></label>
+          <label class="ops-field"><span>비밀번호</span><input id="ops-password" type="password" autocomplete="current-password" placeholder="8자 이상 입력" required></label>
+          <div class="ops-auth-actions">
+            <button class="ops-button primary" id="ops-login" type="submit">로그인</button>
+            <button class="ops-button secondary" id="ops-register" type="button">계정 만들기</button>
+          </div>
+          <p class="ops-auth-note">세션 토큰은 브라우저 저장소가 아니라 HttpOnly · Secure 쿠키로 유지됩니다.</p>
+        </form>
+      </section>
+
+      <div class="ops-workspace" id="ops-workspace" hidden>
+        <section class="ops-view is-active" data-view-panel="overview">
+          <div class="ops-metric-grid" aria-label="Operational summary">
+            <article class="ops-metric"><span>소유 예약</span><strong id="metric-total">0</strong><small>계정에 연결된 전체 예약</small></article>
+            <article class="ops-metric"><span>예정 예약</span><strong id="metric-upcoming">0</strong><small>오늘 이후 일정 기준</small></article>
+            <article class="ops-metric"><span>활성 공유</span><strong id="metric-shares">0</strong><small>현재 서버에서 유효한 링크</small></article>
+            <article class="ops-metric"><span>오늘 일정</span><strong id="metric-today">0</strong><small>오늘 예정된 예약</small></article>
+          </div>
+
+          <div class="ops-grid-main">
+            <section class="ops-panel">
+              <div class="ops-panel-head"><div><span class="ops-panel-kicker">NEXT ACTIONS</span><h2>지금 확인할 예약</h2></div><button class="ops-text-button" type="button" data-view-jump="bookings">전체 예약 보기</button></div>
+              <div class="ops-action-list" id="ops-action-list" aria-live="polite"></div>
+            </section>
+            <aside class="ops-panel ops-health-panel">
+              <div class="ops-panel-head"><div><span class="ops-panel-kicker">SYSTEM</span><h2>Workspace 상태</h2></div></div>
+              <div class="ops-health-row"><span><i class="ok"></i>계정 세션</span><b id="health-session">확인 중</b></div>
+              <div class="ops-health-row"><span><i class="ok"></i>예약 소유권</span><b id="health-bookings">확인 중</b></div>
+              <div class="ops-health-row"><span><i class="ok"></i>Secure sharing</span><b id="health-sharing">확인 중</b></div>
+              <p class="ops-health-note">이 화면은 운영 UI를 위한 별도 데이터베이스를 만들지 않고 v13의 실제 소유권·공유 계약을 읽습니다.</p>
+            </aside>
+          </div>
+        </section>
+
+        <section class="ops-view" data-view-panel="bookings" hidden>
+          <div class="ops-toolbar">
+            <label class="ops-search"><span aria-hidden="true">⌕</span><input id="ops-booking-search" type="search" placeholder="병원명 또는 예약번호 검색" aria-label="예약 검색"></label>
+            <div class="ops-filter-group" role="group" aria-label="예약 일정 필터">
+              <button class="ops-filter is-active" type="button" data-filter="all" aria-pressed="true">전체</button>
+              <button class="ops-filter" type="button" data-filter="upcoming" aria-pressed="false">예정</button>
+              <button class="ops-filter" type="button" data-filter="today" aria-pressed="false">오늘</button>
+              <button class="ops-filter" type="button" data-filter="past" aria-pressed="false">지난 예약</button>
+            </div>
+          </div>
+
+          <section class="ops-panel ops-booking-panel">
+            <div class="ops-table-meta"><div><b id="ops-result-count">0건</b><span>계정 소유 예약</span></div><span id="ops-last-sync">동기화 전</span></div>
+            <div class="ops-table-wrap">
+              <table class="ops-table">
+                <thead><tr><th>예약</th><th>일정</th><th>상태</th><th>공유</th><th><span class="sr-only">작업</span></th></tr></thead>
+                <tbody id="ops-booking-body"></tbody>
+              </table>
+            </div>
+            <div class="ops-card-list" id="ops-booking-cards"></div>
+            <div class="ops-empty" id="ops-booking-empty" hidden><span aria-hidden="true">◇</span><b>조건에 맞는 예약이 없습니다.</b><p>검색어나 일정 필터를 바꿔보세요.</p></div>
+          </section>
+        </section>
+
+        <section class="ops-view" data-view-panel="security" hidden>
+          <div class="ops-security-grid">
+            <section class="ops-panel">
+              <div class="ops-panel-head"><div><span class="ops-panel-kicker">ACCOUNT</span><h2>계정 세션</h2></div><span class="ops-secure-badge">HttpOnly</span></div>
+              <dl class="ops-detail-list">
+                <div><dt>로그인 계정</dt><dd id="security-email">-</dd></div>
+                <div><dt>세션 만료</dt><dd id="security-expiry">-</dd></div>
+                <div><dt>소유 예약</dt><dd id="security-count">0건</dd></div>
+              </dl>
+              <button class="ops-button danger" id="ops-logout" type="button">Operations 로그아웃</button>
+            </section>
+            <section class="ops-panel">
+              <div class="ops-panel-head"><div><span class="ops-panel-kicker">SHARING</span><h2>공유 권한 모델</h2></div></div>
+              <div class="ops-security-callout"><b>Owner ≠ Recipient</b><p>계정 소유자는 공유 링크를 발급·상태 확인·폐기할 수 있고, 공유받은 사용자는 해당 임시 capability 범위에서만 예약에 접근합니다.</p></div>
+              <ul class="ops-check-list"><li>공유 링크는 서버에서 만료 상태를 확인합니다.</li><li>새 링크를 만들면 복사 실패 시 즉시 폐기합니다.</li><li>Operations 화면은 계정에 소유된 예약만 노출합니다.</li></ul>
+            </section>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="ops-drawer-backdrop" id="ops-drawer-backdrop" hidden></div>
+  <aside class="ops-drawer" id="ops-drawer" aria-hidden="true" aria-labelledby="ops-drawer-title">
+    <div class="ops-drawer-head"><div><span class="ops-panel-kicker">BOOKING DETAIL</span><h2 id="ops-drawer-title">예약 상세</h2></div><button class="ops-icon-button" id="ops-drawer-close" type="button" aria-label="예약 상세 닫기">×</button></div>
+    <div class="ops-drawer-body" id="ops-drawer-body"></div>
+  </aside>
+
+  <div class="ops-toast" id="ops-toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script src="v14-ops.js"></script>
+</body>
+</html>
