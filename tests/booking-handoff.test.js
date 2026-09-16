@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
-const source = fs.readFileSync(path.join(ROOT, 'src', 'v11-booking.js'), 'utf8');
+const source = fs.readFileSync(path.join(ROOT, 'src', 'runtime', 'booking-handoff.js'), 'utf8');
 
 function createRuntime({ hash = '' } = {}) {
   const bookingId = 'M10ABCD1234';
@@ -61,11 +61,11 @@ function createRuntime({ hash = '' } = {}) {
     }
   };
   sandbox.globalThis = sandbox;
-  vm.runInNewContext(source, sandbox, { filename: 'v11-booking.js' });
+  vm.runInNewContext(source, sandbox, { filename: 'booking-handoff.js' });
   return { sandbox, bookingId, recoveryKey, calls, events, location };
 }
 
-test('v11 runtime is syntax-valid and exposes portable recovery facade', () => {
+test('portable handoff runtime is syntax-valid and exposes recovery facade', () => {
   assert.doesNotThrow(() => new Function(source));
   const { sandbox } = createRuntime();
   assert.ok(sandbox.MosigoV11BookingHandoff);

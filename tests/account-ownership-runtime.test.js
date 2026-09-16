@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
-const source = fs.readFileSync(path.join(ROOT, 'src', 'v13-account.js'), 'utf8');
+const source = fs.readFileSync(path.join(ROOT, 'src', 'runtime', 'account-ownership.js'), 'utf8');
 
 function createRuntime() {
   const bookingId = 'M10ABCD1234';
@@ -59,11 +59,11 @@ function createRuntime() {
     goTo(id) { calls.push(['goTo', id]); }
   };
   sandbox.globalThis = sandbox;
-  vm.runInNewContext(source, sandbox, { filename:'v13-account.js' });
+  vm.runInNewContext(source, sandbox, { filename:'account-ownership.js' });
   return { sandbox, calls, bookingId, booking, getProvider:()=>provider };
 }
 
-test('v13 account runtime loads owned bookings and grants v12 owner access by booking membership', async () => {
+test('account runtime loads owned bookings and grants secure-sharing owner access by booking membership', async () => {
   assert.doesNotThrow(() => new Function(source));
   const { sandbox, bookingId, getProvider } = createRuntime();
   await sandbox.MosigoV13AccountOwnership.refresh();
@@ -75,7 +75,7 @@ test('v13 account runtime loads owned bookings and grants v12 owner access by bo
   assert.equal(sandbox.MosigoV13AccountOwnership.ownsBooking(bookingId), true);
 });
 
-test('v13 account runtime opens owned booking through cookie-authenticated canonical endpoint', async () => {
+test('account runtime opens owned booking through cookie-authenticated canonical endpoint', async () => {
   const { sandbox, calls, bookingId } = createRuntime();
   await sandbox.MosigoV13AccountOwnership.refresh();
   const opened = await sandbox.MosigoV13AccountOwnership.openBooking(bookingId);
@@ -87,7 +87,7 @@ test('v13 account runtime opens owned booking through cookie-authenticated canon
   assert.ok(calls.some((call)=>call[0]==='goTo'&&call[1]==='s-order'));
 });
 
-test('v13 account runtime delegates share copy/revoke to v12 without accessing cookie material', async () => {
+test('account runtime delegates share copy/revoke without accessing cookie material', async () => {
   const { sandbox, calls, bookingId } = createRuntime();
   await sandbox.MosigoV13AccountOwnership.refresh();
   await sandbox.MosigoV13AccountOwnership.copyShareLink(bookingId, 60);

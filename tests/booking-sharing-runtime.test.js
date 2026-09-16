@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
-const source = fs.readFileSync(path.join(ROOT, 'src', 'v12-sharing.js'), 'utf8');
+const source = fs.readFileSync(path.join(ROOT, 'src', 'runtime', 'booking-sharing.js'), 'utf8');
 
 function createRuntime({ clipboardFails = false, ownerAccess = true } = {}) {
   const bookingId = 'M10ABCD1234';
@@ -95,11 +95,11 @@ function createRuntime({ clipboardFails = false, ownerAccess = true } = {}) {
     Intl
   };
   sandbox.globalThis = sandbox;
-  vm.runInNewContext(source, sandbox, { filename: 'v12-sharing.js' });
+  vm.runInNewContext(source, sandbox, { filename: 'booking-sharing.js' });
   return { sandbox, bookingId, recoveryKey, shareToken, calls, events, location };
 }
 
-test('v12 runtime is syntax-valid and exposes secure sharing facade', () => {
+test('secure sharing runtime is syntax-valid and exposes sharing facade', () => {
   assert.doesNotThrow(() => new Function(source));
   const { sandbox } = createRuntime();
   assert.ok(sandbox.MosigoV12SecureSharing);

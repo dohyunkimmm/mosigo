@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const SOURCE = fs.readFileSync(path.resolve(__dirname, '../src/v9-booking.js'), 'utf8');
+const SOURCE = fs.readFileSync(path.resolve(__dirname, '../src/runtime/booking-coordination.js'), 'utf8');
 const LATEST_KEY = 'mosigo-v7-booking-latest';
 const PREFIX = 'mosigo-v7-booking:';
 
@@ -141,7 +141,7 @@ function createTab(shared, initialState = null) {
     console: { warn() {} }
   };
   vm.createContext(sandbox);
-  vm.runInContext(SOURCE, sandbox, { filename: 'v9-booking.js' });
+  vm.runInContext(SOURCE, sandbox, { filename: 'booking-coordination.js' });
 
   tab.api = sandbox.MosigoV9BookingCoordination;
   tab.getSyncState = () => clone(syncState);
