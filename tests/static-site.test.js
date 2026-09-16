@@ -11,7 +11,6 @@ const RUNTIME_JS = [
   'runtime/boot.js',
   'runtime/post-ui.js',
   'runtime/hospital-search.js',
-  'runtime/booking-state.js',
   'runtime/booking-runtime.js',
   'runtime/booking-sync.js',
   'runtime/booking-recovery.js',
@@ -25,11 +24,11 @@ const RUNTIME_JS = [
   'runtime/account-ownership.js',
   'runtime/account-ui.js'
 ];
-const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'v14-ops.js', ...RUNTIME_JS];
+const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'booking-state.js', 'v14-ops.js', ...RUNTIME_JS];
 const REMOVED_VERSIONED_ROOT_FILES = [
-  'v4-functional.js', 'booking-state.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js',
-  'v8-booking.js', 'v9-booking.js', 'v10-booking.js', 'v11-booking.js', 'v11-ui.js',
-  'v12-sharing.js', 'v12-ui.js', 'v13-account.js', 'v13-ui.js', 'v13-ui.css'
+  'v4-functional.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js', 'v8-booking.js',
+  'v9-booking.js', 'v10-booking.js', 'v11-booking.js', 'v11-ui.js', 'v12-sharing.js',
+  'v12-ui.js', 'v13-account.js', 'v13-ui.js', 'v13-ui.css'
 ];
 
 function readSrc(file) {
@@ -136,6 +135,7 @@ test('stable browser entry delegates to a single role-based runtime bootstrap', 
   const entry = readSrc('index-post.js');
   const boot = readSrc('runtime/boot.js');
   const post = readSrc('runtime/post-ui.js');
+  const bookingState = readSrc('booking-state.js');
 
   assert.match(entry, /runtime\/boot\.js/);
   assert.match(boot, /post-ui\.js/);
@@ -144,7 +144,9 @@ test('stable browser entry delegates to a single role-based runtime bootstrap', 
   assert.match(boot, /'v10-booking\.js':'booking-durable\.js'/);
   assert.match(boot, /'v13-account\.js':'account-ownership\.js'/);
   assert.match(boot, /'v13-ui\.css':'account-ui\.css'/);
+  assert.doesNotMatch(boot, /'booking-state\.js':/, 'shared booking-state should keep its stable root path for browser and Node consumers');
   assert.match(boot, /rewriteRuntimeAsset/);
+  assert.match(bookingState, /MosigoBookingState/);
 });
 
 test('current runtime keeps booking, handoff, sharing, and account contracts intact', () => {
@@ -186,7 +188,7 @@ test('current runtime keeps booking, handoff, sharing, and account contracts int
   assert.match(accountCss, /prefers-reduced-motion/);
 });
 
-test('Vercel keeps old public asset URLs compatible while source uses current paths', () => {
+test('Vercel keeps old versioned public asset URLs compatible while source uses current paths', () => {
   const config = JSON.parse(readSrc('vercel.json'));
   const rewrites = new Map((config.rewrites || []).map(({ source, destination }) => [source, destination]));
   assert.equal(rewrites.get('/v4-functional.js'), '/runtime/hospital-search.js');
@@ -195,6 +197,7 @@ test('Vercel keeps old public asset URLs compatible while source uses current pa
   assert.equal(rewrites.get('/v12-sharing.js'), '/runtime/booking-sharing.js');
   assert.equal(rewrites.get('/v13-account.js'), '/runtime/account-ownership.js');
   assert.equal(rewrites.get('/v13-ui.css'), '/runtime/account-ui.css');
+  assert.equal(rewrites.has('/booking-state.js'), false, 'shared booking-state should be served directly from its stable root path');
 });
 
 test('local HTML asset and page references resolve to existing files', () => {

@@ -7,7 +7,6 @@
   const runtimeBase=new URL('./',currentScript?.src||location.href);
   const scriptMap={
     'v4-functional.js':'hospital-search.js',
-    'booking-state.js':'booking-state.js',
     'v4-booking.js':'booking-runtime.js',
     'v6-booking.js':'booking-sync.js',
     'v7-booking.js':'booking-recovery.js',

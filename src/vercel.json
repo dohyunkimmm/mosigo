@@ -9,7 +9,6 @@
   },
   "rewrites": [
     { "source": "/v4-functional.js", "destination": "/runtime/hospital-search.js" },
-    { "source": "/booking-state.js", "destination": "/runtime/booking-state.js" },
     { "source": "/v4-booking.js", "destination": "/runtime/booking-runtime.js" },
     { "source": "/v6-booking.js", "destination": "/runtime/booking-sync.js" },
     { "source": "/v7-booking.js", "destination": "/runtime/booking-recovery.js" },
