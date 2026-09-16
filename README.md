@@ -5,7 +5,7 @@
 - **Current stable version:** `v14.0.0`
 - **Live Demo:** https://mosigo-nine.vercel.app/
 - **Operations Workspace:** https://mosigo-nine.vercel.app/ops.html
-- **Production:** `main` only · Quality #119 success · Production Smoke #89 success
+- **Production:** `main` only · Quality + Production Smoke verified
 
 ## 프로젝트 개요
 
