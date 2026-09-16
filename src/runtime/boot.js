@@ -55,9 +55,10 @@
     styleMap:{...styleMap}
   };
 
+  // Load the existing post-UI layer first. Its legacy runtime requests are rewritten above.
   const entry=document.createElement('script');
-  entry.src=new URL('hospital-search.js',runtimeBase).href;
+  entry.src=new URL('post-ui.js',runtimeBase).href;
   entry.async=false;
-  entry.dataset.mosigoRuntimeEntry='1';
+  entry.dataset.mosigoPostUi='1';
   append(entry);
 })();
