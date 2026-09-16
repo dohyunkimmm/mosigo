@@ -2,8 +2,9 @@
 
 자녀가 부모님의 병원 이용을 대신 준비하고, 병원 탐색부터 동행 매니저 매칭·동의/결제·실시간 동행·건강 리포트·재예약까지 이어지는 흐름을 검증하기 위한 인터랙티브 병원동행 서비스 프로토타입입니다.
 
-- **Current stable version:** `v13.0.0`
+- **Current stable version:** `v14.0.0`
 - **Live Demo:** https://mosigo-nine.vercel.app/
+- **Operations Workspace:** https://mosigo-nine.vercel.app/ops.html
 
 ## 프로젝트 개요
 
@@ -30,9 +31,31 @@
 - URL fragment 기반 cross-device portable recovery handoff
 - 만료·폐기·회전 가능한 server-validated secure share capability
 - HttpOnly/Secure 계정 세션 기반 booking ownership 및 cross-device 내 예약 목록
+- 계정 소유 예약을 위한 별도 responsive Operations workspace (`/ops.html`)
 - revision + ETag compare-and-swap 기반 stale write 충돌 방지
 
-> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v12는 v10의 durable booking 계약과 v11의 cross-device recovery 흐름을 유지하면서, 영구 recovery key를 직접 공유하지 않고 만료·폐기 가능한 임시 share token으로 예약을 이어볼 수 있게 합니다. v13은 프로토타입 계정 인증·예약 소유권·계정 기반 내 예약 목록을 제공하지만, 실운영 의료 예약 인프라와 광범위한 운영자용 예약 검색/관리 기능은 제공하지 않습니다. recovery key와 share token은 계정이 아니라 예약 리소스에 접근하기 위한 프로토타입 credential입니다.
+> 이 프로젝트는 실제 의료·예약 서비스를 제공하는 운영 서비스가 아니라 서비스 기획과 UX 흐름을 검증하기 위한 프로토타입입니다. v13은 프로토타입 계정 인증·예약 소유권·계정 기반 내 예약 목록을 제공하고, v14는 그 실제 소유권·공유 계약을 재사용하는 운영형 SaaS UI를 별도 `/ops.html` workspace로 제공합니다. v14는 조직/팀 멀티테넌시, RBAC, 과금, 운영자 배정, 실운영 의료 백오피스 기능을 새로 추가하지 않습니다. recovery key와 share token은 계정이 아니라 예약 리소스에 접근하기 위한 프로토타입 credential입니다.
+
+## v14 Operational SaaS Workspace
+
+v14는 기존 사용자용 모바일 프로토타입을 대체하지 않고, v13 Account Ownership과 v12 Secure Sharing을 기반으로 **계정 소유 예약을 관리하는 별도 Operations workspace**를 추가합니다.
+
+- `/ops.html`에서 운영 개요, 예약 운영, 계정·보안의 3개 정보 구조를 제공합니다.
+- `src/v14-ops.css`는 데스크톱 sidebar·topbar·metric/panel/table hierarchy, responsive collapse, mobile booking card, drawer layering, focus-visible, reduced-motion을 포함한 전용 운영 디자인 시스템을 제공합니다.
+- `src/v14-ops.js`는 `/api/account`, `/api/account?resource=bookings`, `/api/bookings?bookingId=...`, `/api/booking-shares`의 기존 실제 계약만 사용합니다.
+- 운영 개요에는 소유 예약·예정 예약·활성 공유·오늘 일정 지표와 다음 액션 목록을 제공하고, 예약 운영에는 검색·일정 필터·desktop table·mobile card·상세 drawer를 제공합니다.
+- 계정 소유자는 Operations에서 기존 secure share를 발급·상태 확인·폐기할 수 있으며 owner/recipient 권한 분리를 유지합니다.
+- 조직/팀, RBAC, billing plan, operator assignment 같은 존재하지 않는 관리자 기능은 만들지 않았습니다.
+- 기존 사용자 앱과 v13 account ownership/server contract는 그대로 유지됩니다.
+
+### Production verification
+
+- v14 app-source merge commit: `f2d64e41c931c2f9d6ee06618f8c97acc7282bff`
+- PR #53 Quality #109: success
+- Production-verified `main` commit: `10833362d8b5e57b4fb2cf3a560eea50f83fd4c4`
+- Vercel Production deployment: `dpl_EzKJmaYXK1n4mS6ZguVZaZ6JBvRo` (`READY`)
+- Live `/ops.html`: HTTP 200, title `Mosigo Operations · v14`
+- Vercel Git policy: only `main` auto-deploys; PR/feature branches are blocked from automatic Preview deployments
 
 ## v13 Account Ownership Beta
 
@@ -134,6 +157,7 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 
 ## 이전 버전
 
+- `v13.0.0` — 계정 세션·예약 소유권·cross-device 내 예약 목록을 추가한 Account Ownership Beta
 - `v12.0.0` — 만료·폐기·회전 가능한 임시 공유 capability를 추가한 Secure Sharing Beta
 - `v11.0.0` — URL fragment 기반 cross-device recovery를 추가한 Portable Recovery Beta
 - `v10.0.0` — Private Vercel Blob durable persistence와 booking-key recovery를 추가한 Durable Booking Beta
@@ -179,6 +203,9 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 │   ├── v11-static.test.js       # v11 runtime/static wiring 검증
 │   ├── v12-sharing.test.js      # secure sharing browser runtime 검증
 │   ├── v12-static.test.js       # v12 runtime/static wiring 검증
+│   ├── v13-account.test.js      # account ownership runtime 검증
+│   ├── v13-static.test.js       # v13 account/UI wiring 검증
+│   ├── v14-static.test.js       # v14 Operations IA/visual/accessibility 검증
 │   ├── v10-static.test.js       # v10 runtime/static wiring 검증
 │   ├── v9-coordination.test.js
 │   └── ...
@@ -196,6 +223,12 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
     ├── v11-ui.js                # in-app portable recovery UI
     ├── v12-sharing.js           # expiring/revocable share runtime
     ├── v12-ui.js                # owner/recipient secure-share UI
+    ├── v13-account.js           # account ownership browser runtime
+    ├── v13-ui.js                # account ownership consumer UI
+    ├── v13-ui.css               # v13 visual polish layer
+    ├── ops.html                 # v14 Operations workspace
+    ├── v14-ops.js               # v14 operational runtime
+    ├── v14-ops.css              # v14 operational visual system
     ├── lib/
     │   ├── booking-service.js    # lifecycle/history/revision service
     │   ├── booking-store.js      # private Blob durable store adapter
@@ -203,6 +236,7 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
     ├── api/
     │   ├── health.js
     │   ├── hospitals.js
+    │   ├── account.js            # v13 account ownership handler
     │   ├── bookings.js           # v10 durable booking resource handler
     │   └── booking-shares.js     # v12 secure share management handler
     ├── package.json              # runtime dependency boundary
@@ -216,7 +250,7 @@ v10은 v9의 same-device coordination과 v8의 validated lifecycle history를 �
 - **Vercel Root Directory:** `src`
 - **Production URL:** https://mosigo-nine.vercel.app/
 
-GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩니다. PR과 `main` 변경은 GitHub Quality로 검증하고, `main` 반영 후 Production Smoke가 실제 공개 runtime과 booking API를 확인합니다.
+GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩니다. PR과 `main` 변경은 GitHub Quality로 검증하고, `main` 반영 후 Production Smoke가 실제 공개 runtime과 booking API를 확인합니다. 자동 Vercel Git 배포는 `main`에만 허용해 PR/feature branch Preview가 배포 quota를 소모하지 않도록 제한합니다.
 
 전체 로컬 품질 게이트는 다음 한 명령으로 실행합니다.
 
@@ -224,9 +258,9 @@ GitHub `main`의 검증된 소스를 기준으로 Vercel Production이 배포됩
 npm run quality
 ```
 
-핵심 검증 범위는 병원 API, booking lifecycle/history/revision, durable Blob store, recovery credential, ETag conflict handling, portable recovery handoff, secure sharing capability, v4~v12 runtime wiring, 보안 헤더, crawler discovery, 접근성, asset integrity, JavaScript syntax, stable-version consistency입니다.
+핵심 검증 범위는 병원 API, booking lifecycle/history/revision, durable Blob store, recovery credential, ETag conflict handling, portable recovery handoff, secure sharing capability, account ownership, v14 Operations static wiring, 보안 헤더, crawler discovery, 접근성, asset integrity, JavaScript syntax, stable-version consistency입니다.
 
-Production Smoke는 실제 Production에서 `/api/health`, `/api/hospitals`, `/api/bookings`, `/api/booking-shares`, v4~v12 runtime assets를 확인하고, v10 durable create/transition/recovery/canonical read와 v12 secure-share issue/read/rotate/revoke 흐름을 함께 검증합니다.
+Production Smoke는 실제 Production에서 `/api/health`, `/api/hospitals`, `/api/bookings`, `/api/booking-shares`, account ownership과 기존 booking/share 핵심 흐름을 확인합니다. v14 Operations workspace는 별도 static coverage와 Production `/ops.html` HTTP 200 검증으로 확인했습니다.
 
 ## Release
 
@@ -247,6 +281,6 @@ python -m http.server 8000
 
 ## 버전 전략
 
-Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → README/CHANGELOG/VERSION sync → 자동 Tag/Release → Notion sync` 흐름으로 마감합니다.
+Mosigo는 기존 안정 동작을 유지하면서 버전별로 점진적으로 고도화합니다. 각 메이저 버전은 `QA → main merge → Vercel Production 검증 → README/CHANGELOG/VERSION sync → 자동 Tag/Release` 흐름으로 마감합니다.
 
-마지막 문서 동기화: 2026-09-15
+마지막 문서 동기화: 2026-09-17

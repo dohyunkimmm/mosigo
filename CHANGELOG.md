@@ -2,6 +2,28 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+## v14.0.0 — 2026-09-17
+
+### Operational SaaS Workspace
+- Added a dedicated responsive `/ops.html` Operations workspace on top of the existing v13 account-ownership model without replacing the consumer/mobile prototype.
+- Added operational overview metrics, next-action queue, owned-booking search/filter, desktop table, mobile booking cards, booking detail drawer, and account/session security view.
+- Added secure-share issue/status/revoke controls for account-owned bookings using the existing v12 server-validated sharing contract.
+- Added `src/v14-ops.css` with a dedicated operational design-token layer, desktop sidebar/topbar hierarchy, responsive density, restrained Mosigo accent, focus-visible treatment, accessible status states, drawer layering, toast feedback, and reduced-motion support.
+- Added `src/v14-ops.js` using the real `/api/account`, `/api/account?resource=bookings`, `/api/bookings?bookingId=...`, and `/api/booking-shares` contracts.
+- Kept organization/team multi-tenancy, RBAC, billing plans, operator assignment, and other unimplemented admin capabilities out of the workspace instead of presenting mock functionality.
+- Added `tests/v14-static.test.js` covering Operations information architecture, real API usage, responsive visual system, keyboard accessibility, and release-metadata separation.
+- Restricted automatic Vercel Git deployment to `main` so PR/feature branches do not automatically create Preview deployments.
+
+### Production QA
+- Passed PR #53 Quality #109 for the v14 Operational SaaS candidate.
+- Merged v14 application source to `main` as `f2d64e41c931c2f9d6ee06618f8c97acc7282bff`.
+- After the rolling Vercel build quota advanced, verified current v14 source on GitHub-verified `main` commit `10833362d8b5e57b4fb2cf3a560eea50f83fd4c4`.
+- Verified Vercel Production deployment `dpl_EzKJmaYXK1n4mS6ZguVZaZ6JBvRo` reached `READY` from that main commit.
+- Confirmed live `/ops.html` returns HTTP 200 with the `Mosigo Operations · v14` workspace.
+
+### Scope
+v14 advances Mosigo from **Account Ownership Beta** to an **Operational SaaS Workspace** by exposing account-owned booking and secure-sharing capabilities in a denser operator-oriented interface. It remains a prototype: it does not add real healthcare back-office infrastructure, organization/team tenancy, role-based access control, billing, payment settlement, or operator-assignment systems.
+
 ## v13.0.0 — 2026-09-15
 
 ### Account Ownership Beta
