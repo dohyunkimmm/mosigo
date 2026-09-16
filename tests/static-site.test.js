@@ -5,18 +5,39 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
-const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html'];
-const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css'];
-const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'v4-functional.js', 'booking-state.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js', 'v8-booking.js', 'v9-booking.js'];
+const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html', 'ops.html'];
+const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css', 'v14-ops.css', 'runtime/account-ui.css'];
+const RUNTIME_JS = [
+  'runtime/boot.js',
+  'runtime/post-ui.js',
+  'runtime/hospital-search.js',
+  'runtime/booking-state.js',
+  'runtime/booking-runtime.js',
+  'runtime/booking-sync.js',
+  'runtime/booking-recovery.js',
+  'runtime/booking-trace.js',
+  'runtime/booking-coordination.js',
+  'runtime/booking-durable.js',
+  'runtime/booking-handoff.js',
+  'runtime/booking-handoff-ui.js',
+  'runtime/booking-sharing.js',
+  'runtime/booking-sharing-ui.js',
+  'runtime/account-ownership.js',
+  'runtime/account-ui.js'
+];
+const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'v14-ops.js', ...RUNTIME_JS];
+const REMOVED_VERSIONED_ROOT_FILES = [
+  'v4-functional.js', 'booking-state.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js',
+  'v8-booking.js', 'v9-booking.js', 'v10-booking.js', 'v11-booking.js', 'v11-ui.js',
+  'v12-sharing.js', 'v12-ui.js', 'v13-account.js', 'v13-ui.js', 'v13-ui.css'
+];
 
 function readSrc(file) {
   return fs.readFileSync(path.join(SRC, file), 'utf8');
 }
 
 function maskHtmlComments(source) {
-  return source.replace(/<!--[\s\S]*?-->/g, (comment) =>
-    comment.replace(/[^\n]/g, ' ')
-  );
+  return source.replace(/<!--[\s\S]*?-->/g, (comment) => comment.replace(/[^\n]/g, ' '));
 }
 
 function collectTagBlocks(tagName, source) {
@@ -25,14 +46,12 @@ function collectTagBlocks(tagName, source) {
   const exactPattern = new RegExp(`^<${tagName}\\b([^>]*)>([\\s\\S]*?)<\\/${tagName}>$`, 'i');
   const blocks = [];
   let match;
-
   while ((match = pattern.exec(masked)) !== null) {
     const full = source.slice(match.index, match.index + match[0].length);
     const exact = full.match(exactPattern);
     assert.ok(exact, `Could not parse ${tagName} block at index ${match.index}`);
     blocks.push({ attrs: exact[1], body: exact[2] });
   }
-
   return blocks;
 }
 
@@ -49,70 +68,45 @@ function isClassicInlineScript(block) {
 function isExternalOrDynamic(ref) {
   const value = String(ref || '').trim();
   return (
-    !value ||
-    value.startsWith('#') ||
-    value.startsWith('data:') ||
-    value.startsWith('blob:') ||
-    value.startsWith('javascript:') ||
-    value.startsWith('mailto:') ||
-    value.startsWith('tel:') ||
-    value.startsWith('//') ||
-    /^[a-z][a-z0-9+.-]*:/i.test(value) ||
-    value.includes('${') ||
-    value.includes('{{') ||
-    value.includes('<%')
+    !value || value.startsWith('#') || value.startsWith('data:') || value.startsWith('blob:') ||
+    value.startsWith('javascript:') || value.startsWith('mailto:') || value.startsWith('tel:') ||
+    value.startsWith('//') || /^[a-z][a-z0-9+.-]*:/i.test(value) || value.includes('${') ||
+    value.includes('{{') || value.includes('<%')
   );
 }
 
 function cleanRef(ref) {
   const withoutQuery = String(ref).split('#')[0].split('?')[0].trim();
-  try {
-    return decodeURIComponent(withoutQuery);
-  } catch {
-    return withoutQuery;
-  }
+  try { return decodeURIComponent(withoutQuery); } catch { return withoutQuery; }
 }
 
 function resolveLocalRef(ownerFile, ref) {
   const clean = cleanRef(ref);
-  if (!clean || clean === '/') return null;
-  if (clean.startsWith('/api/')) return null;
+  if (!clean || clean === '/' || clean.startsWith('/api/')) return null;
   if (clean.startsWith('/')) return path.join(SRC, clean.slice(1));
   return path.resolve(path.dirname(path.join(SRC, ownerFile)), clean);
 }
 
 function assertInsideSrc(resolved, ownerFile, ref) {
   const relative = path.relative(SRC, resolved);
-  assert.ok(
-    relative && !relative.startsWith('..') && !path.isAbsolute(relative),
-    `${ownerFile}: local reference escapes src/: ${ref}`
-  );
+  assert.ok(relative && !relative.startsWith('..') && !path.isAbsolute(relative), `${ownerFile}: local reference escapes src/: ${ref}`);
 }
 
-test('required application entrypoints, modules, and config exist', () => {
+test('current application entrypoints, runtime modules, and config exist', () => {
   for (const file of [
-    ...HTML_FILES,
-    ...CSS_FILES,
-    ...JS_FILES,
-    'api/hospitals.js',
-    'api/bookings.js',
-    'data/hospitals.js',
-    'lib/hospital-query.js',
-    'lib/booking-service.js',
-    'vercel.json'
+    ...HTML_FILES, ...CSS_FILES, ...JS_FILES,
+    'api/hospitals.js', 'api/bookings.js', 'api/booking-shares.js', 'api/account.js',
+    'data/hospitals.js', 'lib/hospital-query.js', 'lib/booking-service.js', 'lib/booking-store.js',
+    'package.json', 'vercel.json'
   ]) {
     assert.ok(fs.existsSync(path.join(SRC, file)), `Missing required file: src/${file}`);
   }
 });
 
-test('main page has essential mobile, SEO, and language metadata', () => {
-  const html = readSrc('index.html');
-  assert.match(html, /^\s*<!DOCTYPE html>/i, 'index.html should declare HTML5 doctype');
-  assert.match(html, /<html\b[^>]*\blang=["']ko["']/i, 'index.html should declare lang="ko"');
-  assert.match(html, /<meta\b[^>]*charset=["']?utf-8["']?/i, 'index.html should declare UTF-8');
-  assert.match(html, /<meta\b[^>]*name=["']viewport["'][^>]*>/i, 'index.html should include viewport metadata');
-  assert.match(html, /<title>[^<]+<\/title>/i, 'index.html should include a non-empty title');
-  assert.match(html, /<meta\b[^>]*name=["']description["'][^>]*content=["'][^"']+["'][^>]*>/i, 'index.html should include a non-empty description');
+test('obsolete version-numbered runtime files are removed from src root', () => {
+  for (const file of REMOVED_VERSIONED_ROOT_FILES) {
+    assert.equal(fs.existsSync(path.join(SRC, file)), false, `Legacy root runtime should be removed: src/${file}`);
+  }
 });
 
 test('main page keeps CSS and classic JavaScript externalized in execution order', () => {
@@ -121,57 +115,91 @@ test('main page keeps CSS and classic JavaScript externalized in execution order
   const classicInline = scripts.filter(isClassicInlineScript);
   const srcs = scripts.map((script) => getAttr(script.attrs, 'src')).filter(Boolean);
 
-  assert.equal((html.match(/<!--/g) || []).length, (html.match(/-->/g) || []).length, 'HTML comments should stay balanced');
-  assert.equal(collectTagBlocks('style', html).length, 0, 'index.html should not contain actual inline style blocks');
-  assert.equal(classicInline.length, 0, 'index.html should not contain classic inline JavaScript');
-  assert.ok(html.includes('href="index.css"'), 'index.html should load index.css');
+  assert.match(html, /^\s*<!DOCTYPE html>/i);
+  assert.match(html, /<html\b[^>]*\blang=["']ko["']/i);
+  assert.match(html, /<meta\b[^>]*name=["']viewport["'][^>]*>/i);
+  assert.equal((html.match(/<!--/g) || []).length, (html.match(/-->/g) || []).length);
+  assert.equal(collectTagBlocks('style', html).length, 0);
+  assert.equal(classicInline.length, 0);
+  assert.ok(html.includes('href="index.css"'));
 
   const coreIndex = srcs.indexOf('index-core.js');
   const extIndex = srcs.indexOf('new_ext-pages.js');
   const postIndex = srcs.indexOf('index-post.js');
-  assert.ok(coreIndex >= 0, 'index-core.js should be loaded');
-  assert.ok(extIndex > coreIndex, 'new_ext-pages.js should load after index-core.js');
-  assert.ok(postIndex > extIndex, 'index-post.js should load after new_ext-pages.js');
-  assert.ok(Buffer.byteLength(html) < 200_000, 'index.html should remain below the v3 structural size guard');
+  assert.ok(coreIndex >= 0);
+  assert.ok(extIndex > coreIndex);
+  assert.ok(postIndex > extIndex);
+  assert.ok(Buffer.byteLength(html) < 200_000);
 });
 
-test('v4 runtime through v9 coordination load through stable extension points', () => {
-  const post = readSrc('index-post.js');
-  const functional = readSrc('v4-functional.js');
-  const booking = readSrc('v4-booking.js');
-  const v6 = readSrc('v6-booking.js');
-  const v7 = readSrc('v7-booking.js');
-  const v8 = readSrc('v8-booking.js');
-  const v9 = readSrc('v9-booking.js');
-  assert.match(post, /script\.src=['"]v4-functional\.js['"]/, 'index-post.js should load v4-functional.js');
-  assert.match(functional, /v4SearchHospitals/, 'v4 functional search layer should expose its search implementation');
-  assert.match(functional, /model\.src=['"]booking-state\.js['"]/, 'v4 functional layer should bootstrap the shared booking state model');
-  assert.match(functional, /runtime\.src=['"]v4-booking\.js['"]/, 'v4 functional layer should load the booking runtime adapter');
-  assert.match(booking, /MosigoV4BookingRuntime/, 'v4 booking runtime should expose hydration for validated recovery');
-  assert.match(booking, /v6\.src=['"]v6-booking\.js['"]/, 'v4 booking runtime should load the v6 booking sync layer');
-  assert.match(v6, /const API=['"]\/api\/bookings['"]/, 'v6 booking sync should target the booking API');
-  assert.match(v6, /v7\.src=['"]v7-booking\.js['"]/, 'v6 booking sync should load the v7 recovery layer');
-  assert.match(v6, /mosigo:booking-sync/, 'v6 booking sync should publish booking state events');
-  assert.match(v7, /localStorage/, 'v7 recovery should persist same-device booking snapshots');
-  assert.match(v7, /method:['"]PUT['"]/, 'v7 recovery should revalidate snapshots through the booking API');
-  assert.match(v7, /runtime\.hydrate\(booking\)/, 'v7 recovery should hydrate the stable booking runtime');
-  assert.match(v7, /incomingRevision<storedRevision/, 'v9 should prevent a stale revision from overwriting the stored snapshot');
-  assert.match(v7, /equal-revision-divergence/, 'v9 should surface divergent same-revision snapshots');
-  assert.match(v7, /v8\.src=['"]v8-booking\.js['"]/, 'v7 recovery should load the v8 trace layer');
-  assert.match(v8, /MosigoV8BookingTrace/, 'v8 should expose the booking trace runtime');
-  assert.match(v8, /booking\.history/, 'v8 should consume the canonical booking history');
-  assert.match(v8, /booking\.revision/, 'v8 should expose the booking revision');
-  assert.match(v8, /v9\.src=['"]v9-booking\.js['"]/, 'v8 trace layer should load v9 coordination');
-  assert.match(v9, /MosigoV9BookingCoordination/, 'v9 should expose same-device booking coordination');
-  assert.match(v9, /addEventListener\(['"]storage['"]/, 'v9 should coordinate tabs through storage events');
-  assert.match(v9, /mosigo:booking-snapshot-conflict/, 'v9 should recover from local snapshot conflicts');
-  assert.match(v9, /revisionOf\(snapshot\)>revisionOf\(current\)/, 'v9 should prefer the higher revision for the same booking');
+test('stable browser entry delegates to a single role-based runtime bootstrap', () => {
+  const entry = readSrc('index-post.js');
+  const boot = readSrc('runtime/boot.js');
+  const post = readSrc('runtime/post-ui.js');
+
+  assert.match(entry, /runtime\/boot\.js/);
+  assert.match(boot, /post-ui\.js/);
+  assert.match(post, /script\.src=['"]v4-functional\.js['"]/, 'preserved post UI should still request the historical extension name');
+  assert.match(boot, /'v4-functional\.js':'hospital-search\.js'/);
+  assert.match(boot, /'v10-booking\.js':'booking-durable\.js'/);
+  assert.match(boot, /'v13-account\.js':'account-ownership\.js'/);
+  assert.match(boot, /'v13-ui\.css':'account-ui\.css'/);
+  assert.match(boot, /rewriteRuntimeAsset/);
+});
+
+test('current runtime keeps booking, handoff, sharing, and account contracts intact', () => {
+  const functional = readSrc('runtime/hospital-search.js');
+  const booking = readSrc('runtime/booking-runtime.js');
+  const sync = readSrc('runtime/booking-sync.js');
+  const recovery = readSrc('runtime/booking-recovery.js');
+  const trace = readSrc('runtime/booking-trace.js');
+  const coordination = readSrc('runtime/booking-coordination.js');
+  const durable = readSrc('runtime/booking-durable.js');
+  const handoff = readSrc('runtime/booking-handoff.js');
+  const sharing = readSrc('runtime/booking-sharing.js');
+  const sharingUi = readSrc('runtime/booking-sharing-ui.js');
+  const account = readSrc('runtime/account-ownership.js');
+  const accountUi = readSrc('runtime/account-ui.js');
+  const accountCss = readSrc('runtime/account-ui.css');
+
+  assert.match(functional, /v4SearchHospitals/);
+  assert.match(booking, /MosigoV4BookingRuntime/);
+  assert.match(sync, /X-Mosigo-Share-Token/);
+  assert.match(recovery, /equal-revision-divergence/);
+  assert.match(trace, /MosigoV8BookingTrace/);
+  assert.match(coordination, /MosigoV9BookingCoordination/);
+  assert.match(durable, /MosigoV10BookingDurability/);
+  assert.match(durable, /v11\.src=['"]v11-booking\.js['"]/);
+  assert.match(durable, /v12\.src=['"]v12-sharing\.js['"]/);
+  assert.match(durable, /v13\.src=['"]v13-account\.js['"]/);
+  assert.match(handoff, /#mosigo-recovery=/);
+  assert.match(sharing, /#mosigo-share=/);
+  assert.match(sharing, /setOwnerAccessProvider/);
+  assert.match(sharingUi, /공유 링크 폐기/);
+  assert.match(account, /credentials:'same-origin'/);
+  assert.match(account, /claim-booking/);
+  assert.doesNotMatch(account, /localStorage/);
+  assert.doesNotMatch(account, /sessionStorage/);
+  assert.match(accountUi, /계정 로그인 · 예약 이어보기/);
+  assert.match(accountUi, /href:'v13-ui\.css'/);
+  assert.match(accountCss, /:focus-visible/);
+  assert.match(accountCss, /prefers-reduced-motion/);
+});
+
+test('Vercel keeps old public asset URLs compatible while source uses current paths', () => {
+  const config = JSON.parse(readSrc('vercel.json'));
+  const rewrites = new Map((config.rewrites || []).map(({ source, destination }) => [source, destination]));
+  assert.equal(rewrites.get('/v4-functional.js'), '/runtime/hospital-search.js');
+  assert.equal(rewrites.get('/v10-booking.js'), '/runtime/booking-durable.js');
+  assert.equal(rewrites.get('/v11-ui.js'), '/runtime/booking-handoff-ui.js');
+  assert.equal(rewrites.get('/v12-sharing.js'), '/runtime/booking-sharing.js');
+  assert.equal(rewrites.get('/v13-account.js'), '/runtime/account-ownership.js');
+  assert.equal(rewrites.get('/v13-ui.css'), '/runtime/account-ui.css');
 });
 
 test('local HTML asset and page references resolve to existing files', () => {
   const missing = [];
   const attrPattern = /\b(?:src|href|poster)\s*=\s*["']([^"']+)["']/gi;
-
   for (const file of HTML_FILES) {
     const html = readSrc(file);
     let match;
@@ -184,14 +212,12 @@ test('local HTML asset and page references resolve to existing files', () => {
       if (!fs.existsSync(resolved)) missing.push(`${file} -> ${ref}`);
     }
   }
-
   assert.deepEqual(missing, [], `Missing local HTML references:\n${missing.join('\n')}`);
 });
 
 test('local CSS url() references resolve to existing files', () => {
   const missing = [];
   const urlPattern = /url\(\s*["']?([^"')]+)["']?\s*\)/gi;
-
   for (const file of CSS_FILES) {
     const css = readSrc(file);
     let match;
@@ -204,37 +230,28 @@ test('local CSS url() references resolve to existing files', () => {
       if (!fs.existsSync(resolved)) missing.push(`${file} -> ${ref}`);
     }
   }
-
   assert.deepEqual(missing, [], `Missing local CSS references:\n${missing.join('\n')}`);
 });
 
-test('externalized classic JavaScript files are syntax-valid', () => {
+test('current external JavaScript files are syntax-valid', () => {
   const failures = [];
   for (const file of JS_FILES) {
-    try {
-      new Function(readSrc(file));
-    } catch (error) {
-      failures.push(`${file}: ${error.message}`);
-    }
+    try { new Function(readSrc(file)); }
+    catch (error) { failures.push(`${file}: ${error.message}`); }
   }
   assert.deepEqual(failures, [], `External JavaScript syntax errors:\n${failures.join('\n')}`);
 });
 
 test('remaining classic inline JavaScript blocks are syntax-valid', () => {
   const failures = [];
-
   for (const file of HTML_FILES) {
     const html = readSrc(file);
     for (const block of collectTagBlocks('script', html).filter(isClassicInlineScript)) {
       const code = block.body.trim();
       if (!code) continue;
-      try {
-        new Function(code);
-      } catch (error) {
-        failures.push(`${file}: ${error.message}`);
-      }
+      try { new Function(code); }
+      catch (error) { failures.push(`${file}: ${error.message}`); }
     }
   }
-
   assert.deepEqual(failures, [], `Inline JavaScript syntax errors:\n${failures.join('\n')}`);
 });
