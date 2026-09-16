@@ -2,6 +2,19 @@
 
 All notable Mosigo changes are tracked here as the prototype advances progressively.
 
+> Released sections preserve the filenames and verification facts that were true at the time of each release. Current source paths are documented in `README.md`; historical `src/v*-*.js` references below are release records, not current source-layout guidance.
+
+## Unreleased
+
+### Runtime & documentation consolidation — 2026-09-17
+- Consolidated the historical v4-v13 browser runtime files into role-based modules under `src/runtime/` without removing their active behavior.
+- Added `src/runtime/boot.js` as the stable runtime bootstrap and retained `src/booking-state.js` at the source root because it is a shared browser + Node booking-state contract.
+- Preserved legacy public asset URLs through Vercel rewrites so existing links and Production Smoke compatibility continue to work after the source-layout cleanup.
+- Consolidated version-numbered runtime/static QA around current feature-oriented tests and paths.
+- PR #57 Quality #118 succeeded; the runtime-layout refactor was merged as application-source commit `c1e68d1f7a8e288d4fc45635c3164ec86ee157f5`.
+- Main Quality #119 and Production Smoke #89 succeeded against the consolidated runtime layout.
+- Simplified documentation ownership: `README.md` now describes only the current stable architecture and operating model, while this changelog remains the single repository record for historical release details.
+
 ## v14.0.0 — 2026-09-17
 
 ### Operational SaaS Workspace
