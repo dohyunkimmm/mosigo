@@ -7,6 +7,23 @@
       "main": true
     }
   },
+  "rewrites": [
+    { "source": "/v4-functional.js", "destination": "/runtime/hospital-search.js" },
+    { "source": "/booking-state.js", "destination": "/runtime/booking-state.js" },
+    { "source": "/v4-booking.js", "destination": "/runtime/booking-runtime.js" },
+    { "source": "/v6-booking.js", "destination": "/runtime/booking-sync.js" },
+    { "source": "/v7-booking.js", "destination": "/runtime/booking-recovery.js" },
+    { "source": "/v8-booking.js", "destination": "/runtime/booking-trace.js" },
+    { "source": "/v9-booking.js", "destination": "/runtime/booking-coordination.js" },
+    { "source": "/v10-booking.js", "destination": "/runtime/booking-durable.js" },
+    { "source": "/v11-booking.js", "destination": "/runtime/booking-handoff.js" },
+    { "source": "/v11-ui.js", "destination": "/runtime/booking-handoff-ui.js" },
+    { "source": "/v12-sharing.js", "destination": "/runtime/booking-sharing.js" },
+    { "source": "/v12-ui.js", "destination": "/runtime/booking-sharing-ui.js" },
+    { "source": "/v13-account.js", "destination": "/runtime/account-ownership.js" },
+    { "source": "/v13-ui.js", "destination": "/runtime/account-ui.js" },
+    { "source": "/v13-ui.css", "destination": "/runtime/account-ui.css" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
