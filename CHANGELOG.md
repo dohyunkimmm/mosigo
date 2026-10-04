@@ -14,6 +14,8 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 - PR #57 Quality #118 succeeded; the runtime-layout refactor was merged as application-source commit `c1e68d1f7a8e288d4fc45635c3164ec86ee157f5`.
 - Main Quality #119 and Production Smoke #89 succeeded against the consolidated runtime layout.
 - Simplified documentation ownership: `README.md` now describes only the current stable architecture and operating model, while this changelog remains the single repository record for historical release details.
+- Added weekly Dependabot coverage for the `/src` npm runtime package and GitHub Actions dependencies.
+- Added a pull-request template that makes runtime/deployment impact, generated assets, and large-media hygiene explicit.
 
 ## v14.0.0 — 2026-09-17
 
