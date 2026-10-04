@@ -37,7 +37,7 @@ jobs:
           echo "sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Checkout release target
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.target.outputs.sha }}
           fetch-depth: 0
