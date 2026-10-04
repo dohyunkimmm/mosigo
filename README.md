@@ -135,12 +135,13 @@ npm run quality
 
 Production 검증은 `scripts/production-smoke.js`와 `.github/workflows/production-smoke.yml`이 담당합니다. `src/`가 변경된 `main` 커밋은 Production이 해당 source commit과 일치할 때까지 확인한 뒤 live API/runtime asset을 smoke-test합니다.
 
-현재 runtime 통합 기준:
+현재 runtime/maintenance 기준:
 
-- PR #57 Quality #118: success
-- merged application-source commit: `c1e68d1f7a8e288d4fc45635c3164ec86ee157f5`
-- main Quality #119: success
-- Production Smoke #89: success
+- `main`과 `src/runtime/`이 현재 구현의 Source of Truth입니다.
+- PR과 `main`은 `npm run quality`로 source structure와 runtime contract를 검증합니다.
+- `src/` npm 의존성과 GitHub Actions는 `.github/dependabot.yml`에서 주 단위로 확인합니다.
+- PR template은 runtime/deployment 영향과 large-media 필요성을 명시하도록 요구합니다.
+- Production 검증은 특정 과거 run 번호가 아니라 현재 `main` source commit과 live runtime/API 일치 여부를 기준으로 합니다.
 
 ## 배포
 
@@ -155,7 +156,7 @@ Production 검증은 `scripts/production-smoke.js`와 `.github/workflows/product
 문서 중복을 방지하기 위해 기준을 다음처럼 단순화했습니다.
 
 - `README.md` — 현재 안정 버전, 현재 구조, 현재 운영/QA 기준
-- `CHANGELOG.md` — v4~v14의 역사적 릴리스 이력과 당시 파일명·검증 기록
+- `CHANGELOG.md` — v4~v14의 역사적 릴리스 이력과 당시 파일명·검증 기록, 릴리스 이후 repository-maintenance 변경 기록
 - GitHub Releases — immutable release/tag 기록
 
 과거 README에 중복되어 있던 v10~v13 상세 릴리스 설명은 `CHANGELOG.md`로 통합했습니다. CHANGELOG의 `src/v11-booking.js` 같은 과거 경로는 당시 릴리스 이력을 보존하기 위한 기록이며, 현재 소스 경로는 이 README의 `src/runtime/` 구조를 기준으로 합니다.
