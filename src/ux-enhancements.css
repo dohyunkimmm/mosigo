@@ -1,0 +1,35 @@
+
+/* P1: prominent service goal before the category and promotion modules. */
+.mosigo-home-task{margin:12px 16px 4px;padding:17px 17px 16px;border:1px solid #cfe8d6;border-radius:17px;background:linear-gradient(135deg,#ecf9ef,#f7fbf8);color:#18372a}
+.mosigo-task-kicker{display:block;margin-bottom:6px;font-size:11px;font-weight:800;letter-spacing:.04em;color:#1b753a}
+.mosigo-home-task h2{margin:0;font-size:17px;line-height:1.4;font-weight:700;letter-spacing:-.45px;word-break:keep-all}
+.mosigo-home-task p{margin:6px 0 12px;color:#516257;font-size:12px;line-height:1.5}
+.mosigo-home-cta,.mosigo-compare-trigger{width:100%;min-height:46px;padding:11px 14px;border:0;border-radius:11px;background:#147d3f;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
+.mosigo-home-cta{display:flex;justify-content:space-between;align-items:center}
+.mosigo-compare-trigger{margin-top:11px;background:#eff9f1;color:#126b35;border:1px solid #afd8b8}
+.mosigo-compare-trigger span{margin-left:5px}
+.mosigo-report-orientation{margin:12px 16px 6px;padding:13px 14px;border:1px solid #d3e8d8;border-radius:12px;background:#f7fcf8}
+.mosigo-report-orientation b{display:block;font-size:15px;line-height:1.4;color:#203a2b}
+.mosigo-report-orientation p{margin:6px 0 0;color:#55685d;font-size:12px;line-height:1.55;word-break:keep-all}
+.mosigo-inline-action{display:inline-flex;align-items:center;gap:5px;padding:7px 0;border:0;background:none;color:#126b35;font-size:13px;font-weight:700;text-align:left;font-family:inherit;cursor:pointer}
+.mosigo-demo-mark{padding:2px 5px;border:1px solid #bcdec5;border-radius:4px;font-size:10px;color:#226b3a}
+.mosigo-compare-dialog{width:min(610px,calc(100vw - 30px));max-height:min(82dvh,750px);overflow:auto;padding:18px;border:1px solid #dce9e0;border-radius:18px;background:#fff;box-shadow:0 20px 70px #092c2155;color:#1b3325;font-family:var(--font,'Pretendard Variable',sans-serif)}
+.mosigo-compare-dialog::backdrop{background:#0c261a90}
+.mosigo-compare-head{display:flex;align-items:start;justify-content:space-between;gap:10px}
+.mosigo-compare-head h2{margin:5px 0;font-size:19px;line-height:1.35}
+.mosigo-compare-head p{margin:0;font-size:12px;color:#526657;line-height:1.5}
+.mosigo-compare-close{width:40px;height:40px;border:1px solid #d8e6dc;border-radius:10px;background:#fff;cursor:pointer;font-size:20px}
+.mosigo-compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:15px}
+.mosigo-compare-card{display:flex;flex-direction:column;gap:9px;padding:12px;border:1px solid #e2e9e4;border-radius:12px;min-width:0;background:#fff}
+.mosigo-compare-card.is-current{border-color:#168244;background:#f3fbf5}
+.mosigo-compare-card h3{font-size:15px;margin:0;line-height:1.3}
+.mosigo-compare-card small{font-size:12px;color:#526457;line-height:1.5}
+.mosigo-compare-stats{display:grid;gap:7px;margin:3px 0}
+.mosigo-compare-stats div{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:3px;border-bottom:1px solid #e5ece6;padding-bottom:5px}
+.mosigo-compare-stats dt{font-size:11px;color:#607169}
+.mosigo-compare-stats dd{margin:0;font-size:12px;font-weight:700}
+.mosigo-compare-card button{min-height:40px;padding:8px;border:1px solid #168044;border-radius:9px;background:#fff;color:#126a34;font-weight:700;cursor:pointer;font-family:inherit}
+.mosigo-compare-card button:focus-visible,.mosigo-home-cta:focus-visible,.mosigo-compare-trigger:focus-visible,.mosigo-inline-action:focus-visible{outline:3px solid #236f38;outline-offset:2px}
+.mosigo-compare-disclaimer{margin-top:13px;font-size:12px;line-height:1.55;color:#506554}
+@media(max-width:500px){.mosigo-compare-grid{grid-template-columns:1fr}.mosigo-compare-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}.mosigo-compare-card h3,.mosigo-compare-stats,.mosigo-compare-card small{grid-column:1/-1}.mosigo-compare-card button{grid-column:1/-1}.mosigo-compare-dialog{max-height:calc(100dvh - 42px)}}
+@media(prefers-reduced-motion:reduce){.mosigo-home-cta,.mosigo-compare-trigger{transition:none}}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="description" content="모시고 Operations의 읽기 전용 샘플 워크스페이스입니다. 예시 데이터로 화면을 체험할 수 있습니다.">
+<title>Mosigo Operations · 읽기 전용 샘플</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="v14-ops.css">
+<link rel="stylesheet" href="ops-preview.css">
+</head>
+<body>
+<div class="ops-app">
+<aside class="ops-sidebar" aria-label="샘플 워크스페이스 내비게이션">
+<a class="ops-brand" href="/ops.html"><span class="ops-brand-mark" aria-hidden="true">M</span><span><b>Mosigo</b><small>Operations Sample</small></span></a>
+<div class="ops-workspace-label">READ-ONLY PREVIEW</div>
+<nav class="ops-nav" aria-label="샘플 메뉴">
+<button type="button" class="ops-nav-item is-active" data-sample-tab="overview" aria-current="page"><span aria-hidden="true">⌂</span><span>개요</span></button>
+<button type="button" class="ops-nav-item" data-sample-tab="bookings"><span aria-hidden="true">▤</span><span>예약 샘플</span></button>
+<button type="button" class="ops-nav-item" data-sample-tab="security"><span aria-hidden="true">◎</span><span>권한 모델</span></button>
+</nav>
+<div class="ops-sidebar-foot"><span class="ops-system-dot" aria-hidden="true"></span><div><b>Preview only</b><small>실제 계정과 연결되지 않습니다</small></div></div>
+</aside>
+<main class="ops-main">
+<header class="ops-topbar"><div class="ops-title-wrap"><div class="ops-eyebrow">MOSIGO OPERATIONS · SAMPLE</div><h1>운영 화면 미리보기</h1><p>실제 운영 데이터가 아닌, 사용자 여정 검토를 위한 예시입니다.</p></div><div class="ops-topbar-actions"><a class="ops-secondary-link" href="/ops.html">로그인 화면</a><a class="ops-secondary-link" href="/">사용자 앱</a></div></header>
+<div class="ops-preview-banner" role="status"><b>읽기 전용 데모</b><span>아래 예약·상태·공유 정보는 모두 가상 데이터입니다. API 요청·로그인·예약 변경·공유 링크 발급은 이루어지지 않습니다.</span></div>
+<section data-sample-panel="overview">
+<div class="ops-metric-grid" aria-label="샘플 예약 현황">
+<article class="ops-metric"><span>샘플 예약</span><strong id="sample-total">3</strong><small>실제 계정과 무관</small></article>
+<article class="ops-metric"><span>예정 예약</span><strong id="sample-upcoming">2</strong><small>예시 일정</small></article>
+<article class="ops-metric"><span>공유 예시</span><strong>1</strong><small>실제 공유 불가</small></article>
+<article class="ops-metric"><span>운영 상태</span><strong class="ops-preview-readonly">읽기 전용</strong><small>변경 기능 비활성</small></article>
+</div>
+<div class="ops-grid-main">
+<section class="ops-panel"><div class="ops-panel-head"><div><span class="ops-panel-kicker">NEXT ACTIONS · SAMPLE</span><h2>확인할 예약</h2></div><button type="button" class="ops-text-button" data-sample-tab="bookings">목록 보기 →</button></div><div id="sample-actions" class="ops-action-list"></div></section>
+<aside class="ops-panel ops-health-panel"><div class="ops-panel-head"><div><span class="ops-panel-kicker">PREVIEW SCOPE</span><h2>구현 범위</h2></div></div><div class="ops-health-row"><span>예약 목록·검색</span><b>샘플 작동</b></div><div class="ops-health-row"><span>상세 보기</span><b>샘플 작동</b></div><div class="ops-health-row"><span>예약 변경·공유 발급</span><b>불가</b></div><p class="ops-health-note">실제 계정 소유권과 보안 공유는 별도의 로그인 화면에서만 사용됩니다.</p></aside>
+</div>
+</section>
+<section data-sample-panel="bookings" hidden>
+<div class="ops-toolbar"><label class="ops-search"><span aria-hidden="true">⌕</span><input type="search" id="sample-query" aria-label="예시 예약 검색" placeholder="병원명·예약번호로 예시 검색"></label><div class="ops-filter-group" role="group" aria-label="샘플 예약 일정"><button type="button" class="ops-filter is-active" data-sample-filter="all" aria-pressed="true">전체</button><button type="button" class="ops-filter" data-sample-filter="upcoming" aria-pressed="false">예정</button><button type="button" class="ops-filter" data-sample-filter="past" aria-pressed="false">지난 예약</button></div></div>
+<section class="ops-panel"><div class="ops-table-meta"><div><b id="sample-result-count">3건</b><span>가상 예약 목록</span></div><span>로컬 샘플 · 서버 연결 없음</span></div><div class="ops-preview-list" id="sample-bookings"></div><div class="ops-empty" id="sample-empty" hidden><b>조건에 맞는 예시 예약이 없습니다.</b><p>검색어나 필터를 변경해 보세요.</p></div></section>
+</section>
+<section data-sample-panel="security" hidden>
+<div class="ops-security-grid"><section class="ops-panel"><div class="ops-panel-head"><div><span class="ops-panel-kicker">PERMISSIONS · SAMPLE</span><h2>소유자와 공유받는 사람</h2></div></div><div class="ops-security-callout"><b>Owner ≠ Recipient</b><p>실제 제품에서는 예약 소유자만 자신의 예약을 관리합니다. 공유받는 사람에게는 만료·폐기 가능한 제한된 링크 권한만 제공됩니다.</p></div><ul class="ops-check-list"><li>이 화면에는 실사용자 계정·개인정보가 없습니다.</li><li>샘플에서는 저장·수정·취소 요청을 보내지 않습니다.</li><li>실제 기능 검증은 Operations 계정 로그인 후 진행합니다.</li></ul></section><section class="ops-panel"><div class="ops-panel-head"><div><span class="ops-panel-kicker">DEMO SAFETY</span><h2>읽기 전용 상태</h2></div></div><p class="ops-auth-note">샘플 데이터는 이 페이지의 JavaScript 안에만 정의되어 있습니다. API 호출·쿠키 변경·계정 생성은 수행하지 않습니다.</p><a class="ops-button secondary ops-preview-link" href="/ops.html">실제 로그인 화면으로 돌아가기</a></section></div>
+</section>
+</main>
+</div>
+<dialog id="sample-detail" class="ops-preview-dialog" aria-labelledby="sample-detail-title"><div class="ops-preview-dialog-head"><div><span class="ops-panel-kicker">SAMPLE BOOKING</span><h2 id="sample-detail-title">가상 예약 상세</h2></div><button type="button" id="sample-detail-close" class="ops-icon-button" aria-label="상세 닫기">×</button></div><dl id="sample-detail-content" class="ops-detail-list"></dl><p class="ops-auth-note">예시 정보입니다. 실제 예약 상태 변경이나 공유 링크 발급은 제공하지 않습니다.</p></dialog>
+<script src="ops-preview.js" defer></script>
+</body>
+</html>

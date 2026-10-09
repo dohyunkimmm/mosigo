@@ -182,7 +182,7 @@ function resetDemoState(){
 }
 
 function enhanceNonNativeButtons(root=document){
-  const selector='.metric[onclick],.history-item[onclick],.mgr-card[onclick],.filter-pill[onclick],.chip[onclick],.agree-item[onclick],.si-row[onclick],.si-rk[onclick],.cat[onclick],.mp-ic[onclick],.sub-banner[onclick],.hosp-card[onclick],.hd-rev-sum[onclick],.dept-btn[onclick]';
+  const selector='.metric[onclick],.history-item[onclick],.mgr-card[onclick],.filter-pill[onclick],.chip[onclick],.agree-item[onclick],.si-row[onclick],.si-rk[onclick],.cat[onclick],.mp-ic[onclick],.sub-banner[onclick],.hosp-card[onclick],.hd-rev-sum[onclick],.dept-btn[onclick],.mp-menu-i[onclick],.search-big .txt[onclick],.mp-benefit[onclick],.mp-hello[onclick],.contact-card[onclick],.target-row[onclick]';
   root.querySelectorAll?.(selector).forEach(el=>{
     if(!el.hasAttribute('role')) el.setAttribute('role','button');
     if(!el.hasAttribute('tabindex')) el.tabIndex=0;
