@@ -179,3 +179,11 @@
     background:var(--g100);
   }
 }
+
+/* Final typography QA: allow lengthy specialty labels and report actions
+   to wrap instead of being clipped when the user enlarges text. */
+#phone .cat-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
+#phone .cat { min-width:0; }
+#phone .cat .cl { max-width:100%; overflow-wrap:anywhere; }
+#phone .dr-btns { min-width:0; }
+#phone .dr-call { min-width:0; white-space:normal; overflow-wrap:anywhere; }
