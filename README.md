@@ -6,6 +6,8 @@
 
 [사용자 체험](https://mosigo-nine.vercel.app/) · [Operations 화면](https://mosigo-nine.vercel.app/ops.html) · [변경 이력](CHANGELOG.md)
 
+**Current stable version:** `v14.0.0`
+
 **사용자 여정:** 가입·건강 연동 → 병원 탐색 → 동행 매니저 매칭 → 동의·결제 → 동행 진행 → 건강 리포트 → 재예약
 
 > 실제 의료기관 예약, 의료 판단, 실결제 또는 병원 운영 서비스를 제공하지 않는 **서비스 기획·UX 검증용 프로토타입**입니다.
