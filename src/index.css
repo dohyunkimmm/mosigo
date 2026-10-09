@@ -2201,3 +2201,25 @@ button, [role="button"], .chip, .filter-pill, .cat, .metric, .history-item, .hos
   .portfolio-review { overflow-y:auto; }
   .pr-point span, .pr-proof span, .pr-note { font-size:12px; line-height:1.45; }
 }
+
+/* Final typography QA: keep supporting copy readable in large-text mode.
+   The onboarding content remains scrollable on short phones. */
+#phone.mosigo-large-text #s-onboard .perm-row .ds,
+#phone.mosigo-large-text #s-onboard .ob-info li,
+#phone.mosigo-large-text #s-mgr .mgr-freelancer-badge,
+#phone.mosigo-large-text #s-mgr .mgr-stat3 span,
+#phone.mosigo-large-text #s-mgr .tag-circle-lbl,
+#phone.mosigo-large-text #s-mgr .review-cat,
+#phone.mosigo-large-text #s-mgr .review-date,
+#phone.mosigo-large-text #s-report .ai-chip,
+#phone.mosigo-large-text #s-report .report-label,
+#phone.mosigo-large-text #s-report span[style*="font-size:10px"],
+#phone.mosigo-large-text #s-report span[style*="font-size:11px"],
+#phone.mosigo-large-text #s-settings .v13-account-desc {
+  font-size:14px !important;
+  line-height:1.5 !important;
+  overflow-wrap:anywhere;
+}
+#phone.mosigo-large-text #s-home .cat-grid {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
