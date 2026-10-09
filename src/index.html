@@ -24,6 +24,7 @@
      new_roles.css는 montage가 일괄 적용한 크기를 사람이 다시 판단해 바로잡으므로 그 다음 순서. -->
 <link rel="stylesheet" href="new_montage.css">
 <link rel="stylesheet" href="new_roles.css">
+<link rel="stylesheet" href="ux-enhancements.css">
 
 
 
@@ -454,6 +455,13 @@
           </div>
         </div>
 
+        <!-- Primary task: prioritize booking over decorative promotions. -->
+        <section class="mosigo-home-task" aria-label="병원동행 시작">
+          <span class="mosigo-task-kicker">부모님 병원 방문 준비</span>
+          <h2>병원 찾고, 믿을 수 있는 동행을 선택하세요</h2>
+          <p>병원 선택 → 매니저 비교 → 동행 신청</p>
+          <button type="button" class="mosigo-home-cta" onclick="openSearch()">병원동행 신청 시작 <span aria-hidden="true">→</span></button>
+        </section>
         <!-- 검색바 -->
         <div class="search-wrap">
           <div class="search-big">
@@ -486,7 +494,7 @@
           </div>
           <div class="rep-promo-title">익숙한 매니저와 함께할까요?</div>
           <!-- ★ 이미지 교체 지점: src에 파일 경로를 넣으면 된다 -->
-          <div class="rep-promo-img"><img src="day.png" decoding="async" alt="" onerror="this.style.display='none'"></div>
+          <div class="rep-promo-img"><img src="day.png" loading="lazy" decoding="async" alt="" onerror="this.style.display='none'"></div>
           <button class="btn primary rep-promo-btn" onclick="goTo('s-rebook')">예약하기</button>
         </div>
 
@@ -1079,6 +1087,7 @@
           <div class="mgr-rate-row"><span class="mgr-rate-tag">동행비</span><b id="mgr-p-price">30,000원</b></div>
           <div class="mgr-msg-box"><i class="fi fi-rr-comment-alt"></i> 매니저님께서 직접 남긴 메시지<div id="mgr-p-msg"></div></div>
           <div class="mosigo-demo-data-note">프로토타입 시연을 위한 예시 매니저 프로필입니다. 자격·신원조회·활동 실적·후기는 실제 인물의 검증 정보가 아닙니다.</div>
+          <button type="button" class="mosigo-compare-trigger" onclick="openMgrCompare()">예시 매니저 3명 비교하기 <span aria-hidden="true">↗</span></button>
         </div>
 
         <!-- 소개 -->
@@ -1912,6 +1921,11 @@
         <div id="rp-tab-record" role="tabpanel" aria-labelledby="health-tab-record">
 
         <!-- AI 요약 + 처방/다음예약 -->
+        <div class="mosigo-report-orientation" aria-label="건강 리포트 안내">
+          <span class="mosigo-task-kicker">진료 후 확인</span>
+          <b>핵심 요약 · 처방 · 다음 방문</b>
+          <p>다음 내용을 순서대로 확인할 수 있습니다. 수치·약 정보는 프로토타입 예시이며 의료적 판단에 사용하지 않습니다.</p>
+        </div>
         <div class="sec">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
             <div class="ai-chip" style="margin-bottom:0">✦ AI 요약 · 3줄</div>
@@ -1927,7 +1941,7 @@
           <div class="report-item">
             <div class="report-label">처방약</div>
             <div class="report-val">메트포르민 1000mg · 1일 2회 (아침·저녁 식후)<br>
-              <span style="font-size:11px;color:var(--teal);cursor:pointer" onclick="showToast('복약 알림을 설정했습니다')">복약 알림 설정하기 →</span>
+              <button type="button" class="mosigo-inline-action" onclick="showPrototypeNotice('복약 알림 설정')">복약 알림 설정하기 → <span class="mosigo-demo-mark">시연</span></button>
             </div>
           </div>
           <div class="report-item">
@@ -2268,5 +2282,7 @@
      BANNER_SLIDES·tapBanner를 감싸서 배너 탭을 가로채므로 본문 스크립트 뒤에 와야 한다. -->
 <script src="new_ext-pages.js"></script>
 <script src="index-post.js"></script>
+<!-- P0/P1 behaviors are isolated from the booking/auth runtime. -->
+<script src="ux-enhancements.js"></script>
 </body>
 </html>
