@@ -45,7 +45,7 @@ test('Operations sample is searchable, filterable, and read-only',async({page})=
  await expect(page.locator('#sample-bookings .ops-preview-item')).toHaveCount(1);
  await page.locator('#sample-bookings button').click();
  await expect(page.locator('#sample-detail')).toBeVisible();
- await expect(page.locator('#sample-detail')).toContainText('가상');
+ await expect(page.locator('#sample-detail')).toContainText('예시 정보입니다');
 });
 test('Operations layout fits 320px without horizontal overflow',async({page})=>{
  await page.setViewportSize({width:320,height:844});
