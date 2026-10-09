@@ -253,7 +253,7 @@
 
     if(!document.querySelector('script[data-mosigo-v7-booking]')){
       const v7=document.createElement('script');
-      v7.src='v7-booking.js';
+      v7.src='/runtime/booking-recovery.js';
       v7.async=false;
       v7.dataset.mosigoV7Booking='1';
       document.head.appendChild(v7);

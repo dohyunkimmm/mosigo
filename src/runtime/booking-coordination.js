@@ -187,7 +187,7 @@
 
     if(typeof document!=='undefined' && !document.querySelector('script[data-mosigo-v10-booking]')){
       const v10=document.createElement('script');
-      v10.src='v10-booking.js';
+      v10.src='/runtime/booking-durable.js';
       v10.async=false;
       v10.dataset.mosigoV10Booking='1';
       document.head.appendChild(v10);
