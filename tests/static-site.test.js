@@ -280,3 +280,46 @@ test('typography QA keeps large headings, readable operations text, and a shared
   assert.match(opsCss, /--ops-font:'Pretendard Variable'/);
   assert.match(opsHtml, /pretendardvariable-dynamic-subset\.min\.css/);
 });
+
+
+test('final typography QA guards 320px operations, contrast and text resizing', () => {
+  const appCss = readSrc('index.css');
+  const rolesCss = readSrc('new_roles.css');
+  const opsCss = readSrc('v14-ops.css');
+
+  // A fixed 340px minimum used to overflow the 320px Operations viewport.
+  const narrowRule = opsCss.match(/@media\s*\(max-width:360px\)\s*\{[\s\S]*?\.ops-field input\s*\{[^}]*\}[^}]*\}/)?.[0];
+  assert.ok(narrowRule, 'Operations should provide a 320px login override');
+  assert.match(narrowRule, /\.ops-auth-gate\s*\{\s*grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(narrowRule, /\.ops-field input\s*\{[^}]*min-width:0/);
+
+  // Normal-sized supporting text should meet WCAG AA contrast (4.5:1).
+  const lightness = (hex) => {
+    const channels = hex.match(/[0-9a-f]{2}/gi).map((pair) => parseInt(pair, 16) / 255);
+    const linear = channels.map((v) => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+    return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+  };
+  const mutedHex = opsCss.match(/--ops-muted:\s*(#[0-9a-f]{6})/i)?.[1];
+  assert.ok(mutedHex, 'Operations should define a muted text color');
+  const contrast = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  for (const background of ['#f5f7f8', '#ffffff']) {
+    assert.ok(contrast(lightness(mutedHex.slice(1)), lightness(background.slice(1))) >= 4.5,
+      'Operations supporting text should have AA contrast against ' + background);
+  }
+
+  // Large-text mode must not leave key 10-11.5px content at caption size.
+  for (const selector of ['#s-onboard .perm-row .ds', '#s-onboard .ob-info li',
+    '#s-mgr .mgr-stat3 span', '#s-report .ai-chip',
+    '#s-report span[style*="font-size:10px"]',
+    '#s-report span[style*="font-size:11px"]',
+    '#s-settings .v13-account-desc']) {
+    assert.ok(appCss.includes('#phone.mosigo-large-text ' + selector),
+      'Missing large-text override for ' + selector);
+  }
+  assert.match(appCss, /#phone\.mosigo-large-text #s-settings \.v13-account-desc\s*\{\s*font-size:14px !important/);
+  assert.match(appCss, /#phone\.mosigo-large-text #s-home \.cat-grid\s*\{\s*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+
+  // Text-only resizing must be able to wrap labels and report actions.
+  assert.match(rolesCss, /#phone \.cat \.cl\s*\{[^}]*overflow-wrap:anywhere/);
+  assert.match(rolesCss, /#phone \.dr-call\s*\{[^}]*white-space:normal;[^}]*overflow-wrap:anywhere/);
+});

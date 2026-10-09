@@ -5,7 +5,7 @@
   --ops-sidebar:#0c1713;
   --ops-sidebar-soft:#13231d;
   --ops-text:#15201b;
-  --ops-muted:#69756f;
+  --ops-muted:#66716b;
   --ops-faint:#637069;
   --ops-border:#e4e9e6;
   --ops-border-strong:#d6ded9;
@@ -69,3 +69,13 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid rgba(
 @media (max-width:720px){.ops-app{display:block}.ops-sidebar{position:sticky;z-index:20;width:100%;height:auto;display:grid;grid-template-columns:auto 1fr;align-items:center;padding:9px 12px;border-right:0;border-bottom:1px solid rgba(255,255,255,.06)}.ops-brand{padding:0;border:0}.ops-brand-mark{width:30px;height:30px}.ops-nav{display:flex;justify-content:flex-end;gap:3px}.ops-nav-item{width:38px;height:36px;min-height:36px}.ops-sidebar-foot{display:none}.ops-main{padding:0 14px 34px}.ops-topbar{min-height:84px}.ops-title-wrap p,.ops-eyebrow,.ops-secondary-link,.ops-account-copy{display:none}.ops-title-wrap h1{font-size:18px}.ops-account-chip{min-width:auto;padding:4px;border:0;background:transparent}.ops-avatar{width:31px;height:31px}.ops-auth-gate{margin-top:30px}.ops-auth-copy h2{font-size:29px}.ops-auth-copy p{font-size:14px}.ops-metric-grid{gap:8px}.ops-metric{padding:14px}.ops-metric strong{font-size:24px}.ops-toolbar{align-items:stretch;flex-direction:column}.ops-search{width:100%}.ops-filter-group{overflow:auto}.ops-table-wrap{display:none}.ops-card-list{display:grid}.ops-booking-mobile{padding:14px;border-bottom:1px solid var(--ops-border)}.ops-booking-mobile:last-child{border-bottom:0}.ops-mobile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.ops-mobile-head b{font-size:13px}.ops-mobile-meta{margin-top:5px;color:var(--ops-muted);font-size:12px}.ops-mobile-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}.ops-mobile-actions button{min-height:34px}.ops-detail-list div{grid-template-columns:90px 1fr}}
 @media (max-width:440px){.ops-topbar-actions{gap:4px}.ops-icon-button{width:34px;height:34px}.ops-auth-card{padding:18px}.ops-auth-actions{grid-template-columns:1fr}.ops-metric-grid{grid-template-columns:1fr 1fr}.ops-metric small{display:none}.ops-metric{min-height:92px}.ops-grid-main{margin-top:8px}.ops-panel{padding:15px}.ops-drawer{width:100vw;padding:17px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Final typography QA: narrow phones should not inherit the 340px login
+   grid minimum; long field contents must be allowed to shrink. */
+@media (max-width:360px) {
+  .ops-auth-gate { grid-template-columns:minmax(0,1fr); }
+  .ops-auth-gate > * { min-width:0; }
+  .ops-card-head { flex-wrap:wrap; }
+  .ops-field { grid-template-columns:minmax(0,1fr); }
+  .ops-field input { min-width:0; width:100%; }
+}
