@@ -258,3 +258,25 @@ test('remaining classic inline JavaScript blocks are syntax-valid', () => {
   }
   assert.deepEqual(failures, [], `Inline JavaScript syntax errors:\n${failures.join('\n')}`);
 });
+
+test('typography QA keeps large headings, readable operations text, and a shared font', () => {
+  const appCss = readSrc('index.css');
+  const opsCss = readSrc('v14-ops.css');
+  const opsHtml = readSrc('ops.html');
+  assert.match(appCss, /--g500:\s*#[0-9a-f]{6}/i);
+  assert.match(appCss, /--g700:\s*#[0-9a-f]{6}/i);
+  const largeHeadingRule = appCss.match(/#phone\.mosigo-large-text \.app-bar-title,[\s\S]*?font-size:18px !important;[^}]*\}/)?.[0];
+  assert.ok(largeHeadingRule, 'Small headings must be enlarged');
+  for (const selector of ['bk-title', 'hl-title', 'hd-nm', 'mgr-hero-nm', 'dr-head-t']) {
+    assert.ok(!largeHeadingRule.includes('.' + selector), selector + ' must keep its original larger font size');
+  }
+  assert.doesNotMatch(appCss, /#phone\.mosigo-large-text \.hl-row \.v\s*,/);
+  assert.match(appCss, /#phone\.mosigo-large-text \.ob-btn\s*\{\s*font-size:17px/);
+  assert.match(appCss, /\.pr-proof span, \.pr-note \{ font-size:12px;/);
+  const sizes = [...opsCss.matchAll(/font-size:(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]));
+  assert.ok(sizes.length > 0 && sizes.every((size) => size >= 12), 'Operations text must not fall below 12px');
+  assert.match(opsCss, /\.ops-button\.primary\{background:var\(--ops-accent-dark\);color:#fff/);
+  assert.match(opsCss, /--ops-faint:#637069;/);
+  assert.match(opsCss, /--ops-font:'Pretendard Variable'/);
+  assert.match(opsHtml, /pretendardvariable-dynamic-subset\.min\.css/);
+});
