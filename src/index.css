@@ -19,7 +19,7 @@
   --coral:  #E11D48; --coral-l:#FEEAEE;
   --amber:  #8A6D00; --amber-l:#FFF6CE;
   --yellow: #FFDD2E; --yellow-d:#B58A00;
-  --g100:   #F6F7FA; --g200:#E9EBF0; --g400:#A9AEBB; --g600:#6B7280; --g900:#1A1C22;
+  --g100:   #F6F7FA; --g200:#E9EBF0; --g400:#A9AEBB; --g500:#626B78; --g600:#6B7280; --g700:#424A57; --g900:#1A1C22;
   --white:  #FFFFFF; --border:#E6E8EF;
   /* aha 스타일: 스크롤 영역은 연회색 바탕, 콘텐츠는 테두리 없는 흰 카드 블록으로 띄운다 */
   --bg:     #F4F5F7;
@@ -1542,29 +1542,25 @@ b, strong { font-weight:600; }
 .big-toggle .knob { transition:transform .2s,background .2s,border-color .2s; }
 .big-toggle.mosigo-large-on { background:var(--teal); color:#fff; border-color:var(--teal); }
 .big-toggle.mosigo-large-on .knob { transform:translateX(4px); border-color:#fff; }
+/* 18px 미만 제목만 확대한다. 20~26px 제목은 원래 크기를 유지한다. */
 #phone.mosigo-large-text .app-bar-title,
 #phone.mosigo-large-text .card-title,
-#phone.mosigo-large-text .ob-title,
-#phone.mosigo-large-text .bk-title,
-#phone.mosigo-large-text .hl-title,
-#phone.mosigo-large-text .hd-nm,
-#phone.mosigo-large-text .mgr-hero-nm,
-#phone.mosigo-large-text .dr-head-t { font-size:18px !important; line-height:1.45 !important; }
+#phone.mosigo-large-text .ob-title { font-size:18px !important; line-height:1.45 !important; }
 #phone.mosigo-large-text .card-sub,
 #phone.mosigo-large-text .mgr-meta,
 #phone.mosigo-large-text .report-val,
 #phone.mosigo-large-text .dr-row,
 #phone.mosigo-large-text .dr-ul li,
 #phone.mosigo-large-text .hl-row .k,
-#phone.mosigo-large-text .hl-row .v,
 #phone.mosigo-large-text .mp-foot,
 #phone.mosigo-large-text .mosigo-demo-data-note,
 #phone.mosigo-large-text .mosigo-prototype-note { font-size:14px !important; line-height:1.65 !important; }
 #phone.mosigo-large-text .mp-menu-i,
 #phone.mosigo-large-text .input,
 #phone.mosigo-large-text .btn,
-#phone.mosigo-large-text .ob-btn,
 #phone.mosigo-large-text .hd-cta-btn { font-size:16px !important; min-height:48px; }
+/* 기본 17px인 온보딩 CTA는 작아지지 않게 유지한다. */
+#phone.mosigo-large-text .ob-btn { font-size:17px !important; min-height:48px; }
 
 button:focus-visible, [role="button"]:focus-visible, a:focus-visible,
 input:focus-visible, select:focus-visible, textarea:focus-visible {
@@ -2198,4 +2194,10 @@ button, [role="button"], .chip, .filter-pill, .cat, .metric, .history-item, .hos
     align-items:center;
   }
   #s-onboard .perm-row .ic { margin-top:0; }
+}
+
+/* Typography QA: PC 포트폴리오의 근거·보조 텍스트가 9px 미만으로 축소되지 않도록 한다. */
+@media (min-width:900px) {
+  .portfolio-review { overflow-y:auto; }
+  .pr-point span, .pr-proof span, .pr-note { font-size:12px; line-height:1.45; }
 }
