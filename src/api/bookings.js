@@ -97,6 +97,26 @@ async function assertBookingAccess(current, req, body, bookingId, shareStore, ac
   throw new BookingServiceError('booking_recovery_key_invalid', 'A valid recovery key, owner account session, or active share token is required for this durable booking.', 401);
 }
 
+// Keep the account's booking index recoverable when a Blob write response is lost.
+// If the canonical booking definitely does not exist, compensate the advisory index.
+async function createWithOwnerIndex(store, accountStore, booking, recoveryKey, ownerAccountId) {
+  if (ownerAccountId) await accountStore.addBooking(ownerAccountId, booking.bookingId);
+  try {
+    await store.create(booking, recoveryKey, { ownerAccountId: ownerAccountId || null });
+  } catch (error) {
+    if (ownerAccountId && typeof accountStore.removeBooking === 'function') {
+      try {
+        // A write timeout can happen *after* persistence; preserve that index.
+        const persisted = await store.read(booking.bookingId);
+        if (!persisted) await accountStore.removeBooking(ownerAccountId, booking.bookingId);
+      } catch (cleanupError) {
+        // Do not mask the original storage error; the index reader skips missing records.
+      }
+    }
+    throw error;
+  }
+}
+
 function createHandler({
   store = createBookingStore(),
   shareStore = createBookingShareStore(),
@@ -165,8 +185,7 @@ function createHandler({
         const session = await optionalAccountSession(accountStore, req);
         const ownerAccountId = session?.account?.accountId || '';
         const recoveryKey = createRecoveryKey();
-        if (ownerAccountId) await accountStore.addBooking(ownerAccountId, booking.bookingId);
-        await store.create(booking, recoveryKey, { ownerAccountId: ownerAccountId || null });
+        await createWithOwnerIndex(store, accountStore, booking, recoveryKey, ownerAccountId);
         return res.status(201).json({
           success: true,
           source: 'prototype',
@@ -198,8 +217,7 @@ function createHandler({
           const session = await optionalAccountSession(accountStore, req);
           const ownerAccountId = session?.account?.accountId || '';
           const recoveryKey = createRecoveryKey();
-          if (ownerAccountId) await accountStore.addBooking(ownerAccountId, submitted.bookingId);
-          await store.create(submitted, recoveryKey, { ownerAccountId: ownerAccountId || null });
+          await createWithOwnerIndex(store, accountStore, submitted, recoveryKey, ownerAccountId);
           return res.status(200).json({
             success: true,
             source: 'prototype',

@@ -375,6 +375,31 @@ function createAccountStore({
     throw new AccountStoreError('account_booking_index_conflict', 'Could not update account booking index.', 409);
   }
 
+  // Compensate a booking creation failure. The index is not the canonical record.
+  async function removeBooking(accountId, bookingId) {
+    assertConfigured();
+    const id = String(accountId || '').trim();
+    const booking = String(bookingId || '').trim();
+    if (!/^A13[A-F0-9]{16}$/.test(id)) throw new AccountStoreError('account_id_invalid', 'A valid account ID is required.', 422);
+    if (!/^M(?:[46789]|1[01])[A-Z0-9]{8}$/.test(booking)) throw new AccountStoreError('account_booking_id_invalid', 'A valid booking ID is required.', 422);
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const current = await readBookingIndex(id);
+      if (!current || !current.record.bookingIds.includes(booking)) return false;
+      const record = {
+        ...current.record,
+        bookingIds: current.record.bookingIds.filter((value) => value !== booking),
+        updatedAt: new Date(Number(now())).toISOString()
+      };
+      try {
+        await putJson(bookingIndexPath(id), record, { current });
+        return true;
+      } catch (error) {
+        if (!(error instanceof AccountStoreError) || error.code !== 'account_storage_conflict' || attempt === 3) throw error;
+      }
+    }
+    return false;
+  }
+
   async function listBookingIds(accountId) {
     const current = await readBookingIndex(accountId);
     return current ? [...current.record.bookingIds] : [];
@@ -403,6 +428,7 @@ function createAccountStore({
     revokeSession,
     readAccountByEmail,
     addBooking,
+    removeBooking,
     listBookingIds,
     listOwnedBookings
   };

@@ -180,3 +180,29 @@ test('existing durable booking can be claimed once with recovery key and cannot 
   assert.equal(firstAllowed.statusCode, 200);
   assert.equal(firstAllowed.body.accessType, 'account-session');
 });
+
+// Blob failures before persistence must not leave phantom bookings in the owner index.
+test('failed durable create compensates owner index without exposing a recovery key', async () => {
+  const blobApi = fakeBlobApi();
+  const normalPut = blobApi.put.bind(blobApi);
+  blobApi.put = async (pathname, body, options) => {
+    if (pathname.startsWith('mosigo/bookings/')) throw new Error('simulated storage outage');
+    return normalPut(pathname, body, options);
+  };
+  const env = { BLOB_READ_WRITE_TOKEN: 'test-token' };
+  const accountStore = createAccountStore({ env, blobApi });
+  const bookingStore = createBookingStore({ env, blobApi });
+  const accountHandler = createAccountHandler({ accountStore, bookingStore });
+  const bookingsHandler = createBookingsHandler({ store: bookingStore, accountStore });
+  const registration = await invoke(accountHandler, {
+    method: 'POST',
+    body: { action: 'register', email: 'failure@example.com', password: 'password-123' }
+  });
+  assert.equal(registration.statusCode, 201);
+  const cookie = cookieHeader(registration.headers['set-cookie']);
+  const failed = await invoke(bookingsHandler, { method: 'POST', headers: { cookie }, body: { booking: sample } });
+  assert.equal(failed.statusCode, 502);
+  assert.equal(failed.body.success, false);
+  assert.equal(failed.body.recoveryKey, undefined);
+  assert.deepEqual(await accountStore.listBookingIds(registration.body.account.accountId), []);
+});
