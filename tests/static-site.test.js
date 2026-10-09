@@ -5,8 +5,8 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
-const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html', 'ops.html'];
-const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css', 'v14-ops.css', 'runtime/account-ui.css'];
+const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html', 'ops.html', 'ops-preview.html'];
+const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css', 'v14-ops.css', 'ops-preview.css', 'ux-enhancements.css', 'runtime/account-ui.css'];
 const RUNTIME_JS = [
   'runtime/boot.js',
   'runtime/post-ui.js',
@@ -24,7 +24,7 @@ const RUNTIME_JS = [
   'runtime/account-ownership.js',
   'runtime/account-ui.js'
 ];
-const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'booking-state.js', 'v14-ops.js', ...RUNTIME_JS];
+const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'booking-state.js', 'v14-ops.js', 'ops-preview.js', 'ux-enhancements.js', ...RUNTIME_JS];
 const REMOVED_VERSIONED_ROOT_FILES = [
   'v4-functional.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js', 'v8-booking.js',
   'v9-booking.js', 'v10-booking.js', 'v11-booking.js', 'v11-ui.js', 'v12-sharing.js',
@@ -322,4 +322,26 @@ test('final typography QA guards 320px operations, contrast and text resizing', 
   // Text-only resizing must be able to wrap labels and report actions.
   assert.match(rolesCss, /#phone \.cat \.cl\s*\{[^}]*overflow-wrap:anywhere/);
   assert.match(rolesCss, /#phone \.dr-call\s*\{[^}]*white-space:normal;[^}]*overflow-wrap:anywhere/);
+});
+
+test('P0/P1/P2 journeys explicitly disclose simulations and keep account data isolated', () => {
+  const home = readSrc('index.html');
+  const ops = readSrc('ops.html');
+  const preview = readSrc('ops-preview.html');
+  const previewJs = readSrc('ops-preview.js');
+  const uxJs = readSrc('ux-enhancements.js');
+  const css = readSrc('ux-enhancements.css');
+  assert.match(ops, /href="\/ops-preview\.html"/);
+  assert.match(preview, /읽기 전용/);
+  assert.match(preview, /실제 계정과 연결되지 않습니다/);
+  assert.doesNotMatch(previewJs, /fetch\(|localStorage|sessionStorage|document\.cookie|\/api\//);
+  assert.match(previewJs, /data-sample-filter/);
+  assert.match(home, /mosigo-home-task/);
+  assert.match(home, /mosigo-compare-trigger/);
+  assert.match(home, /mosigo-report-orientation/);
+  assert.match(uxJs, /window\.openMgrCompare=openMgrCompare/);
+  assert.match(uxJs, /window\.showPrototypeNotice=showPrototypeNotice/);
+  assert.match(uxJs, /실제 처리나 알림 발송은 수행되지 않습니다/);
+  assert.match(css, /mosigo-compare-dialog/);
+  assert.match(readSrc('runtime/post-ui.js'), /\.mp-menu-i\[onclick\]/);
 });
