@@ -24,7 +24,7 @@ const RUNTIME_JS = [
   'runtime/account-ownership.js',
   'runtime/account-ui.js'
 ];
-const JS_FILES = ['index-core.js', 'new_ext-pages.js', 'index-post.js', 'booking-state.js', 'v14-ops.js', 'ops-preview.js', 'ux-enhancements.js', ...RUNTIME_JS];
+const JS_FILES = ['core/map-experience.js', 'index-core.js', 'new_ext-pages.js', 'index-post.js', 'booking-state.js', 'v14-ops.js', 'ops-preview.js', 'ux-enhancements.js', ...RUNTIME_JS];
 const REMOVED_VERSIONED_ROOT_FILES = [
   'v4-functional.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js', 'v8-booking.js',
   'v9-booking.js', 'v10-booking.js', 'v11-booking.js', 'v11-ui.js', 'v12-sharing.js',
@@ -122,10 +122,11 @@ test('main page keeps CSS and classic JavaScript externalized in execution order
   assert.equal(classicInline.length, 0);
   assert.ok(html.includes('href="index.css"'));
 
+  const mapIndex = srcs.indexOf('core/map-experience.js');
   const coreIndex = srcs.indexOf('index-core.js');
   const extIndex = srcs.indexOf('new_ext-pages.js');
   const postIndex = srcs.indexOf('index-post.js');
-  assert.ok(coreIndex >= 0);
+  assert.ok(mapIndex >= 0 && coreIndex > mapIndex);
   assert.ok(extIndex > coreIndex);
   assert.ok(postIndex > extIndex);
   assert.ok(Buffer.byteLength(html) < 200_000);
@@ -135,6 +136,8 @@ test('stable browser entry delegates to a single role-based runtime bootstrap', 
   const entry = readSrc('index-post.js');
   const boot = readSrc('runtime/boot.js');
   const post = readSrc('runtime/post-ui.js');
+  const map = readSrc('core/map-experience.js');
+  const core = readSrc('index-core.js');
   const bookingState = readSrc('booking-state.js');
 
   assert.match(entry, /runtime\/boot\.js/);
@@ -147,6 +150,8 @@ test('stable browser entry delegates to a single role-based runtime bootstrap', 
   assert.doesNotMatch(boot, /'booking-state\.js':/, 'shared booking-state should keep its stable root path for browser and Node consumers');
   assert.match(boot, /rewriteRuntimeAsset/);
   assert.match(bookingState, /MosigoBookingState/);
+  assert.match(map, /function initMaps\(/);
+  assert.doesNotMatch(core, /function initMaps\(/);
 });
 
 test('current runtime keeps booking, handoff, sharing, and account contracts intact', () => {
