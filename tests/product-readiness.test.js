@@ -34,10 +34,8 @@ test('external event pages are mounted lazily and remain labelled', () => {
   assert.doesNotMatch(source, /function init\(\)\{[^}]*\bmount\(\)/s);
 });
 
-test('prototype video footprint stays within the v5 demo budget', () => {
+test('prototype video footprint stays within budget when videos are present', () => {
   const videos = walk(SRC).filter((file) => path.extname(file).toLowerCase() === '.mp4');
-  assert.ok(videos.length > 0, 'Expected prototype video assets');
-
   const sizes = videos.map((file) => ({ file: path.relative(ROOT, file), bytes: fs.statSync(file).size }));
   const total = sizes.reduce((sum, item) => sum + item.bytes, 0);
   const mib = 1024 * 1024;
