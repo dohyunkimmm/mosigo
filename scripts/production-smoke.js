@@ -296,12 +296,12 @@ async function runChecks() {
   const v10Asset = await fetchText('/v10-booking.js');
   assert(v10Asset.text.includes('MosigoV10BookingDurability'), 'v10 durability runtime is missing');
   assert(v10Asset.text.includes('X-Mosigo-Recovery-Key'), 'v10 recovery credential flow is missing');
-  assert(v10Asset.text.includes("v11.src='v11-booking.js'"), 'v10 does not load the v11 portable recovery runtime');
-  assert(v10Asset.text.includes("v11Ui.src='v11-ui.js'"), 'v10 does not load the v11 portable recovery UI');
-  assert(v10Asset.text.includes("v12.src='v12-sharing.js'"), 'v10 does not load the v12 secure sharing runtime');
-  assert(v10Asset.text.includes("v12Ui.src='v12-ui.js'"), 'v10 does not load the v12 secure sharing UI');
-  assert(v10Asset.text.includes("v13.src='v13-account.js'"), 'v10 does not load the v13 account ownership runtime');
-  assert(v10Asset.text.includes("v13Ui.src='v13-ui.js'"), 'v10 does not load the v13 account ownership UI');
+  assert(v10Asset.text.includes("v11.src='/runtime/booking-handoff.js'"), 'v10 does not load the v11 portable recovery runtime');
+  assert(v10Asset.text.includes("v11Ui.src='/runtime/booking-handoff-ui.js'"), 'v10 does not load the v11 portable recovery UI');
+  assert(v10Asset.text.includes("v12.src='/runtime/booking-sharing.js'"), 'v10 does not load the v12 secure sharing runtime');
+  assert(v10Asset.text.includes("v12Ui.src='/runtime/booking-sharing-ui.js'"), 'v10 does not load the v12 secure sharing UI');
+  assert(v10Asset.text.includes("v13.src='/runtime/account-ownership.js'"), 'v10 does not load the v13 account ownership runtime');
+  assert(v10Asset.text.includes("v13Ui.src='/runtime/account-ui.js'"), 'v10 does not load the v13 account ownership UI');
 
   const v11Asset = await fetchText('/v11-booking.js');
   assert(v11Asset.text.includes('MosigoV11BookingHandoff'), 'v11 portable recovery facade is missing');

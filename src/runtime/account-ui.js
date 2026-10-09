@@ -31,7 +31,7 @@
       if(document.getElementById('v13-ui-style')) return;
       const link=node('link',{
         id:'v13-ui-style',
-        attrs:{ rel:'stylesheet', href:'v13-ui.css' }
+        attrs:{ rel:'stylesheet', href:'/runtime/account-ui.css' }
       });
       (document.head||document.documentElement).appendChild(link);
     }
