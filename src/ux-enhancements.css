@@ -33,3 +33,6 @@
 .mosigo-compare-disclaimer{margin-top:13px;font-size:12px;line-height:1.55;color:#506554}
 @media(max-width:500px){.mosigo-compare-grid{grid-template-columns:1fr}.mosigo-compare-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}.mosigo-compare-card h3,.mosigo-compare-stats,.mosigo-compare-card small{grid-column:1/-1}.mosigo-compare-card button{grid-column:1/-1}.mosigo-compare-dialog{max-height:calc(100dvh - 42px)}}
 @media(prefers-reduced-motion:reduce){.mosigo-home-cta,.mosigo-compare-trigger{transition:none}}
+
+/* Keep the demo source note flush without an inline style. */
+#modal-demo-guide .demo-guide-note{margin-bottom:0}
