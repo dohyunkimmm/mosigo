@@ -85,3 +85,26 @@ const report = {
 };
 
 console.log(JSON.stringify(report, null, 2));
+
+// Report plus enforceable guardrails: CI must fail when source structure regresses.
+const violations=[];
+if(report.bytes>=200_000) violations.push('src/index.html exceeds the 200 KB source budget');
+if(report.htmlCommentOpeners!==report.htmlCommentClosers) violations.push('unbalanced HTML comments');
+if(report.styleBlocks!==0) violations.push('inline <style> blocks are forbidden');
+if(report.inlineScriptBlocks!==0) violations.push('inline <script> blocks are forbidden');
+for(const asset of localAssets){
+  if(!asset.exists) violations.push('missing core asset: '+asset.file);
+}
+const expectedSources=['core/map-experience.js','index-core.js','new_ext-pages.js','index-post.js','ux-enhancements.js'];
+const externalSources=externalScripts.map(script=>script.src).filter(Boolean);
+let lastIndex=-1;
+for(const source of expectedSources){
+  const index=externalSources.indexOf(source);
+  if(index<=lastIndex) violations.push('missing or misordered script: '+source);
+  else lastIndex=index;
+  if(!fs.existsSync(path.join(ROOT,'src',source))) violations.push('missing script file: '+source);
+}
+if(violations.length){
+  for(const violation of violations) console.error('Source audit failed: '+violation);
+  process.exitCode=1;
+}

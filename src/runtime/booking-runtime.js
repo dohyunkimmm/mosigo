@@ -206,7 +206,7 @@
   // v6 extends the stable booking runtime after v4 has restored and published its local state.
   if(!document.querySelector('script[data-mosigo-v6-booking]')){
     const v6=document.createElement('script');
-    v6.src='v6-booking.js';
+    v6.src='/runtime/booking-sync.js';
     v6.async=false;
     v6.dataset.mosigoV6Booking='1';
     document.head.appendChild(v6);

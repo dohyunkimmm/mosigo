@@ -204,7 +204,7 @@ syncHospitalSourceUI=function(){
   function loadRuntime(){
     if(document.querySelector('script[data-mosigo-v4-booking]')) return;
     const runtime=document.createElement('script');
-    runtime.src='v4-booking.js';
+    runtime.src='/runtime/booking-runtime.js';
     runtime.async=false;
     runtime.dataset.mosigoV4Booking='1';
     document.head.appendChild(runtime);

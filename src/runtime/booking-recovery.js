@@ -189,7 +189,7 @@
 
     if(!document.querySelector('script[data-mosigo-v8-booking]')){
       const v8=document.createElement('script');
-      v8.src='v8-booking.js';
+      v8.src='/runtime/booking-trace.js';
       v8.async=false;
       v8.dataset.mosigoV8Booking='1';
       document.head.appendChild(v8);

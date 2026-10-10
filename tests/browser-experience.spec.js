@@ -54,3 +54,15 @@ test('Operations layout fits 320px without horizontal overflow',async({page})=>{
  expect(width).toBeLessThanOrEqual(1);
  await expect(page.locator('.ops-preview-entry')).toBeVisible();
 });
+
+// Verify the full role-based module chain loads without intercepting DOM methods.
+test('booking, recovery, sharing and account modules load through current paths',async({page})=>{
+ await page.goto('/');
+ await page.waitForFunction(()=>Boolean(window.MosigoV13AccountOwnership && window.MosigoV12SecureSharing && window.MosigoV10BookingDurability));
+ const urls=await page.locator('script[src]').evaluateAll(nodes=>nodes.map(node=>new URL(node.src).pathname));
+ for(const path of ['/runtime/hospital-search.js','/runtime/booking-durable.js','/runtime/booking-sharing.js','/runtime/account-ownership.js']){
+   expect(urls).toContain(path);
+ }
+ expect(urls.some(path=>/^\/v(?:4|6|7|8|9|10|11|12|13)[-.]/.test(path))).toBe(false);
+ await expect(page.locator('link[href="/runtime/account-ui.css"]')).toHaveCount(1);
+});

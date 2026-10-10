@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: '24'
       - name: Install test runner only
-        run: npm install --no-save @playwright/test
+        run: npm install --no-save --no-package-lock @playwright/test@1.56.0
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Check key journeys and accessibility

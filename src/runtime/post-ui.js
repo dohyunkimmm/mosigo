@@ -244,7 +244,7 @@ window.addEventListener('online',()=>showToast('네트워크 연결이 복구됐
 // v4 기능 레이어는 안정화된 v3 스크립트 뒤에서 점진적으로 기능을 확장한다.
 (function loadV4FunctionalLayer(){
   const script=document.createElement('script');
-  script.src='v4-functional.js';
+  script.src='/runtime/hospital-search.js';
   script.async=false;
   document.head.appendChild(script);
 })();
