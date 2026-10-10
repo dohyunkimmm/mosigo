@@ -65,8 +65,8 @@
       <div><b>API</b><span>출처 구분</span></div>
     </div>
     <div class="pr-actions">
-      <button class="pr-btn primary" type="button" onclick="openDemoGuide()">▶ 3분 핵심 데모 보기</button>
-      <button class="pr-btn" type="button" onclick="resetDemoState()">서비스 처음 화면으로</button>
+      <button class="pr-btn primary" type="button" data-mosigo-demo-action="open-guide">▶ 3분 핵심 데모 보기</button>
+      <button class="pr-btn" type="button" data-mosigo-demo-action="reset-demo">서비스 처음 화면으로</button>
     </div>
     <p class="pr-note">본 페이지는 포트폴리오용 인터랙티브 프로토타입입니다. 실제 의료 상담·예약 서비스가 아니며 일부 데이터는 예시입니다.</p>
   </aside>
@@ -99,7 +99,7 @@
       </div>
       <div class="ob-foot">
         <button class="ob-btn" onclick="openNoti()">확인</button>
-        <button class="ob-btn ob-demo-btn" id="open-demo-guide" onclick="openDemoGuide()" aria-haspopup="dialog" aria-controls="modal-demo-guide">3분 핵심 데모 보기</button>
+        <button class="ob-btn ob-demo-btn" id="open-demo-guide" data-mosigo-demo-action="open-guide" aria-haspopup="dialog" aria-controls="modal-demo-guide">3분 핵심 데모 보기</button>
       </div>
       <!-- 알림 권한 -->
       <div class="ob-ov" id="ov-noti">
@@ -2203,8 +2203,8 @@
 
 
     <!-- ══ 포트폴리오 3분 핵심 데모 가이드 ══ -->
-    <div class="overlay" id="modal-demo-guide" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="demo-guide-title" onclick="closeDemoGuide()">
-      <div class="modal-sheet demo-guide-sheet" onclick="event.stopPropagation()">
+    <div class="overlay" id="modal-demo-guide" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="demo-guide-title" data-mosigo-demo-action="dismiss-guide">
+      <div class="modal-sheet demo-guide-sheet">
         <div class="modal-handle"></div>
         <div class="demo-guide-head">
           <div>
@@ -2212,34 +2212,34 @@
             <div class="demo-guide-title" id="demo-guide-title">핵심 사용자 여정 바로 보기</div>
             <div class="demo-guide-sub">5단계 순서대로 보거나 원하는 핵심 화면으로 바로 이동할 수 있어요.</div>
           </div>
-          <button class="demo-guide-close" type="button" aria-label="데모 가이드 닫기" onclick="closeDemoGuide()">×</button>
+          <button class="demo-guide-close" type="button" aria-label="데모 가이드 닫기" data-mosigo-demo-action="close-guide">×</button>
         </div>
-        <button class="demo-guide-start" type="button" onclick="startGuidedDemo()"><span aria-hidden="true">▶</span> 순서대로 5단계 핵심 데모 시작</button>
-        <div class="demo-guide-meta"><span><b>약 3분</b> · 단계별 바로 이동</span><button class="demo-guide-reset" type="button" onclick="resetDemoState()">데모 상태 초기화</button></div>
+        <button class="demo-guide-start" type="button" data-mosigo-demo-action="start-guide"><span aria-hidden="true">▶</span> 순서대로 5단계 핵심 데모 시작</button>
+        <div class="demo-guide-meta"><span><b>약 3분</b> · 단계별 바로 이동</span><button class="demo-guide-reset" type="button" data-mosigo-demo-action="reset-demo">데모 상태 초기화</button></div>
         <div class="demo-guide-grid">
-          <button class="demo-route" type="button" onclick="demoJump('hospital')">
+          <button class="demo-route" type="button" data-mosigo-demo-action="jump-hospital">
             <span class="demo-route-ic" aria-hidden="true">🏥</span><span class="demo-route-tx"><b>1. 병원 찾기</b><span>진료과 탐색 → 병원 선택까지 한 흐름</span></span><span class="demo-route-arr" aria-hidden="true">›</span>
           </button>
-          <button class="demo-route" type="button" onclick="demoJump('manager')">
+          <button class="demo-route" type="button" data-mosigo-demo-action="jump-manager">
             <span class="demo-route-ic" aria-hidden="true">🧑‍⚕️</span><span class="demo-route-tx"><b>2. 매니저 매칭</b><span>선택 병원 기준 동행 가능 매니저 탐색</span></span><span class="demo-route-arr" aria-hidden="true">›</span>
           </button>
-          <button class="demo-route" type="button" onclick="demoJump('booking')">
+          <button class="demo-route" type="button" data-mosigo-demo-action="jump-booking">
             <span class="demo-route-ic" aria-hidden="true">📅</span><span class="demo-route-tx"><b>3. 예약 현황</b><span>확정 일정·예약번호·전달사항 확인</span></span><span class="demo-route-arr" aria-hidden="true">›</span>
           </button>
-          <button class="demo-route" type="button" onclick="demoJump('live')">
+          <button class="demo-route" type="button" data-mosigo-demo-action="jump-live">
             <span class="demo-route-ic" aria-hidden="true">📍</span><span class="demo-route-tx"><b>4. 동행 진행</b><span>실시간 위치와 단계별 동행 상태 확인</span></span><span class="demo-route-arr" aria-hidden="true">›</span>
           </button>
-          <button class="demo-route" type="button" onclick="demoJump('report')">
+          <button class="demo-route" type="button" data-mosigo-demo-action="jump-report">
             <span class="demo-route-ic" aria-hidden="true">📄</span><span class="demo-route-tx"><b>5. 건강 리포트</b><span>진료 기록과 건강 정보를 한 번에 확인</span></span><span class="demo-route-arr" aria-hidden="true">›</span>
           </button>
         </div>
-        <div class="mosigo-prototype-note" style="margin-bottom:0"><span class="example-chip">데이터 구분</span> 병원 검색 결과의 출처는 결과 화면에 표시하며, 매니저·진료·건강 정보 일부는 사용자 여정 검증용 예시입니다.</div>
+        <div class="mosigo-prototype-note demo-guide-note"><span class="example-chip">데이터 구분</span> 병원 검색 결과의 출처는 결과 화면에 표시하며, 매니저·진료·건강 정보 일부는 사용자 여정 검증용 예시입니다.</div>
       </div>
     </div>
 
     <!-- 4차: 5단계 데모 완료 상태 -->
-    <div class="overlay" id="modal-demo-complete" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="demo-complete-title" onclick="closeDemoComplete()">
-      <div class="modal-sheet demo-complete-sheet" onclick="event.stopPropagation()">
+    <div class="overlay" id="modal-demo-complete" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="demo-complete-title" data-mosigo-demo-action="dismiss-complete">
+      <div class="modal-sheet demo-complete-sheet">
         <div class="modal-handle"></div>
         <div class="demo-complete-kicker">✓ DEMO COMPLETE</div>
         <div class="demo-complete-title" id="demo-complete-title">핵심 사용자 여정 5단계를 확인했어요</div>
@@ -2250,10 +2250,10 @@
           <div class="demo-complete-stat"><b>구분 표시</b><span>API·예시 데이터 출처</span></div>
         </div>
         <div class="demo-complete-actions">
-          <button class="demo-complete-btn" type="button" onclick="restartGuidedDemo()">처음부터 다시</button>
-          <button class="demo-complete-btn primary" type="button" onclick="returnDemoToStart()">앱 처음 화면</button>
+          <button class="demo-complete-btn" type="button" data-mosigo-demo-action="restart-guide">처음부터 다시</button>
+          <button class="demo-complete-btn primary" type="button" data-mosigo-demo-action="return-start">앱 처음 화면</button>
         </div>
-        <button class="demo-complete-link" type="button" onclick="closeDemoComplete(); openDemoGuide()">다른 핵심 화면 바로 보기</button>
+        <button class="demo-complete-link" type="button" data-mosigo-demo-action="switch-guide">다른 핵심 화면 바로 보기</button>
       </div>
     </div>
 
