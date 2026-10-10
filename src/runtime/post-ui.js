@@ -181,6 +181,33 @@ function resetDemoState(){
   showToast('데모 상태를 초기화했어요');
 }
 
+// Portfolio guide actions are delegated to preserve behavior without inline handlers.
+// Dismiss only on a direct backdrop click; clicks inside either sheet stay inside.
+const MOSIGO_DEMO_ACTIONS={
+  'open-guide':()=>openDemoGuide(),
+  'reset-demo':()=>resetDemoState(),
+  'close-guide':()=>closeDemoGuide(),
+  'dismiss-guide':()=>closeDemoGuide(),
+  'start-guide':()=>startGuidedDemo(),
+  'jump-hospital':()=>demoJump('hospital'),
+  'jump-manager':()=>demoJump('manager'),
+  'jump-booking':()=>demoJump('booking'),
+  'jump-live':()=>demoJump('live'),
+  'jump-report':()=>demoJump('report'),
+  'close-complete':()=>closeDemoComplete(),
+  'dismiss-complete':()=>closeDemoComplete(),
+  'restart-guide':()=>restartGuidedDemo(),
+  'return-start':()=>returnDemoToStart(),
+  'switch-guide':()=>{closeDemoComplete();openDemoGuide();}
+};
+document.addEventListener('click',event=>{
+  const control=event.target.closest?.('[data-mosigo-demo-action]');
+  if(!control) return;
+  const action=control.dataset.mosigoDemoAction;
+  if((action==='dismiss-guide'||action==='dismiss-complete')&&event.target!==control) return;
+  MOSIGO_DEMO_ACTIONS[action]?.();
+});
+
 function enhanceNonNativeButtons(root=document){
   const selector='.metric[onclick],.history-item[onclick],.mgr-card[onclick],.filter-pill[onclick],.chip[onclick],.agree-item[onclick],.si-row[onclick],.si-rk[onclick],.cat[onclick],.mp-ic[onclick],.sub-banner[onclick],.hosp-card[onclick],.hd-rev-sum[onclick],.dept-btn[onclick],.mp-menu-i[onclick],.search-big .txt[onclick],.mp-benefit[onclick],.mp-hello[onclick],.contact-card[onclick],.target-row[onclick]';
   root.querySelectorAll?.(selector).forEach(el=>{

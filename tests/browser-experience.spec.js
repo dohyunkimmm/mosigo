@@ -66,3 +66,34 @@ test('booking, recovery, sharing and account modules load through current paths'
  expect(urls.some(path=>/^\/v(?:4|6|7|8|9|10|11|12|13)[-.]/.test(path))).toBe(false);
  await expect(page.locator('link[href="/runtime/account-ui.css"]')).toHaveCount(1);
 });
+
+test('demo guide opens, ignores sheet clicks and resets from delegated controls',async({page})=>{
+ await page.goto('/');
+ await page.waitForFunction(()=>typeof window.openDemoGuide==='function');
+ const opener=page.locator('#open-demo-guide');
+ const guide=page.locator('#modal-demo-guide');
+ await opener.click();
+ await expect(guide).toHaveClass(/show/);
+ await guide.locator('.demo-guide-sheet').click({position:{x:25,y:25}});
+ await expect(guide).toHaveClass(/show/);
+ await guide.getByRole('button',{name:'데모 가이드 닫기'}).click();
+ await expect(guide).not.toHaveClass(/show/);
+ await opener.click();
+ await guide.locator('.demo-guide-reset').click();
+ await expect(guide).not.toHaveClass(/show/);
+ await expect(page.locator('#s-onboard')).toHaveClass(/active/);
+});
+test('guide routes and completion dialog work without inline event handlers',async({page})=>{
+ await page.goto('/');
+ await page.waitForFunction(()=>typeof window.demoJump==='function');
+ const guide=page.locator('#modal-demo-guide');
+ await page.locator('#open-demo-guide').click();
+ await guide.locator('.demo-route').first().click();
+ await expect(guide).not.toHaveClass(/show/);
+ await page.evaluate(()=>openDemoComplete());
+ const complete=page.locator('#modal-demo-complete');
+ await expect(complete).toHaveClass(/show/);
+ await complete.locator('.demo-complete-link').click();
+ await expect(complete).not.toHaveClass(/show/);
+ await expect(guide).toHaveClass(/show/);
+});
