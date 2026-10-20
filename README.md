@@ -6,7 +6,9 @@
 
 [사용자 체험](https://mosigo-nine.vercel.app/) · [Operations 로그인](https://mosigo-nine.vercel.app/ops.html) · [읽기 전용 Operations 샘플](https://mosigo-nine.vercel.app/ops-preview.html) · [변경 이력](CHANGELOG.md)
 
-**기준 버전:** `v14.0.0`. 최근 UX 개선은 [변경 이력](CHANGELOG.md)의 Unreleased 항목에 기록했으며, 별도 버전을 발행한 것은 아닙니다.
+**Current stable version:** `v14.0.0`
+
+최근 UX 개선은 [변경 이력](CHANGELOG.md)의 Unreleased 항목에 기록했으며, 별도 버전을 발행한 것은 아닙니다.
 
 **사용자 여정:** 가입·건강 정보 연동(시연) → 병원 탐색 → 동행 매니저 매칭 → 동의·결제 화면 → 동행 진행 → 건강 리포트 → 재예약
 
