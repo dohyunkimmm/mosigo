@@ -4,7 +4,7 @@
 
 경쟁 앱 7종과 사용자 리뷰 118건을 분석해 병원 탐색, 매니저 정보, 가족 대리 신청의 불편을 사용자 흐름에 반영했습니다.
 
-[사용자 체험](https://mosigo-nine.vercel.app/) · [Operations 화면](https://mosigo-nine.vercel.app/ops.html) · [변경 이력](CHANGELOG.md)
+[사용자 체험](https://mosigo-nine.vercel.app/) · [Operations 로그인](https://mosigo-nine.vercel.app/ops.html) · [읽기 전용 Operations 샘플](https://mosigo-nine.vercel.app/ops-preview.html) · [변경 이력](CHANGELOG.md)
 
 **Current stable version:** `v14.0.0`
 
@@ -18,6 +18,7 @@
 - **예약·동행 경험:** 동의·결제 화면, 예약 상태, 실시간 동행 타임라인, 건강 리포트와 재예약
 - **예약 복원·공유:** 예약 복구 키, 기기 간 계정 소유 예약 조회, 만료·폐기 가능한 보안 공유
 - **Operations 화면:** 본인 소유 예약의 현황·일정·검색·상세 조회와 공유 상태 관리
+- **시연 편의성:** 홈의 다음 행동 강조, 예시 매니저 3명 비교, 건강 리포트 안내, 실제 처리가 없는 데모 행동의 명시적 구분
 
 ## 구현 범위
 
@@ -27,6 +28,7 @@
 | 예약 데이터 | 서버 검증 API와 Private Vercel Blob 영속 저장, revision·ETag 충돌 방지 |
 | 계정·복구·공유 | 보안 쿠키 기반 계정 세션, 예약 복구 키, 서버 검증 공유 권한 |
 | Operations | 기존 계정 소유 예약 API를 사용하는 별도 `/ops.html` 화면 |
+| Operations 샘플 | `/ops-preview.html`은 로그인·API 호출 없이 예시 예약 3건의 조회·검색·필터·상세 보기만 제공하는 읽기 전용 화면. 실제 예약이나 공유를 변경하지 않음 |
 | 미구현 | 실제 병원 예약·의료 백오피스·결제 정산·운영자 배정·조직별 권한 체계 |
 
 복구 키·공유 토큰의 원문은 서버 영속 레코드에 저장하지 않습니다. 공유·복구 정보는 URL 쿼리 대신 fragment를 사용하며, 오래된 예약 데이터 쓰기는 서버에서 거부합니다.
@@ -36,7 +38,7 @@
 - **구성:** JavaScript, Vercel Functions, Private Vercel Blob, `src/runtime/` 역할별 모듈
 - **버전:** `v14.0.0` · `main` 브랜치에서 Production 배포
 - **소스 기준:** 과거 v4~v13 기능을 `src/runtime/`에 통합했으며, 기존 공개 경로의 호환성은 유지합니다.
-- **검증:** Node.js 24, 자동 테스트·소스 감사·Production Smoke
+- **검증:** Node.js 24, 자동 테스트·소스 감사·별도 Chromium 브라우저 경험 QA·Production Smoke. CI 검사 결과와 운영 배포 확인은 구분
 
 ```bash
 npm run quality
