@@ -6,6 +6,14 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 
 ## Unreleased
 
+### 사용자 경험·런타임 정리 — 2026-10-09~10
+
+- [#71](https://github.com/dohyunkimmm/mosigo/pull/71): 로그인 없는 읽기 전용 `/ops-preview.html`을 추가했습니다. 예시 예약 3건의 개요·검색·필터·상세 확인은 실제 계정·예약 변경·공유 발급 API와 분리됩니다. 홈의 다음 행동, 예시 매니저 비교, 리포트·데모 안내를 개선하고 Chromium 사용자 여정 테스트를 추가했습니다.
+- [#72](https://github.com/dohyunkimmm/mosigo/pull/72): 지도 경험을 `src/core/map-experience.js`로 분리하고 역할별 런타임 모듈 로딩을 정리했습니다. 예약 영속 생성 실패 시 소유자 인덱스 정리, 소스 구조 감사와 회귀 검사를 강화했습니다.
+- [#73](https://github.com/dohyunkimmm/mosigo/pull/73): 포트폴리오 가이드의 인라인 이벤트·스타일을 정리하고 위임 이벤트 회귀 검사를 추가했습니다. CI GitHub Actions는 고정된 커밋 SHA를 사용합니다.
+- **검증 경계:** 기존 `v14.0.0` 이후 `main` 변경 이력입니다. 새로운 버전 릴리스나 변경분의 Production 검증 완료를 의미하지 않습니다.
+
+
 ### Runtime & documentation consolidation — 2026-09-17
 - Consolidated the historical v4-v13 browser runtime files into role-based modules under `src/runtime/` without removing their active behavior.
 - Added `src/runtime/boot.js` as the stable runtime bootstrap and retained `src/booking-state.js` at the source root because it is a shared browser + Node booking-state contract.
