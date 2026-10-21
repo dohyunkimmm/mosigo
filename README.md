@@ -51,5 +51,6 @@ npm run quality
 
 ## 참고 자료
 
+- [저장소 운영·브랜치 보호·미완료 WAF/Production Smoke](docs/REPO-OPERATIONS.md) — 2026-10-22 검증 기록
 - [릴리스 이력](CHANGELOG.md) · [현재 버전](VERSION)
 - [런타임 코드](src/runtime/) · [Production 검증 스크립트](scripts/production-smoke.js)
