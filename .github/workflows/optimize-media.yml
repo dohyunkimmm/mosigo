@@ -1,0 +1,41 @@
+name: One-time MP4 optimization
+on:
+  push:
+    branches:
+      - chore/optimize-game-media-20261021
+    paths:
+      - scripts/optimize-media.sh
+      - .github/workflows/optimize-media.yml
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    if: github.repository == 'dohyunkimmm/mosigo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout optimization branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: chore/optimize-game-media-20261021
+          persist-credentials: true
+      - name: Check media tools
+        run: |
+          command -v ffmpeg
+          command -v ffprobe
+      - name: Optimize videos without removing required assets
+        run: bash scripts/optimize-media.sh
+      - name: Commit smaller output only
+        run: |
+          set -euo pipefail
+          git add -- 'src/game2.mp4' 'src/game3.mp4' 'src/game4.mp4' 'src/0810(4).mp4'
+          if git diff --cached --quiet; then
+            echo 'No smaller video output; preserving originals.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'perf(media): reduce game animation sizes without changing routes'
+          git push origin 'HEAD:chore/optimize-game-media-20261021'
