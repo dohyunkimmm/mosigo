@@ -21,8 +21,10 @@ jobs:
         with:
           ref: chore/optimize-game-media-20261021
           persist-credentials: true
-      - name: Check media tools
+      - name: Install media tools
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
           command -v ffmpeg
           command -v ffprobe
       - name: Optimize videos without removing required assets
