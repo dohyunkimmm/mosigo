@@ -72,7 +72,8 @@ function createAuthBurstLimiter({ maxAttempts = 20, windowMs = 5 * 60 * 1000, ma
   const buckets = new Map();
   return function allow(req) {
     const headers = req?.headers || {};
-    const source = headers['x-real-ip'] || headers['x-forwarded-for'] || req?.socket?.remoteAddress || 'unknown';
+    // Vercel normalizes x-forwarded-for at the edge to prevent client IP spoofing.
+    const source = headers['x-forwarded-for'] || headers['x-real-ip'] || req?.socket?.remoteAddress || 'unknown';
     const key = String(source).split(',')[0].trim().slice(0, 100) || 'unknown';
     const now = clock();
     const previous = buckets.get(key);
