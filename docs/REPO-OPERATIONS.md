@@ -6,7 +6,7 @@
 
 | 영역 | 확인한 변경 | 근거 |
 | --- | --- | --- |
-| 기준 코드 | `main` SHA `bba8176397836e4a0d9ebb57f0dd47af901c7609` | [main](https://github.com/dohyunkimmm/mosigo/commits/main) |
+| 기준 코드 | 문서 갱신 직전 `main` SHA `69f74b6be5c726dbfdef9ed32ffa276f5692deb5` | [main](https://github.com/dohyunkimmm/mosigo/commits/main) |
 | 영상 초기 로딩 / 인증 | 영상 `preload="none"`, 숨김 결과 영상의 불필요한 autoplay 제거, `POST /api/account` 인증 시도에 IP별 메모리 burst 제한(20회/5분), QA 산출물 ignore | [PR #79](https://github.com/dohyunkimmm/mosigo/pull/79) |
 | 의존성 | Actions setup-node 7.1.0 및 `@vercel/blob` 2.8.2 | [PR #81](https://github.com/dohyunkimmm/mosigo/pull/81) |
 | 게임 영상 바이너리 | 4개 MP4 합계 **22,075,212 → 2,715,736 bytes (약 87.7% 감소)**. 공개 파일 경로 유지; 압축 스크립트와 MP4·용량 테스트 추가 | [PR #82](https://github.com/dohyunkimmm/mosigo/pull/82) |
@@ -21,9 +21,17 @@
 - 해당 workflow는 문서 전용 커밋인 경우 `EXPECTED_COMMIT`을 빈 문자열로 설정하지만, 두 실행 로그에서 실제 응답 SHA를 확인했으며 최신 실행은 당시 `main`과 일치했습니다. Smoke 스크립트는 웹 루트·보안 응답 헤더·health·병원/예약/공유/계정 API 계약과 테스트 예약 생성·전환·복구를 검증합니다.
 - Vercel에는 문서 동기화 커밋 `1982bb55`의 [Production READY 배포](https://vercel.com/dohyunkimm/mosigo/5fEsKvjQpfSFf3KskiZGdrD62A3v)가 확인됩니다. **이전 실패 실행의 이력을 고치지는 않으며, 별도의 재검증 실행 성공으로 해결을 인정합니다.**
 
+## 최신 코드·운영 일치 재검증 (2026-10-22 09:22 KST)
+
+- 운영 근거 업데이트용 [문서 PR #84](https://github.com/dohyunkimmm/mosigo/pull/84)가 병합되어 `main` SHA `69f74b6be5c726dbfdef9ed32ffa276f5692deb5`가 됐습니다.
+- 최신 SHA에 대해 [Production Smoke run #39699245529](https://github.com/dohyunkimmm/mosigo/actions/runs/39699245529) **SUCCESS**. [job 로그](https://github.com/dohyunkimmm/mosigo/actions/runs/39699245529/job/119564160722): `Production smoke passed on attempt 1; commit=69f74b6be5c726dbfdef9ed32ffa276f5692deb5`. 
+- 동일 SHA의 `quality-checks`, `browser-journey`, `production-smoke`, `release` **4개 모두 SUCCESS**. Vercel 배포 `dpl_EGdgXJVC8TGanWPU62yRBfUCwQBy`도 해당 SHA로 **READY**: [배포 정보](https://vercel.com/dohyunkimm/mosigo/EGdgXJVC8TGanWPU62yRBfUCwQBy).
+- 해당 workflow는 문서 전용 푸시에서는 `EXPECTED_COMMIT`을 비워 서버의 SHA와 강제 일치를 검사하지 않습니다. 여기서는 **로그에 출력된 실제 운영 서버 응답 SHA**가 당시 `main`과 일치함을 별도 대조했습니다. 따라서 기존 실패 이력을 수정하지 않고 별도의 성공 검증으로 기록합니다.
+- 모바일 네트워크 영상 재생·재시도 **체감 QA는 미완료**이며 Production Smoke 성공만으로 이 검증까지 완료되었다고 말하지 않습니다.
+
 ## 미완료 — 플랫폼 WAF
 
-[#80](https://github.com/dohyunkimmm/mosigo/issues/80): `POST /api/account`에 플랫폼 수준 분산 rate-limit(제안: IP별 20회/5분)을 설정하고 초기 `log`/관측 → 점진적 차단으로 전환해야 합니다. PR #79의 인스턴스 메모리 `Map` 제한은 인스턴스 간 전역 보호가 아닙니다. **Vercel Firewall 적용 및 다중 인스턴스 검증은 미완료**로 취급합니다.
+[#80](https://github.com/dohyunkimmm/mosigo/issues/80): `POST /api/account`에 플랫폼 수준 분산 rate-limit(제안: IP별 20회/5분)을 설정하고 초기 `log`/관측 → 점진적 차단으로 전환해야 합니다. PR #79의 인스턴스 메모리 `Map` 제한은 인스턴스 간 전역 보호가 아닙니다. Vercel Firewall `active` 구성 API 재조회에서는 `404: Seawall Config not found`가 응답했습니다. 화면에서 규칙의 저장·활성 여부를 재확인하지 못했으므로 **플랫폼 WAF 분산 제한 적용 확인 및 다중 인스턴스 검증은 미완료**로 취급합니다.
 
 ## 운영 시 유의
 
