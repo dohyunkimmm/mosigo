@@ -29,9 +29,15 @@
 - 해당 workflow는 문서 전용 푸시에서는 `EXPECTED_COMMIT`을 비워 서버의 SHA와 강제 일치를 검사하지 않습니다. 여기서는 **로그에 출력된 실제 운영 서버 응답 SHA**가 당시 `main`과 일치함을 별도 대조했습니다. 따라서 기존 실패 이력을 수정하지 않고 별도의 성공 검증으로 기록합니다.
 - 모바일 네트워크 영상 재생·재시도 **체감 QA는 미완료**이며 Production Smoke 성공만으로 이 검증까지 완료되었다고 말하지 않습니다.
 
-## 미완료 — 플랫폼 WAF
+## 2026-10-23 Vercel WAF 1단계 배포·운영 종료 기록
 
-[#80](https://github.com/dohyunkimmm/mosigo/issues/80): `POST /api/account`에 플랫폼 수준 분산 rate-limit(제안: IP별 20회/5분)을 설정하고 초기 `log`/관측 → 점진적 차단으로 전환해야 합니다. PR #79의 인스턴스 메모리 `Map` 제한은 인스턴스 간 전역 보호가 아닙니다. Vercel Firewall `active` 구성 API 재조회에서는 `404: Seawall Config not found`가 응답했습니다. 화면에서 규칙의 저장·활성 여부를 재확인하지 못했으므로 **플랫폼 WAF 분산 제한 적용 확인 및 다중 인스턴스 검증은 미완료**로 취급합니다.
+- **배포됨(감사 이벤트 확인):** 사용자가 Vercel 대시보드에서 `mosigo-account-rate-limit`을 설정·Publish 완료. Vercel `firewall-config-promoted` 이벤트(2026-10-23 11:26 KST)에 이 프로젝트 Firewall **version #1** 게시 및 규칙 `rule_mosigo_account_rate_limit_LfbCuR`(`active=true`, `rules.insert`) 기록이 있습니다.
+- **설정 의도(사용자 입력 기준):** `POST /api/account`, IP별 **5분에 20회**, 초과 시 **Log(관찰 전용)**. Vercel API `GET /v1/security/firewall/config/active` 및 `/1`은 계속 `404 Seawall Config not found`이어서 **정확한 실제 조건·후속 액션을 API로 독립 검증하지 못했습니다**. 게시 사실은 이벤트로 확인됐습니다.
+- **초기 안전성:** 설정 직후 Vercel의 이 경로에 대한 최근 30분 런타임 오류 클러스터는 없었으며 사용자가 UI상 문제없음을 확인했습니다. 해당 기간에 관련 요청이 있었는지 또는 매칭·초과 이벤트가 있었는지는 별도로 확인하지 못했습니다.
+- **정리 기준:** 관찰 규칙 **게시·기본 확인 작업**은 종료합니다. 사용자 설정대로 Log 단계를 유지하며, 실제 429 차단, 공유 IP 영향, 다중 인스턴스 집계 및 실사용 트래픽 경고 동작은 **검증·적용되지 않았습니다**. 기존 PR #79의 애플리케이션 로컬 `Map` 제한도 서버리스 인스턴스 간 공유되지 않습니다.
+- [운영 후속 이슈 #80](https://github.com/dohyunkimmm/mosigo/issues/80)은 1단계 종료를 기록하며, 모바일 네트워크 영상 재생·재시도 현장 QA 및 실패 CI PR의 병합 차단 재현은 **미실시 후속**으로 문서에 남깁니다. Production Smoke는 이미 최신 배포에서 성공했으며 모바일 체감 테스트까지 대체하지는 않습니다.
+
+
 
 ## 운영 시 유의
 
