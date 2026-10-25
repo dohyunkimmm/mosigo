@@ -121,6 +121,16 @@ async function runChecks() {
     assert(bookings.json.recoveryScope === 'same-device', 'Fallback recovery scope should remain same-device');
   }
 
+  // Doc-only main updates must not create persistent smoke accounts or bookings.
+  if (process.env.SMOKE_READ_ONLY === 'true') {
+    const robots = await fetchText('/robots.txt');
+    assert(robots.response.ok && /Sitemap:\s*https:\/\/mosigo-nine\.vercel\.app\/sitemap\.xml/i.test(robots.text), 'robots.txt is not production-ready');
+    const sitemap = await fetchText('/sitemap.xml');
+    assert(sitemap.response.ok && /<loc>https:\/\/mosigo-nine\.vercel\.app\/<\/loc>/.test(sitemap.text), 'sitemap.xml is not production-ready');
+    console.log('Read-only smoke: verified production API capabilities without creating test records.');
+    return health.json.commit;
+  }
+
   const sampleBooking = {
     hospitalId: 'hospital-1',
     hospitalName: '똑똑연세내과의원',
