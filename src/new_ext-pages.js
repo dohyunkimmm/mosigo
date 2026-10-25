@@ -149,6 +149,10 @@
 
   // ── 페이지 → 부모 신호 처리 ──
   window.addEventListener('message', e => {
+    // Accept commands only from the active same-origin extension iframe.
+    if(!host || !host.classList.contains('is-open')) return;
+    if(e.source !== frames[live]?.contentWindow) return;
+    if(e.origin !== window.location.origin && !(window.location.protocol === 'file:' && e.origin === 'null')) return;
     const d = e.data;
     if(!d || d.source !== 'ext-page') return;
     if(d.action === 'close') closeExtPage();
