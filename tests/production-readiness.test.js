@@ -47,3 +47,13 @@ test('Vercel Git deployment policy spends builds on verified main only', () => {
 test('health endpoint is part of the deployed application surface', () => {
   assert.ok(fs.existsSync(path.join(SRC, 'api', 'health.js')));
 });
+
+test('documentation-only smoke runs do not create persistent test records', () => {
+  const workflow = fs.readFileSync(path.join(ROOT, '.github/workflows/production-smoke.yml'), 'utf8');
+  const smoke = fs.readFileSync(path.join(ROOT, 'scripts/production-smoke.js'), 'utf8');
+  assert.match(workflow, /read_only=true/);
+  assert.match(workflow, /read_only=false/);
+  assert.match(workflow, /SMOKE_READ_ONLY:.*steps\.deployment\.outputs\.read_only/);
+  assert.match(smoke, /process\.env\.SMOKE_READ_ONLY === 'true'/);
+  assert.match(smoke, /Read-only smoke: verified production API capabilities without creating test records/);
+});
