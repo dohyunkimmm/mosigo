@@ -21,6 +21,7 @@ const {
   AccountStoreError,
   createAccountStore
 } = require('../lib/account-store.js');
+const { createIpBurstLimiter } = require('../lib/ip-burst-limiter.js');
 
 function readBody(req) {
   if (!req || req.body == null) return {};
@@ -120,8 +121,16 @@ async function createWithOwnerIndex(store, accountStore, booking, recoveryKey, o
 function createHandler({
   store = createBookingStore(),
   shareStore = createBookingShareStore(),
-  accountStore = createAccountStore()
+  accountStore = createAccountStore(),
+  creationLimiter = createIpBurstLimiter({ maxAttempts: 20 })
 } = {}) {
+  function requireCreationCapacity(req, res) {
+    // Per-instance best effort; a shared WAF/edge rule is still required.
+    const limit = creationLimiter(req);
+    if (limit.allowed) return;
+    res.setHeader('Retry-After', String(limit.retryAfter || 1));
+    throw new BookingServiceError('booking_rate_limited', 'Too many booking creation attempts. Try again later.', 429);
+  }
   return async function handler(req, res) {
     writeCommonHeaders(res);
 
@@ -184,6 +193,7 @@ function createHandler({
         }
         const session = await optionalAccountSession(accountStore, req);
         const ownerAccountId = session?.account?.accountId || '';
+        requireCreationCapacity(req, res);
         const recoveryKey = createRecoveryKey();
         await createWithOwnerIndex(store, accountStore, booking, recoveryKey, ownerAccountId);
         return res.status(201).json({
@@ -216,6 +226,7 @@ function createHandler({
         if (!current) {
           const session = await optionalAccountSession(accountStore, req);
           const ownerAccountId = session?.account?.accountId || '';
+          requireCreationCapacity(req, res);
           const recoveryKey = createRecoveryKey();
           await createWithOwnerIndex(store, accountStore, submitted, recoveryKey, ownerAccountId);
           return res.status(200).json({
