@@ -223,7 +223,8 @@ function startChipAuto(){
 
 function notifyParent(action, data){
   if(window.parent === window) return false;
-  window.parent.postMessage(Object.assign({ source:'ext-page', action }, data||{}), '*');
+  const targetOrigin = window.location.protocol === 'file:' ? '*' : window.location.origin;
+  window.parent.postMessage(Object.assign({ source:'ext-page', action }, data||{}), targetOrigin);
   return true;
 }
 
