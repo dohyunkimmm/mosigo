@@ -6,7 +6,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'src');
 const HTML_FILES = ['index.html', 'new_event.html', 'new_game.html', 'ops.html', 'ops-preview.html'];
-const CSS_FILES = ['index.css', 'new_montage.css', 'new_roles.css', 'v14-ops.css', 'ops-preview.css', 'ux-enhancements.css', 'runtime/account-ui.css'];
+const CSS_FILES = ['index.css', 'new_event.css', 'new_game.css', 'new_montage.css', 'new_roles.css', 'v14-ops.css', 'ops-preview.css', 'ux-enhancements.css', 'runtime/account-ui.css'];
 const RUNTIME_JS = [
   'runtime/boot.js',
   'runtime/post-ui.js',
@@ -24,7 +24,7 @@ const RUNTIME_JS = [
   'runtime/account-ownership.js',
   'runtime/account-ui.js'
 ];
-const JS_FILES = ['core/map-experience.js', 'index-core.js', 'new_ext-pages.js', 'index-post.js', 'booking-state.js', 'v14-ops.js', 'ops-preview.js', 'ux-enhancements.js', ...RUNTIME_JS];
+const JS_FILES = ['core/map-experience.js', 'index-core.js', 'new_event.js', 'new_game.js', 'new_ext-pages.js', 'index-post.js', 'booking-state.js', 'v14-ops.js', 'ops-preview.js', 'ux-enhancements.js', ...RUNTIME_JS];
 const REMOVED_VERSIONED_ROOT_FILES = [
   'v4-functional.js', 'v4-booking.js', 'v6-booking.js', 'v7-booking.js', 'v8-booking.js',
   'v9-booking.js', 'v10-booking.js', 'v11-booking.js', 'v11-ui.js', 'v12-sharing.js',
@@ -130,6 +130,16 @@ test('main page keeps CSS and classic JavaScript externalized in execution order
   assert.ok(extIndex > coreIndex);
   assert.ok(postIndex > extIndex);
   assert.ok(Buffer.byteLength(html) < 200_000);
+});
+
+test('event and game pages load external CSS and JavaScript without inline blocks', () => {
+  for (const name of ['new_event', 'new_game']) {
+    const html = readSrc(name + '.html');
+    assert.equal(collectTagBlocks('style', html).length, 0, name + ' has inline style');
+    assert.equal(collectTagBlocks('script', html).filter(isClassicInlineScript).length, 0, name + ' has inline JavaScript');
+    assert.match(html, new RegExp('href="' + name + '\\.css"'));
+    assert.match(html, new RegExp('src="' + name + '\\.js"'));
+  }
 });
 
 test('stable browser entry delegates to a single role-based runtime bootstrap', () => {
