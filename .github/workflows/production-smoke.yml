@@ -34,15 +34,18 @@ jobs:
         run: |
           if git diff --quiet HEAD^ HEAD -- src/; then
             echo "expected_commit=" >> "$GITHUB_OUTPUT"
+            echo "read_only=true" >> "$GITHUB_OUTPUT"
             echo "No src/ changes; smoke-testing the current Production deployment."
           else
             echo "expected_commit=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+            echo "read_only=false" >> "$GITHUB_OUTPUT"
             echo "src/ changed; waiting for Production to match this main commit."
           fi
 
       - name: Wait for Production and smoke-test it
         env:
           EXPECTED_COMMIT: ${{ steps.deployment.outputs.expected_commit }}
+          SMOKE_READ_ONLY: ${{ steps.deployment.outputs.read_only }}
           SMOKE_ATTEMPTS: '30'
           SMOKE_RETRY_MS: '10000'
         run: npm run smoke:production
