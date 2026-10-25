@@ -68,7 +68,7 @@ test('extension navigation rejects messages from a foreign window or origin', ()
 });
 
 test('child extension pages target the parent origin for messages', () => {
-  for (const page of ['new_event.html', 'new_game.html']) {
+  for (const page of ['new_event.js', 'new_game.js']) {
     const source = fs.readFileSync(path.join(ROOT, 'src', page), 'utf8');
     assert.match(source, /const targetOrigin = window\.location\.protocol === 'file:' \? '\*' : window\.location\.origin/);
     assert.match(source, /window\.parent\.postMessage\([^;]+, targetOrigin\)/);
