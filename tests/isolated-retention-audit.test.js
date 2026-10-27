@@ -57,6 +57,7 @@ function mockedBlob(pages, values, calls) {
 
 test('authorization rejects production targets, CI and ambient Blob tokens', () => {
   assert.deepEqual(context, { productionStoreId: PROD, testStoreId: TEST, oidcToken: TOKEN });
+  assert.deepEqual(authorizeIsolatedAudit({...env,BLOB_STORE_ID:TEST}),context);
   for (const delta of [
     { MOSIGO_ISOLATED_AUDIT_READ_ONLY: '' },
     { MOSIGO_SMOKE_PRODUCTION_STORE_ID: TEST },
@@ -64,7 +65,7 @@ test('authorization rejects production targets, CI and ambient Blob tokens', () 
     { MOSIGO_SMOKE_TEST_STORE_ID: PROD },
     { MOSIGO_SMOKE_CONFIRMED_TEST_STORE_ID: 'store_WRONG' },
     { MOSIGO_BLOB_STORE_ID: TEST },
-    { BLOB_STORE_ID: TEST },
+    { BLOB_STORE_ID: PROD },
     { BLOB_READ_WRITE_TOKEN: 'secret' },
     { VERCEL_OIDC_TOKEN: '' },
     { CI: 'true' }, { GITHUB_ACTIONS: 'true' },
