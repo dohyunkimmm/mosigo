@@ -209,14 +209,27 @@
       setTimeout(()=>enqueue(()=>reconcileLocal(globalThis.v4BookingState)),3400);
     };
 
+    function denyReadOnlySharedMutation(){
+      const id=String(remoteBooking?.bookingId||'').trim();
+      if(!id || !getShareToken(id) || getRecoveryKey(id)) return false;
+      if(globalThis.MosigoV12SecureSharing?.hasOwnerAccess?.(id)) return false;
+      // The server remains authoritative. Unknown capability fails closed in
+      // the UI, preventing locally optimistic state changes before validation.
+      if(globalThis.MosigoV10BookingDurability?.getCapability?.()?.shareParticipantWriteAccess==='edit') return false;
+      try{ globalThis.showToast?.('열람 전용 공유 링크입니다. 예약 변경은 소유자에게 요청해 주세요.'); }catch(error){}
+      return true;
+    }
+
     const originalConfirmBkCancel=confirmBkCancel;
     confirmBkCancel=function(){
+      if(denyReadOnlySharedMutation()) return;
       originalConfirmBkCancel();
       enqueue(()=>reconcileLocal(globalThis.v4BookingState));
     };
 
     const originalCompleteReturn=completeReturn;
     completeReturn=function(){
+      if(denyReadOnlySharedMutation()) return;
       originalCompleteReturn();
       enqueue(()=>reconcileLocal(globalThis.v4BookingState));
     };
