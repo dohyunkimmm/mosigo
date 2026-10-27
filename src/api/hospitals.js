@@ -1,3 +1,4 @@
+require('../lib/dep0169-trace.js');
 const { queryHospitalResult } = require('../lib/hospital-query');
 
 module.exports = function handler(req, res) {
