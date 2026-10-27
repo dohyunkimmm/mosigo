@@ -39,3 +39,30 @@ test('broken video downloads recover to an actionable state and allow retry', as
   await expect(page.locator('#g-result')).toBeHidden();
   expect(blockedMedia).toBeGreaterThan(0);
 });
+
+
+test('video retry fetches media again after a simulated network outage', async ({page}) => {
+  let unavailable = true;
+  let failedRequests = 0;
+  let recoveredRequests = 0;
+  await page.route(/\.mp4(?:\?|$)/i, route => {
+    if (unavailable) {
+      failedRequests += 1;
+      return route.abort('failed');
+    }
+    recoveredRequests += 1;
+    return route.continue();
+  });
+  await page.goto('/new_game.html?win=0');
+  await page.locator('#g-cast').click();
+  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\.mp4$/);
+  await expect.poll(() => failedRequests).toBeGreaterThan(0);
+  await expect(page.locator('#g-cast')).toHaveAttribute('aria-label', '잡은 것 확인하기', {timeout:7000});
+  await page.evaluate(() => onRetry());
+  await expect(page.locator('#g-bg2')).not.toHaveAttribute('src', /.+/);
+  await expect(page.locator('#g-cast')).toHaveAttribute('aria-label', '낚시대 던지기');
+  unavailable = false;
+  await page.locator('#g-cast').click();
+  await expect.poll(() => recoveredRequests, {timeout:7000}).toBeGreaterThan(0);
+  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\.mp4$/);
+});
