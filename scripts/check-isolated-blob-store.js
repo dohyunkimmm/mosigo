@@ -60,7 +60,7 @@ async function checkIsolatedStore({ context, blob, now = Date.now(), entropy } =
   });
 
   const loaded = await blob.get(pathname, { ...auth, access: 'private', useCache: false });
-  if (!loaded || loaded.statusCode !== 200 || !loaded.stream) {
+  if (!loaded || (loaded.statusCode && loaded.statusCode !== 200) || !loaded.stream) {
     throw new Error('Isolated marker readback was not successful');
   }
   const readback = await new Response(loaded.stream).text();
