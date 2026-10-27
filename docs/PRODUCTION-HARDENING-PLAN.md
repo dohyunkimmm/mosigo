@@ -160,7 +160,29 @@ node scripts/check-isolated-blob-store.js
 - 모바일 게임에서 `visibilitychange` 및 `pagehide/pageshow`를 다뤄 영상 진행 중 앱 전환·브라우저 페이지 캐시 복귀 시 **중단된 타이머를 해제하고 영상을 멈춘 뒤**, 다시 보일 때 사용자 클릭으로 재시작하게 합니다. 자동 재생하거나 백그라운드에서 결과를 확정하지 않습니다.
 - Playwright의 Android Chromium/iPhone WebKit에서 브라우저 생명주기 이벤트를 *모의 발생*시켜 새 요청과 재시작 버튼을 검사합니다. 진짜 iOS/Android 백그라운드와 LTE/5G 기기 확인은 여전히 미실시이며, `docs/DEVICE-QA-RUNBOOK.md`에 실기기 승인 기준을 유지합니다.
 
+### #88: 수동 격리 저장소 읽기 전용 만료 인벤토리
+
+- `scripts/audit-isolated-retention.js`는 **격리된 테스트 Blob 저장소의 `mosigo-isolated-smoke/` 경로만** 읽기 전용으로 검사합니다. 기본 최대 2페이지 × 25건(최대 100건으로 제한), 최대 4KiB 마커만 읽으며 페이지/경로 중복, 범위 이탈, 이상한 응답은 실패로 처리합니다. 페이지가 남으면 `complete=false`를 표기합니다.
+- 경로의 `runId`와 JSON 마커의 `runId`, 지정된 `evidenceRef`, 소유자 및 7일 만료 시간을 검사하고 **현재 유지·만료 후 독립 출처 검토 필요·미분류** 건수만 출력합니다. JSON 자체가 독립 소유권 증명이 아니므로 **`safeToDelete=false`, `candidateDeletions=0`은 항상 유지**합니다. 이 도구에는 삭제 및 쓰기 API가 없습니다.
+- Vercel CI/함수에서는 실행하지 않으며 운영/테스트 저장소 ID를 각각 별도로 확인한 안전한 로컬 환경, `MOSIGO_ISOLATED_AUDIT_READ_ONLY=yes`, 저장소 범위로 제한된 **짧은 OIDC**가 필요합니다. 주변 `BLOB_READ_WRITE_TOKEN`이 있으면 실행을 거절하고, 결과에는 저장소 ID·파일명·비공개 URL·토큰을 담지 않습니다. 조회 자체도 Vercel 사용량·과금에 포함될 수 있습니다.
+- **실행 전 관리자 조치**: Vercel의 비공개 `mosigo-smoke-isolated-20261027` 저장소 **Projects 탭**에서 `mosigo-isolated-smoke-lab` *테스트 프로젝트에만* 연결하고 OIDC 접근 환경을 확인합니다. 운영 `mosigo` 프로젝트에는 연결하지 않습니다. Vercel 관리 API로 해당 연결을 수행할 수 없어 이 단계는 아직 미실시입니다. 프로젝트의 `BLOB_STORE_ID`가 있으면 반드시 **테스트 저장소** ID와 일치해야 합니다.
+- 위 연결과 별도 승인 후, 실제 실행 권한이 있는 로컬 셸에서만 다음 환경 설정과 실행을 사용합니다. ID와 토큰의 값은 저장소, 이슈, CI 로그에 기록하지 않습니다.
+
+```bash
+unset BLOB_READ_WRITE_TOKEN
+# VERCEL_OIDC_TOKEN must come from the approved test-only project context
+export MOSIGO_SMOKE_PRODUCTION_STORE_ID="<verified-production-store-id>"
+export MOSIGO_SMOKE_CONFIRMED_PRODUCTION_STORE_ID="<independently-confirmed-production-store-id>"
+export MOSIGO_SMOKE_TEST_STORE_ID="<verified-test-store-id>"
+export MOSIGO_SMOKE_CONFIRMED_TEST_STORE_ID="<independently-confirmed-test-store-id>"
+export MOSIGO_ISOLATED_AUDIT_READ_ONLY=yes
+npm --prefix src ci --omit=dev
+node scripts/audit-isolated-retention.js
+```
+
+- `scripts/check-isolated-blob-store.js` 수동 1회 쓰기 프로브도 환경에 `BLOB_STORE_ID`가 있으면 테스트 저장소 ID와 일치하는지 검증하도록 수정했습니다. **원격 쓰기/읽기 및 수동 인벤토리는 이번 변경에서 실행하지 않았습니다.** 기존 프로덕션 Blob 객체도 조회·수정·삭제하지 않았습니다.
+
 ## 릴리스 판단
 - **이번 변경 배포 가능:** Production Smoke 영구 읽기 전용화, 회귀 테스트, 현재 권한 계약 설명 문서.
 - **이번 변경에 포함하지 않음:** 기존 Blob 데이터 삭제/만료, 신규 WAF 차단 활성화, 공유 토큰 권한 변경, 실기기 QA 완료 선언.
-- 데이터 격리와 공유 권한 강화가 완료될 때까지 #88·#90은 열어 둡니다.
+- 데이터 격리 #88과 실제 모바일 실기기 검증 #99는 완료 증빙 전까지 열어 둡니다. 보안 이슈 #90은 GitHub에서 별도로 닫혀 있으나 WAF/전역 제한을 독립적으로 완료 검증했다고 간주하지 않습니다.
