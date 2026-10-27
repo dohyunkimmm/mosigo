@@ -92,5 +92,12 @@ for stem in ("gyeote_report_hero", "day"):
 path.write_text(html)
 PY
 
+# Only remove originals after both encoded files and their HTML references are validated.
+for stem in gyeote_report_hero day; do
+  if [[ -f "src/${stem}.png" && -f "src/${stem}.webp" ]]; then
+    rm -- "src/${stem}.png"
+  fi
+done
+
 if (( converted == 0 )); then echo "Already optimized; no changes."; fi
 echo "Re-run npm run quality and browser QA before merging."
