@@ -258,3 +258,50 @@ test('expired or revoked share tokens cannot PATCH a booking and do not alter it
   assert.equal(canonical.body.booking.revision, 1);
   assert.equal(canonical.body.booking.phase, 'requesting');
 });
+
+
+test('opt-in read-only sharing allows viewing but denies share-token PATCH without changing a booking', async () => {
+  const blobApi = fakeBlobApi();
+  const env = { BLOB_READ_WRITE_TOKEN: 'test-token' };
+  const store = createBookingStore({ env, blobApi });
+  const shareStore = createBookingShareStore({ env, blobApi });
+  const bookings = createBookingsHandler({ store, shareStore, shareWritePolicy: 'read-only' });
+  const shares = createSharesHandler({ store, shareStore });
+  const capability = await invoke(bookings);
+  assert.equal(capability.body.shareParticipantWriteAccess, 'read-only');
+
+  const created = await invoke(bookings, { method: 'POST', body: { booking: sample } });
+  assert.equal(created.statusCode, 201);
+  const { bookingId } = created.body.booking;
+  const ownerHeaders = { 'x-mosigo-recovery-key': created.body.recoveryKey };
+  const issued = await invoke(shares, {
+    method: 'POST', headers: ownerHeaders, body: { bookingId, ttlMinutes: 60 }
+  });
+  assert.equal(issued.statusCode, 201);
+  const sharedHeaders = { 'x-mosigo-share-token': issued.body.shareToken };
+
+  const sharedRead = await invoke(bookings, { query: { bookingId }, headers: sharedHeaders });
+  assert.equal(sharedRead.statusCode, 200);
+  assert.equal(sharedRead.body.accessType, 'share-token');
+
+  const denied = await invoke(bookings, {
+    method: 'PATCH', headers: sharedHeaders,
+    body: { bookingId, action: 'confirm', expectedRevision: 1 }
+  });
+  assert.equal(denied.statusCode, 403);
+  assert.equal(denied.body.error, 'booking_share_read_only');
+  const ownerRead = await invoke(bookings, { query: { bookingId }, headers: ownerHeaders });
+  assert.equal(ownerRead.statusCode, 200);
+  assert.equal(ownerRead.body.booking.revision, 1);
+  assert.equal(ownerRead.body.booking.phase, 'requesting');
+
+  const ownerPatch = await invoke(bookings, {
+    method: 'PATCH', headers: ownerHeaders,
+    body: { bookingId, action: 'confirm', expectedRevision: 1 }
+  });
+  assert.equal(ownerPatch.statusCode, 200);
+  assert.equal(ownerPatch.body.booking.revision, 2);
+  const sharedReadAfter = await invoke(bookings, { query: { bookingId }, headers: sharedHeaders });
+  assert.equal(sharedReadAfter.statusCode, 200);
+  assert.equal(sharedReadAfter.body.booking.phase, 'confirmed');
+});
