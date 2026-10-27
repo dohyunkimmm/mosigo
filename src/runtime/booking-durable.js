@@ -43,6 +43,7 @@
       if(!response.ok || !data?.success) throw new Error(data?.message||data?.error||('HTTP '+response.status));
       capability=data;
       publish(data.durableServerPersistence?'ready':'fallback',sync.getState(),data.durableServerPersistence?'':'Durable storage is not configured.');
+      try{ window.dispatchEvent(new CustomEvent('mosigo:booking-capability')); }catch(error){}
       return capability;
     }
 
