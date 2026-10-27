@@ -34,11 +34,19 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-function assertReportOnlyCsp(response, path) {
+function assertReportOnlyCsp(response, path, enforce = false) {
   const policy = response.headers.get('content-security-policy-report-only') || '';
   assert(policy.includes("default-src 'self'") && policy.includes("object-src 'none'") &&
     policy.includes("frame-ancestors 'self'"), `${path} is missing expected CSP report-only directives`);
-  assert(!response.headers.get('content-security-policy'), `${path} unexpectedly enabled blocking CSP`);
+  const active = response.headers.get('content-security-policy') || '';
+  if (enforce) {
+    assert(active.includes("script-src 'self'") && active.includes("script-src-attr 'none'") &&
+      active.includes("frame-ancestors 'self'"), `${path} is missing scoped enforced CSP`);
+    assert(!active.includes("'unsafe-inline'") || active.includes("style-src 'self' 'unsafe-inline'"),
+      `${path} has an unexpected script inline relaxation`);
+  } else {
+    assert(!active, `${path} unexpectedly enabled blocking CSP`);
+  }
 }
 
 async function runChecks() {
@@ -48,10 +56,10 @@ async function runChecks() {
   assert(root.response.headers.get('x-content-type-options') === 'nosniff', 'Missing X-Content-Type-Options header');
   assert(root.response.headers.get('referrer-policy') === 'strict-origin-when-cross-origin', 'Unexpected Referrer-Policy header');
   assertReportOnlyCsp(root.response, '/');
-  for (const path of ['/ops.html','/new_game.html']) {
+  for (const path of ['/ops.html','/ops-preview.html','/new_game.html']) {
     const page = await fetchText(path);
     assert(page.response.ok, `${path} returned ${page.response.status}`);
-    assertReportOnlyCsp(page.response, path);
+    assertReportOnlyCsp(page.response, path, path.startsWith('/ops'));
   }
 
   const health = await fetchJson('/api/health');

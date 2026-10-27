@@ -108,6 +108,14 @@ Chromium 모바일 뷰포트에서 게임 MP4 지연 로딩과 MP4 전송 실패
 - 읽기 전용 Production Smoke는 메인·Operations·게임 응답의 관찰용 CSP 존재와 강제 CSP 부재를 검사합니다. CSP 정책을 운영 차단으로 전환하지 않습니다.
 - 모바일 비디오 실패 후 다시 도전할 때 이전 `src`를 비워 다음 클릭에서 새 네트워크 요청을 허용합니다. WebKit/Chromium 네트워크 실패 → 복구 요청을 모의 검사합니다. 실제 LTE/5G 환경 검증은 여전히 별도 필요합니다.
 
+### #90: Operations 전용 강제 CSP 시범 적용
+
+- `/ops.html`과 `/ops-preview.html`의 정적 스크립트/이벤트 속성을 조사하여 기존 인라인 이벤트가 없음을 확인했습니다. 두 HTML 응답에만 `Content-Security-Policy`를 적용하고 `script-src 'self'`, `script-src-attr 'none'`, `frame-ancestors 'self'`, `object-src 'none'`을 강제합니다.
+- Pretendard 외부 스타일·폰트(`cdn.jsdelivr.net`)는 명시 허용하고 현재 레이아웃 호환을 위해 스타일 인라인만 허용합니다. 외부 스크립트 실행은 허용하지 않습니다.
+- 메인 예약 앱·게임 화면에는 **기존 report-only 정책만** 유지합니다. 두 운영 화면에 한정된 강화가 전체 CSP 강제 전환을 의미하지는 않습니다.
+- 로컬 브라우저 QA 서버에 경로별 헤더 선택을 구현하고, browser QA에서 두 운영 화면의 정상 동작·CSP 위반 유무를 검사합니다. Production Smoke는 경로별 정책을 읽기 전용으로 검증합니다.
+- 실제 상용 사용자 임베딩/외부 도메인 연동/모바일 실기기 호환성은 별도 검증하고, 문제가 발생하면 해당 두 경로의 강제 CSP 헤더만 제거하는 롤백을 사용합니다.
+
 ## 릴리스 판단
 - **이번 변경 배포 가능:** Production Smoke 영구 읽기 전용화, 회귀 테스트, 현재 권한 계약 설명 문서.
 - **이번 변경에 포함하지 않음:** 기존 Blob 데이터 삭제/만료, 신규 WAF 차단 활성화, 공유 토큰 권한 변경, 실기기 QA 완료 선언.

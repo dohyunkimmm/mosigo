@@ -79,3 +79,26 @@ test('CSP is report-only, scoped to audited third-party origins, and cannot sile
   assert.doesNotMatch(csp, /(?:^|\s)\*(?:\s|;|$)|default-src https:/);
   assert.doesNotMatch(csp, /report-uri|report-to/, 'No unreviewed collection endpoint or sensitive report uploads');
 });
+
+
+test('scoped Operations CSP enforces no inline scripts without affecting the booking app', () => {
+  const config = JSON.parse(read('vercel.json'));
+  const rules = config.headers;
+  const globalRule = rules.find(rule => rule.source === '/(.*)');
+  assert.equal(globalRule.headers.some(h => h.key.toLowerCase() === 'content-security-policy'), false);
+  for (const route of ['/ops.html','/ops-preview.html']) {
+    const rule = rules.find(r => r.source === route);
+    assert.ok(rule, `Missing isolated CSP for ${route}`);
+    const csp = rule.headers.find(h => h.key.toLowerCase() === 'content-security-policy')?.value;
+    assert.ok(csp);
+    assert.match(csp, /(?:^|; )script-src 'self'(?:;|$)/);
+    assert.match(csp, /(?:^|; )script-src-attr 'none'(?:;|$)/);
+    assert.match(csp, /(?:^|; )frame-ancestors 'self'(?:;|$)/);
+    assert.match(csp, /(?:^|; )object-src 'none'(?:;|$)/);
+    assert.doesNotMatch(csp, /script-src[^;]*unsafe-inline/);
+    const html = read(route.slice(1));
+    assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)/i);
+    assert.doesNotMatch(html, /\bon(?:click|error|load|submit|change)\s*=/i);
+  }
+  assert.equal(rules.some(r => r.source === '/' || r.source === '/new_game.html' || r.source === '/index.html'), false);
+});

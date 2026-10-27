@@ -232,15 +232,20 @@ test('CSP report-only is visible on real page journeys without new policy violat
   await page.addInitScript(() => {
     window.__mosigoReportedDirectives = [];
     document.addEventListener('securitypolicyviolation', event => {
-      if (event.disposition === 'report') window.__mosigoReportedDirectives.push(event.effectiveDirective);
+      window.__mosigoReportedDirectives.push(event.disposition + ':' + event.effectiveDirective);
     });
   });
-  for (const path of ['/', '/ops.html', '/new_game.html?win=0']) {
+  for (const path of ['/', '/ops.html', '/ops-preview.html', '/new_game.html?win=0']) {
     const response = await page.goto(path, {waitUntil:'domcontentloaded'});
     expect(response?.status(), `${path}: HTML response`).toBe(200);
     const headers = await response.headers();
     expect(headers['content-security-policy-report-only'], `${path}: report-only policy`).toContain("default-src 'self'");
-    expect(headers['content-security-policy'], `${path}: blocking policy is unapproved`).toBeUndefined();
+    if (path.startsWith('/ops')) {
+      expect(headers['content-security-policy'], `${path}: enforced policy`).toContain("script-src 'self'");
+      expect(headers['content-security-policy'], `${path}: no inline event handlers`).toContain("script-src-attr 'none'");
+    } else {
+      expect(headers['content-security-policy'], `${path}: blocking policy is unapproved`).toBeUndefined();
+    }
     await page.waitForTimeout(250);
     const directives = await page.evaluate(() => window.__mosigoReportedDirectives);
     expect(directives, `${path}: unexpected report-only policy violations`).toEqual([]);
