@@ -102,7 +102,7 @@ test('guide routes and completion dialog work without inline event handlers',asy
 test('mobile game does not eagerly download MP4 before the first action', async ({ page }) => {
  const mediaRequests = [];
  page.on('request', request => {
-  if (/\\.mp4(?:\\?|$)/.test(request.url())) mediaRequests.push(request.url());
+  if (/\.mp4(?:\?|$)/.test(request.url())) mediaRequests.push(request.url());
  });
  await page.goto('/new_game.html?win=0');
  await expect(page.locator('#g-cast')).toHaveAttribute('aria-label', '낚시대 던지기');
@@ -114,7 +114,7 @@ test('mobile game does not eagerly download MP4 before the first action', async 
 });
 
 test('mobile game remains recoverable when video requests fail', async ({ page }) => {
- await page.route(/\\.mp4(?:\\?|$)/, route => route.abort('failed'));
+ await page.route(/\.mp4(?:\?|$)/, route => route.abort('failed'));
  await page.goto('/new_game.html?win=0');
  await page.locator('#g-cast').click();
  await expect(page.locator('#g-cast')).toBeHidden();

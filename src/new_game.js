@@ -55,6 +55,9 @@ function showLayer(id){
 function playLayer(id){
   const v = $(id);
   if(!v || !v.play) return false;
+  // WebKit may prefetch video even with preload="none" when src is in markup.
+  // Set the actual source only for the video the user just chose to play.
+  if(!v.getAttribute('src') && v.dataset.src) v.src = v.dataset.src;
   try { v.currentTime = 0; } catch(e) {}
   const p = v.play();
   if(p && p.catch) p.catch(()=>{});
@@ -159,6 +162,7 @@ function showResult(){
 
   const art = box.querySelector('video.g-result-art');
   if(art){
+    if(!art.getAttribute('src') && art.dataset.src) art.src = art.dataset.src;
     try { art.currentTime = 0; } catch(e) {}
     const p = art.play();
     if(p && p.catch) p.catch(()=>{});

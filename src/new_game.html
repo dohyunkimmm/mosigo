@@ -18,9 +18,9 @@
 <div class="page-main">
   <div class="g-stage" aria-hidden="true">
     <img   class="g-layer is-on" id="g-bg1" src="game1.webp" alt="">
-    <video class="g-layer"       id="g-bg2" src="game2.mp4" muted playsinline preload="none"></video>
-    <video class="g-layer"       id="g-bg3" src="game3.mp4" muted playsinline preload="none"></video>
-    <video class="g-layer"       id="g-bg4" src="game4.mp4" muted playsinline preload="none"></video>
+    <video class="g-layer"       id="g-bg2" data-src="game2.mp4" muted playsinline preload="none"></video>
+    <video class="g-layer"       id="g-bg3" data-src="game3.mp4" muted playsinline preload="none"></video>
+    <video class="g-layer"       id="g-bg4" data-src="game4.mp4" muted playsinline preload="none"></video>
   </div>
 
   <button class="g-back" onclick="goBackPage()" aria-label="이전 화면으로 돌아가기">
@@ -55,7 +55,7 @@
           <p class="g-result-kicker">아쉽네요</p>
           <h2 class="g-result-title">이번엔 꽝이에요.</h2>
           <p class="g-result-points">그래도 <b>5P</b>를 획득했어요!</p>
-          <video class="g-result-art" src="0810(4).mp4"
+          <video class="g-result-art" data-src="0810(4).mp4"
                  preload="none" muted loop playsinline aria-hidden="true"
                  onerror="this.remove()"></video>
         </div>
