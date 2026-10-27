@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const { requiresDurableStorage } = require('./smoke-policy.js');
 
 const BASE_URL = process.env.MOSIGO_PRODUCTION_URL || 'https://mosigo-nine.vercel.app';
 const EXPECTED_COMMIT = process.env.EXPECTED_COMMIT || '';
@@ -109,7 +110,7 @@ async function runChecks() {
   assert(accountCapability.json.bookingOwnership === true && accountCapability.json.bookingListing === true, 'Account ownership/listing capability is incomplete');
 
   const durable = bookings.json.durableServerPersistence === true;
-  if (['10.','11.','12.','13.'].some((prefix) => RELEASE_VERSION.startsWith(prefix))) {
+  if (requiresDurableStorage(RELEASE_VERSION)) {
     assert(durable, 'v10+ release requires durable server persistence to be configured');
   }
   if (durable) {
@@ -363,7 +364,7 @@ async function runChecks() {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
       const commit = await runChecks();
-      const durableRequired = ['10.','11.','12.','13.'].some((prefix) => RELEASE_VERSION.startsWith(prefix));
+      const durableRequired = requiresDurableStorage(RELEASE_VERSION);
       console.log(`Production smoke passed on attempt ${attempt}; commit=${commit || 'unknown'}; durable=${durableRequired ? 'required' : 'development'}`);
       process.exit(0);
     } catch (error) {
