@@ -111,7 +111,7 @@
       for(const selector of [
         '#order-cancel-btn',
         '#modal-bk-cancel .dlg-btn.danger',
-        '#s-live button[onclick="completeReturn()"]'
+        'button[onclick="completeReturn()"]'
       ]){
         const button=document.querySelector(selector);
         if(!button) continue;
