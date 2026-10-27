@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<img class="status-img" src="bar.png" alt="" aria-hidden="true" onerror="this.remove()">
+<img class="status-img" src="bar.png" alt="" aria-hidden="true" data-remove-on-error>
 
 <div class="page-main">
   <div class="g-stage" aria-hidden="true">
@@ -23,7 +23,7 @@
     <video class="g-layer"       id="g-bg4" data-src="game4.mp4" muted playsinline preload="none"></video>
   </div>
 
-  <button class="g-back" onclick="goBackPage()" aria-label="이전 화면으로 돌아가기">
+  <button class="g-back"  aria-label="이전 화면으로 돌아가기">
     <i class="fi fi-rr-angle-left" aria-hidden="true"></i>
   </button>
 
@@ -35,12 +35,12 @@
   <div class="g-spacer"></div>
 
   <div class="g-foot">
-    <button class="g-cast" id="g-cast" onclick="onCast()" aria-label="낚시대 던지기">클릭</button>
+    <button class="g-cast" id="g-cast"  aria-label="낚시대 던지기">클릭</button>
   </div>
 
   <div class="g-result" id="g-result" hidden>
     <div class="g-result-nav">
-      <button onclick="hideResult(); goBackPage()" aria-label="뒤로 가기">
+      <button  aria-label="뒤로 가기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M20 12H4M11 5l-7 7 7 7"/>
         </svg>
@@ -57,7 +57,7 @@
           <p class="g-result-points">그래도 <b>5P</b>를 획득했어요!</p>
           <video class="g-result-art" data-src="0810(4).mp4"
                  preload="none" muted loop playsinline aria-hidden="true"
-                 onerror="this.remove()"></video>
+                 data-remove-on-error></video>
         </div>
 
         <div id="g-win" hidden>
@@ -66,7 +66,7 @@
           <div class="g-coupon-card">
             <div class="g-coupon-top">
               <span class="g-coupon-badge">N 지금배달 상품 쿠폰</span>
-              <img class="g-coupon-product" src="game_img1.webp" alt="" aria-hidden="true" onerror="this.remove()">
+              <img class="g-coupon-product" src="game_img1.webp" alt="" aria-hidden="true" data-remove-on-error>
             </div>
             <div class="g-coupon-bottom">
               <p class="g-coupon-name">스타벅스 아이스 아메리카노</p>
@@ -77,8 +77,8 @@
       </div>
 
       <div class="g-result-actions" id="g-result-actions">
-        <button class="g-rbtn" id="g-rbtn-primary" onclick="onResultPrimary()">친구 초대하고 도전하기</button>
-        <button class="g-rbtn g-rbtn--text" id="g-rbtn-secondary" onclick="onResultSecondary()">내 물고기 자랑하기 ›</button>
+        <button class="g-rbtn" id="g-rbtn-primary" >친구 초대하고 도전하기</button>
+        <button class="g-rbtn g-rbtn--text" id="g-rbtn-secondary" >내 물고기 자랑하기 ›</button>
       </div>
     </div>
   </div>
@@ -86,7 +86,7 @@
   <div class="g-toast" id="g-toast" role="status" aria-live="polite"></div>
 </div>
 
-<img class="home-img" src="bottom.png" alt="" aria-hidden="true" onerror="this.remove()">
+<img class="home-img" src="bottom.png" alt="" aria-hidden="true" data-remove-on-error>
 
 <script src="new_game.js"></script>
 </body>
