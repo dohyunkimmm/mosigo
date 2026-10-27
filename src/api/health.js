@@ -1,4 +1,3 @@
-require('../lib/dep0169-trace.js');
 module.exports = function handler(req, res) {
   if (!['GET', 'HEAD'].includes(req.method)) {
     res.setHeader('Allow', 'GET, HEAD');
