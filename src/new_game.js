@@ -119,6 +119,16 @@ function veil(on){
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
+  // Event listeners replace inline onclick/onerror under scoped CSP.
+  document.querySelector('.g-back')?.addEventListener('click',goBackPage);
+  $('g-cast')?.addEventListener('click',onCast);
+  document.querySelector('.g-result-nav button')?.addEventListener('click',()=>{hideResult();goBackPage();});
+  $('g-rbtn-primary')?.addEventListener('click',onResultPrimary);
+  $('g-rbtn-secondary')?.addEventListener('click',onResultSecondary);
+  document.querySelectorAll('[data-remove-on-error]').forEach(asset=>{
+    asset.addEventListener('error',()=>asset.remove(),{once:true});
+    if(asset instanceof HTMLImageElement && asset.complete && asset.naturalWidth===0) asset.remove();
+  });
   const expiry = new Date();
   expiry.setDate(expiry.getDate()+30);
   const expiryEl = $('g-coupon-expiry');
