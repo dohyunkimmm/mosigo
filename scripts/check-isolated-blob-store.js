@@ -25,8 +25,10 @@ function authorizeIsolatedWrite(env = process.env) {
   assertIsolatedStore(productionStoreId, testStoreId);
   if (confirmedProduction !== productionStoreId) throw new Error('Independent production store ID confirmation required');
   if (confirmed !== testStoreId) throw new Error('Independent test store ID confirmation required');
+  // BLOB_STORE_ID, if injected by Vercel, must identify the *test* project store.
+  // MOSIGO_BLOB_STORE_ID is the separately supplied application production ID.
   if ((env.MOSIGO_BLOB_STORE_ID && env.MOSIGO_BLOB_STORE_ID !== productionStoreId) ||
-      (env.BLOB_STORE_ID && env.BLOB_STORE_ID !== productionStoreId)) {
+      (env.BLOB_STORE_ID && env.BLOB_STORE_ID !== testStoreId)) {
     throw new Error('Production store ID does not match the active application configuration');
   }
   const oidcToken = String(env.VERCEL_OIDC_TOKEN || '').trim();
