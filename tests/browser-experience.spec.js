@@ -225,3 +225,24 @@ test('a view-only share does not optimistically cancel the local booking', async
   });
   expect(unchanged).toBe(true);
 });
+
+
+test('CSP report-only is visible on real page journeys without new policy violations', async ({page}) => {
+  // Persist only directive names, never blocked URLs or tokens from event details.
+  await page.addInitScript(() => {
+    window.__mosigoReportedDirectives = [];
+    document.addEventListener('securitypolicyviolation', event => {
+      if (event.disposition === 'report') window.__mosigoReportedDirectives.push(event.effectiveDirective);
+    });
+  });
+  for (const path of ['/', '/ops.html', '/new_game.html?win=0']) {
+    const response = await page.goto(path, {waitUntil:'domcontentloaded'});
+    expect(response?.status(), `${path}: HTML response`).toBe(200);
+    const headers = await response.headers();
+    expect(headers['content-security-policy-report-only'], `${path}: report-only policy`).toContain("default-src 'self'");
+    expect(headers['content-security-policy'], `${path}: blocking policy is unapproved`).toBeUndefined();
+    await page.waitForTimeout(250);
+    const directives = await page.evaluate(() => window.__mosigoReportedDirectives);
+    expect(directives, `${path}: unexpected report-only policy violations`).toEqual([]);
+  }
+});
