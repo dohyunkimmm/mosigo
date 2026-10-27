@@ -49,6 +49,8 @@
 npm run quality
 ```
 
+**이미지 유지보수:** 보고서·혜택 배너 원본 PNG를 교체할 때는 `ffmpeg`와 `ffprobe` 설치 후 `npm run optimize:images`를 실행합니다. 해상도, 최소 15% 용량 절감, SSIM 0.96 이상을 확인한 경우에만 WebP 참조로 변경하며 `tests/hero-image-assets.test.js`가 파일 정합성을 검사합니다.
+
 ## 참고 자료
 
 - [저장소 운영·브랜치 보호·WAF 후속/Production Smoke 재검증](docs/REPO-OPERATIONS.md) — 2026-10-22 검증 기록
