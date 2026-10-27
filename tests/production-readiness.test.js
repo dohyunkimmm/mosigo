@@ -48,12 +48,16 @@ test('health endpoint is part of the deployed application surface', () => {
   assert.ok(fs.existsSync(path.join(SRC, 'api', 'health.js')));
 });
 
-test('documentation-only smoke runs do not create persistent test records', () => {
+test('Production Smoke never writes real booking, account, or share records', () => {
   const workflow = fs.readFileSync(path.join(ROOT, '.github/workflows/production-smoke.yml'), 'utf8');
   const smoke = fs.readFileSync(path.join(ROOT, 'scripts/production-smoke.js'), 'utf8');
-  assert.match(workflow, /read_only=true/);
-  assert.match(workflow, /read_only=false/);
-  assert.match(workflow, /SMOKE_READ_ONLY:.*steps\.deployment\.outputs\.read_only/);
-  assert.match(smoke, /process\.env\.SMOKE_READ_ONLY === 'true'/);
-  assert.match(smoke, /Read-only smoke: verified production API capabilities without creating test records/);
+
+  assert.match(workflow, /SMOKE_READ_ONLY: 'true'/);
+  assert.doesNotMatch(workflow, /read_only=false|steps\.deployment\.outputs\.read_only/);
+  assert.match(workflow, /expected_commit=\$\{\{ github\.event\.workflow_run\.head_sha \}\}/);
+  assert.doesNotMatch(smoke, /method:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/);
+  assert.doesNotMatch(smoke, /accountEmail|sampleBooking|requestJson/);
+  assert.match(smoke, /Read-only smoke: verified production API capabilities and assets without creating test records/);
+  assert.match(smoke, /for \(const asset of \[/);
+  assert.match(smoke, /requiresDurableStorage\(RELEASE_VERSION\)/);
 });
