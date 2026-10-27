@@ -56,10 +56,10 @@ async function runChecks() {
   assert(root.response.headers.get('x-content-type-options') === 'nosniff', 'Missing X-Content-Type-Options header');
   assert(root.response.headers.get('referrer-policy') === 'strict-origin-when-cross-origin', 'Unexpected Referrer-Policy header');
   assertReportOnlyCsp(root.response, '/');
-  for (const path of ['/ops.html','/ops-preview.html','/new_game.html']) {
+  for (const path of ['/ops.html','/ops-preview.html','/new_event.html','/new_game.html']) {
     const page = await fetchText(path);
     assert(page.response.ok, `${path} returned ${page.response.status}`);
-    assertReportOnlyCsp(page.response, path, path.startsWith('/ops'));
+    assertReportOnlyCsp(page.response, path, true);
   }
 
   const health = await fetchJson('/api/health');

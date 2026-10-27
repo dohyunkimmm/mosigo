@@ -235,12 +235,12 @@ test('CSP report-only is visible on real page journeys without new policy violat
       window.__mosigoReportedDirectives.push(event.disposition + ':' + event.effectiveDirective);
     });
   });
-  for (const path of ['/', '/ops.html', '/ops-preview.html', '/new_game.html?win=0']) {
+  for (const path of ['/', '/ops.html', '/ops-preview.html', '/new_event.html', '/new_game.html?win=0']) {
     const response = await page.goto(path, {waitUntil:'domcontentloaded'});
     expect(response?.status(), `${path}: HTML response`).toBe(200);
     const headers = await response.headers();
     expect(headers['content-security-policy-report-only'], `${path}: report-only policy`).toContain("default-src 'self'");
-    if (path.startsWith('/ops')) {
+    if (['/ops.html','/ops-preview.html','/new_event.html','/new_game.html?win=0'].includes(path)) {
       expect(headers['content-security-policy'], `${path}: enforced policy`).toContain("script-src 'self'");
       expect(headers['content-security-policy'], `${path}: no inline event handlers`).toContain("script-src-attr 'none'");
     } else {
@@ -250,4 +250,16 @@ test('CSP report-only is visible on real page journeys without new policy violat
     const directives = await page.evaluate(() => window.__mosigoReportedDirectives);
     expect(directives, `${path}: unexpected report-only policy violations`).toEqual([]);
   }
+});
+
+
+test('embedded event can advance to game under enforced scoped CSP', async ({page}) => {
+  await page.goto('/');
+  await page.waitForFunction(() => typeof window.openExtPage === 'function');
+  await page.evaluate(() => window.openExtPage('event'));
+  await expect(page.locator('.ext-host')).toHaveClass(/is-open/);
+  await page.frameLocator('.ext-host iframe.is-live').locator('.fish-cta').click();
+  await expect(page.frameLocator('.ext-host iframe.is-live').locator('#g-cast')).toHaveAttribute('aria-label','낚시대 던지기');
+  await page.frameLocator('.ext-host iframe.is-live').locator('#g-cast').click();
+  await expect(page.frameLocator('.ext-host iframe.is-live').locator('#g-cast')).toBeHidden();
 });

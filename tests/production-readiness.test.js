@@ -100,5 +100,23 @@ test('scoped Operations CSP enforces no inline scripts without affecting the boo
     assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)/i);
     assert.doesNotMatch(html, /\bon(?:click|error|load|submit|change)\s*=/i);
   }
-  assert.equal(rules.some(r => r.source === '/' || r.source === '/new_game.html' || r.source === '/index.html'), false);
+  assert.equal(rules.some(r => r.source === '/' || r.source === '/index.html'), false);
+});
+
+
+test('event and game CSP disallow inline handlers without changing root policy', () => {
+  const config=JSON.parse(read('vercel.json'));
+  for(const route of ['/new_event.html','/new_game.html']){
+    const rule=config.headers.find(r=>r.source===route);
+    assert.ok(rule, 'Scoped CSP missing for '+route);
+    const csp=rule.headers.find(h=>h.key.toLowerCase()==='content-security-policy')?.value;
+    assert.match(csp,/script-src 'self'; script-src-attr 'none'/);
+    assert.match(csp,/frame-ancestors 'self'/);
+    assert.doesNotMatch(csp,/script-src[^;]*'unsafe-inline'/);
+    const html=read(route.slice(1));
+    assert.doesNotMatch(html,/\bon(?:click|error|load|submit|change|input)\s*=/i);
+    assert.doesNotMatch(html,/<script\b(?![^>]*\bsrc=)/i);
+  }
+  const root=config.headers.find(r=>r.source==='/(.*)');
+  assert.equal(root.headers.some(h=>h.key.toLowerCase()==='content-security-policy'),false);
 });
