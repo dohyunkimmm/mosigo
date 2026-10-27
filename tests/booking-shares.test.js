@@ -171,3 +171,43 @@ test('booking-share management requires the durable owner recovery key', async (
   assert.equal(denied.statusCode, 401);
   assert.equal(denied.body.error, 'booking_recovery_key_invalid');
 });
+
+
+test('share holders cannot issue, rotate, or revoke share grants without owner credentials', async () => {
+  const blobApi = fakeBlobApi();
+  const env = { BLOB_READ_WRITE_TOKEN: 'test-token' };
+  const store = createBookingStore({ env, blobApi });
+  const shareStore = createBookingShareStore({ env, blobApi });
+  const bookings = createBookingsHandler({ store, shareStore });
+  const shares = createSharesHandler({ store, shareStore });
+
+  const created = await invoke(bookings, { method: 'POST', body: { booking: sample } });
+  assert.equal(created.statusCode, 201);
+  const bookingId = created.body.booking.bookingId;
+  const ownerKey = created.body.recoveryKey;
+  const issued = await invoke(shares, {
+    method: 'POST',
+    headers: { 'x-mosigo-recovery-key': ownerKey },
+    body: { bookingId, ttlMinutes: 60 }
+  });
+  const token = issued.body.shareToken;
+  assert.ok(token);
+
+  for (const method of ['POST', 'DELETE']) {
+    const denied = await invoke(shares, {
+      method,
+      headers: { 'x-mosigo-share-token': token },
+      body: { bookingId, ttlMinutes: 60 }
+    });
+    assert.equal(denied.statusCode, 401, method);
+    assert.equal(denied.body.error, 'booking_recovery_key_invalid', method);
+  }
+
+  const ownerState = await invoke(shares, {
+    query: { bookingId },
+    headers: { 'x-mosigo-recovery-key': ownerKey }
+  });
+  assert.equal(ownerState.statusCode, 200);
+  assert.equal(ownerState.body.share.active, true);
+  assert.equal(ownerState.body.share.generation, 1);
+});

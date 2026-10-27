@@ -30,16 +30,8 @@ async function fetchJson(path, options = {}) {
   return { response, json };
 }
 
-async function requestJson(path, options) {
-  return fetchJson(path, options);
-}
-
 function assert(condition, message) {
   if (!condition) throw new Error(message);
-}
-
-function cookieFromResponse(response) {
-  return String(response.headers.get('set-cookie') || '').split(';')[0];
 }
 
 async function runChecks() {
@@ -122,181 +114,9 @@ async function runChecks() {
     assert(bookings.json.recoveryScope === 'same-device', 'Fallback recovery scope should remain same-device');
   }
 
-  // Doc-only main updates must not create persistent smoke accounts or bookings.
-  if (process.env.SMOKE_READ_ONLY === 'true') {
-    const robots = await fetchText('/robots.txt');
-    assert(robots.response.ok && /Sitemap:\s*https:\/\/mosigo-nine\.vercel\.app\/sitemap\.xml/i.test(robots.text), 'robots.txt is not production-ready');
-    const sitemap = await fetchText('/sitemap.xml');
-    assert(sitemap.response.ok && /<loc>https:\/\/mosigo-nine\.vercel\.app\/<\/loc>/.test(sitemap.text), 'sitemap.xml is not production-ready');
-    console.log('Read-only smoke: verified production API capabilities without creating test records.');
-    return health.json.commit;
-  }
-
-  const sampleBooking = {
-    hospitalId: 'hospital-1',
-    hospitalName: '똑똑연세내과의원',
-    managerIndex: 0,
-    managerName: '김민준',
-    targetName: '아버지',
-    date: '2026-09-20',
-    time: '10:00',
-    durationHours: 2,
-    mode: '차량 동행',
-    amount: 45000
-  };
-  const created = await requestJson('/api/bookings', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ booking: sampleBooking })
-  });
-  assert(created.response.status === 201 && created.json.success === true, 'Booking create smoke failed');
-  assert(/^M10[A-Z0-9]{8}$/.test(created.json.booking?.bookingId || ''), 'Booking create did not return an M10 ID');
-  assert(created.json.booking?.revision === 1, 'Booking create revision is not 1');
-  assert(created.json.booking?.historyComplete === true, 'New booking history should be complete');
-  assert(created.json.booking?.history?.[0]?.type === 'created', 'Booking create history event is missing');
-  if (durable) assert(typeof created.json.recoveryKey === 'string' && created.json.recoveryKey.length > 10, 'Durable create did not return a recovery key');
-
-  const recoveryKey = created.json.recoveryKey || '';
-  const confirmed = await requestJson('/api/bookings', {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(recoveryKey ? { 'X-Mosigo-Recovery-Key': recoveryKey } : {})
-    },
-    body: JSON.stringify({
-      action: 'confirm',
-      booking: created.json.booking,
-      bookingId: created.json.booking.bookingId,
-      expectedRevision: created.json.booking.revision,
-      recoveryKey
-    })
-  });
-  assert(confirmed.response.ok && confirmed.json.success === true, 'Booking transition smoke failed');
-  assert(confirmed.json.booking?.phase === 'confirmed', 'Booking transition did not confirm');
-  assert(confirmed.json.booking?.revision === 2, 'Booking revision did not advance');
-  assert(confirmed.json.booking?.history?.length === 2, 'Booking history did not append transition');
-
-  const recovered = await requestJson('/api/bookings', {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(recoveryKey ? { 'X-Mosigo-Recovery-Key': recoveryKey } : {})
-    },
-    body: JSON.stringify({ booking: confirmed.json.booking, recoveryKey })
-  });
-  assert(recovered.response.ok && recovered.json.recovered === true, 'Booking recovery smoke failed');
-  assert(recovered.json.booking?.bookingId === created.json.booking.bookingId, 'Recovered booking ID changed');
-  assert(recovered.json.booking?.phase === 'confirmed', 'Recovered booking phase changed');
-  assert(recovered.json.booking?.revision === 2, 'Recovered booking revision changed');
-
-  if (durable) {
-    const bookingId = created.json.booking.bookingId;
-    const canonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
-      headers: { 'X-Mosigo-Recovery-Key': recoveryKey }
-    });
-    assert(canonical.response.ok && canonical.json.durablePersisted === true, 'Durable canonical read failed');
-    assert(canonical.json.booking?.revision === 2, 'Durable canonical read returned the wrong revision');
-
-    const firstShare = await requestJson('/api/booking-shares', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Mosigo-Recovery-Key': recoveryKey
-      },
-      body: JSON.stringify({ bookingId, ttlMinutes: 60 })
-    });
-    assert(firstShare.response.status === 201 && firstShare.json.success === true, 'Secure share issuance failed');
-    assert(typeof firstShare.json.shareToken === 'string' && firstShare.json.shareToken.length >= 24, 'Secure share token is missing');
-    assert(firstShare.json.share?.active === true, 'Secure share should be active after issuance');
-    const firstToken = firstShare.json.shareToken;
-
-    const sharedCanonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
-      headers: { 'X-Mosigo-Share-Token': firstToken }
-    });
-    assert(sharedCanonical.response.ok && sharedCanonical.json.booking?.revision === 2, 'Secure share canonical recovery failed');
-
-    const rotatedShare = await requestJson('/api/booking-shares', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Mosigo-Recovery-Key': recoveryKey
-      },
-      body: JSON.stringify({ bookingId, ttlMinutes: 30 })
-    });
-    assert(rotatedShare.response.status === 201 && rotatedShare.json.share?.generation >= 2, 'Secure share rotation failed');
-    const secondToken = rotatedShare.json.shareToken;
-    assert(secondToken && secondToken !== firstToken, 'Secure share rotation did not replace the token');
-
-    const oldShare = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
-      headers: { 'X-Mosigo-Share-Token': firstToken }
-    });
-    assert(oldShare.response.status === 401 && oldShare.json.success === false, 'Rotated share token should no longer authorize booking access');
-
-    const rotatedCanonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
-      headers: { 'X-Mosigo-Share-Token': secondToken }
-    });
-    assert(rotatedCanonical.response.ok && rotatedCanonical.json.booking?.bookingId === bookingId, 'Rotated share token is not active');
-
-    const revokedShare = await requestJson('/api/booking-shares', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Mosigo-Recovery-Key': recoveryKey
-      },
-      body: JSON.stringify({ bookingId })
-    });
-    assert(revokedShare.response.ok && revokedShare.json.share?.active === false, 'Secure share revocation failed');
-
-    const revokedCanonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(bookingId)}`, {
-      headers: { 'X-Mosigo-Share-Token': secondToken }
-    });
-    assert(revokedCanonical.response.status === 401 && revokedCanonical.json.success === false, 'Revoked share token should not authorize booking access');
-
-    const unique = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
-    const accountEmail = `smoke-${unique}@example.com`;
-    const accountPassword = `Mosigo-${unique}-Pass!`;
-    const registered = await requestJson('/api/account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'register', email: accountEmail, password: accountPassword })
-    });
-    assert(registered.response.status === 201 && registered.json.authenticated === true, 'v13 account registration failed');
-    const accountCookie = cookieFromResponse(registered.response);
-    assert(/^mosigo_v13_session=/.test(accountCookie), 'v13 registration did not return a session cookie');
-
-    const ownedCreated = await requestJson('/api/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Cookie: accountCookie },
-      body: JSON.stringify({ booking: sampleBooking })
-    });
-    assert(ownedCreated.response.status === 201 && ownedCreated.json.accountOwned === true, 'v13 account-owned booking creation failed');
-    const ownedBookingId = ownedCreated.json.booking?.bookingId;
-
-    const ownedList = await fetchJson('/api/account?resource=bookings', { headers: { Cookie: accountCookie } });
-    assert(ownedList.response.ok && ownedList.json.bookings?.some((item) => item.bookingId === ownedBookingId), 'v13 owned booking listing failed');
-
-    const ownedCanonical = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(ownedBookingId)}`, { headers: { Cookie: accountCookie } });
-    assert(ownedCanonical.response.ok && ownedCanonical.json.accessType === 'account-session', 'v13 account session did not authorize owned booking');
-
-    const accountShare = await requestJson('/api/booking-shares', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Cookie: accountCookie },
-      body: JSON.stringify({ bookingId: ownedBookingId, ttlMinutes: 60 })
-    });
-    assert(accountShare.response.status === 201 && accountShare.json.ownerAccessType === 'account-session', 'v13 account owner could not issue v12 share');
-
-    const accountRevoke = await requestJson('/api/booking-shares', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', Cookie: accountCookie },
-      body: JSON.stringify({ bookingId: ownedBookingId })
-    });
-    assert(accountRevoke.response.ok && accountRevoke.json.share?.active === false, 'v13 account owner could not revoke v12 share');
-
-    const loggedOut = await requestJson('/api/account', { method: 'DELETE', headers: { Cookie: accountCookie } });
-    assert(loggedOut.response.ok && loggedOut.json.authenticated === false, 'v13 logout failed');
-    const afterLogout = await fetchJson(`/api/bookings?bookingId=${encodeURIComponent(ownedBookingId)}`, { headers: { Cookie: accountCookie } });
-    assert(afterLogout.response.status === 401, 'revoked v13 session should not authorize owned booking');
-  }
+  // The production smoke is intentionally read-only for every commit. Write-path
+  // integration is covered by local tests until an isolated, expiring test store
+  // is provisioned. Never create account/booking/share records in Production.
 
   for (const asset of ['/v4-functional.js', '/booking-state.js', '/v4-booking.js', '/v6-booking.js', '/v7-booking.js', '/v8-booking.js', '/v9-booking.js', '/v10-booking.js', '/v11-booking.js', '/v11-ui.js', '/v12-sharing.js', '/v12-ui.js', '/v13-account.js', '/v13-ui.js']) {
     const result = await fetchText(asset);
@@ -356,6 +176,7 @@ async function runChecks() {
   const sitemap = await fetchText('/sitemap.xml');
   assert(sitemap.response.ok && /<loc>https:\/\/mosigo-nine\.vercel\.app\/<\/loc>/.test(sitemap.text), 'sitemap.xml is not production-ready');
 
+  console.log('Read-only smoke: verified production API capabilities and assets without creating test records.');
   return health.json.commit;
 }
 
