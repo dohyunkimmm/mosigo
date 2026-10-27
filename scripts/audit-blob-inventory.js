@@ -4,6 +4,7 @@
 // This module intentionally has no get/put/copy/delete functionality.
 const { createRequire } = require('node:module');
 const path = require('node:path');
+const { resolveBlobStoreId } = require('../src/lib/booking-store.js');
 
 const PREFIXES = Object.freeze([
   ['bookings', 'mosigo/bookings/'],
@@ -50,15 +51,44 @@ async function collectMetadata({ list, pageSize = 100, maxPages = 3 } = {}) {
   return report;
 }
 
-async function main() {
-  if (process.env.MOSIGO_AUDIT_BLOB_METADATA_ONLY !== 'yes') {
-    throw new Error('Set MOSIGO_AUDIT_BLOB_METADATA_ONLY=yes to permit a read-only inventory');
+// A list request with only an ambient BLOB_READ_WRITE_TOKEN could target a
+// completely different store. Require an explicitly confirmed OIDC target.
+function auditTarget(env = process.env) {
+  if (env.CI || env.GITHUB_ACTIONS || env.VERCEL) {
+    throw new Error('Audit must run from an approved local, non-CI context');
   }
-  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new Error('An explicit Blob token is required for local audit');
-  // Resolve the existing src dependency only when explicitly running this CLI.
+  if (env.MOSIGO_AUDIT_BLOB_METADATA_ONLY !== 'yes') {
+    throw new Error('Explicit metadata-only opt-in is required');
+  }
+  const expected = resolveBlobStoreId(env);
+  const approved = String(env.MOSIGO_AUDIT_EXPECTED_STORE_ID || '').trim();
+  if (!approved || approved !== expected || !/^store_[A-Za-z0-9]+$/.test(approved)) {
+    throw new Error('Confirmed target Blob store ID must match the application store ID');
+  }
+  if (!String(env.VERCEL_OIDC_TOKEN || '').trim()) {
+    throw new Error('A short-lived, store-scoped Vercel OIDC token is required');
+  }
+  // Do not let an ambient long-lived RW token silently supersede OIDC auth.
+  if (env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error('Unset BLOB_READ_WRITE_TOKEN; metadata audit uses OIDC only');
+  }
+  return { storeId: approved, oidcToken: env.VERCEL_OIDC_TOKEN };
+}
+
+function scopedList(list, credentials) {
+  if (typeof list !== 'function') throw new TypeError('Blob list function required');
+  if (!credentials?.storeId || !credentials?.oidcToken) {
+    throw new Error('Store-scoped OIDC credentials required');
+  }
+  return (options) => list({ ...options, storeId: credentials.storeId, oidcToken: credentials.oidcToken });
+}
+
+async function main() {
+  const credentials = auditTarget(process.env);
+  // Resolve the existing src dependency only after explicit target confirmation.
   const runtimeRequire = createRequire(path.resolve(__dirname, '../src/package.json'));
   const { list } = runtimeRequire('@vercel/blob');
-  const report = await collectMetadata({ list });
+  const report = await collectMetadata({ list: scopedList(list, credentials) });
   process.stdout.write(JSON.stringify(report, null, 2) + '\n');
 }
 
@@ -70,4 +100,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { PREFIXES, collectMetadata };
+module.exports = { PREFIXES, collectMetadata, auditTarget, scopedList };

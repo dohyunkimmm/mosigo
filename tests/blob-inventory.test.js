@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { collectMetadata, PREFIXES } = require('../scripts/audit-blob-inventory.js');
+const { collectMetadata, PREFIXES, auditTarget, scopedList } = require('../scripts/audit-blob-inventory.js');
 
 const entry = (pathname, uploadedAt = '2026-10-21T00:00:00.000Z') =>
   ({ pathname, uploadedAt, size: 128, url: 'https://private.example.test/never-log-this' });
@@ -64,4 +64,46 @@ test('audit implementation never calls get, put, del, copy, or exports private i
   assert.doesNotMatch(source, /\bblob\.(?:get|put|del|copy)\s*\(/);
   assert.match(source, /MOSIGO_AUDIT_BLOB_METADATA_ONLY/);
   assert.match(source, /classification: 'unattributed'/);
+});
+
+
+test('audit rejects wrong store, missing OIDC, CI and ambient read-write credentials', () => {
+  const storeId = 'store_eZ1r1Ofm1v8N0Ahj';
+  const env = {
+    MOSIGO_AUDIT_BLOB_METADATA_ONLY: 'yes',
+    MOSIGO_BLOB_STORE_ID: storeId,
+    MOSIGO_AUDIT_EXPECTED_STORE_ID: storeId,
+    VERCEL_OIDC_TOKEN: 'short-lived-fake-oidc'
+  };
+  assert.deepEqual(auditTarget(env), {
+    storeId, oidcToken: 'short-lived-fake-oidc'
+  });
+  for (const updates of [
+    { MOSIGO_AUDIT_EXPECTED_STORE_ID: 'store_another' },
+    { MOSIGO_AUDIT_EXPECTED_STORE_ID: '' },
+    { MOSIGO_BLOB_STORE_ID: 'store_another' },
+    { VERCEL_OIDC_TOKEN: '' },
+    { MOSIGO_AUDIT_BLOB_METADATA_ONLY: 'no' },
+    { BLOB_READ_WRITE_TOKEN: 'must-not-be-used' },
+    { CI: 'true' },
+    { VERCEL: '1' },
+    { GITHUB_ACTIONS: 'true' }
+  ]) {
+    assert.throws(() => auditTarget({ ...env, ...updates }));
+  }
+});
+
+test('OIDC store scope applies on every paginated list request and never returns token in report', async () => {
+  const storeId = 'store_eZ1r1Ofm1v8N0Ahj', oidcToken = 'do-not-print-this';
+  const calls = [];
+  const list = scopedList(async options => {
+    calls.push(options);
+    return { blobs: [], hasMore: false };
+  }, { storeId, oidcToken });
+  const report = await collectMetadata({ list });
+  assert.equal(calls.length, PREFIXES.length);
+  assert.ok(calls.every(x => x.storeId === storeId && x.oidcToken === oidcToken));
+  assert.ok(calls.every(x => x.prefix?.startsWith('mosigo/') && x.mode === 'expanded'));
+  assert.doesNotMatch(JSON.stringify(report), /do-not-print-this|store_eZ1r1Ofm1v8N0Ahj/);
+  assert.throws(() => scopedList(() => [], {}));
 });
