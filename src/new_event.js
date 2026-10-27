@@ -82,3 +82,16 @@ function goNext(){
 applyName();
 rollChip();
 if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches) startChipAuto();
+
+// Bind controls without executable HTML attributes. Required by the
+// enforced script-src-attr 'none' policy on the standalone event page.
+function bindEventControls(){
+  document.querySelector('.fish-nav [aria-label="뒤로 가기"]')?.addEventListener('click',closeEvent);
+  document.querySelector('.fish-nav [aria-label="공유하기"]')?.addEventListener('click',shareEvent);
+  document.querySelector('.fish-cta')?.addEventListener('click',goNext);
+  document.querySelectorAll('[data-remove-on-error]').forEach(asset=>{
+    asset.addEventListener('error',()=>asset.remove(),{once:true});
+    if(asset instanceof HTMLImageElement && asset.complete && asset.naturalWidth===0) asset.remove();
+  });
+}
+bindEventControls();
