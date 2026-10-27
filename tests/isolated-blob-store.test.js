@@ -21,6 +21,9 @@ test('manual probe fails closed on target ambiguity, production use or ambient t
   assert.deepEqual(authorizeIsolatedWrite(env), {
     productionStoreId: PROD, testStoreId: ISOLATED, oidcToken:TOKEN
   });
+  assert.deepEqual(authorizeIsolatedWrite({...env,BLOB_STORE_ID:ISOLATED}), {
+    productionStoreId: PROD, testStoreId: ISOLATED, oidcToken:TOKEN
+  });
   for(const delta of [
     {MOSIGO_ISOLATED_WRITE_ONCE:''},
     {MOSIGO_ISOLATED_ACCEPT_RETAINED_MARKER:''},
@@ -35,6 +38,7 @@ test('manual probe fails closed on target ambiguity, production use or ambient t
     {CI:'true'}, {GITHUB_ACTIONS:'true'}, {VERCEL:'1'},
     {VERCEL_ENV:'production'}, {VERCEL_URL:'example.vercel.app'},
     {BLOB_STORE_ID:'store_OTHER789'},
+    {BLOB_STORE_ID:PROD},
     {MOSIGO_BLOB_STORE_ID:'store_OTHER789'}
   ]) assert.throws(()=>authorizeIsolatedWrite({...env,...delta}));
 });
