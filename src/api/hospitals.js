@@ -1,4 +1,5 @@
 require('../lib/dep0169-trace.js');
+const { parseRequestQuery } = require('../lib/request-query.js');
 const { queryHospitalResult } = require('../lib/hospital-query');
 
 module.exports = function handler(req, res) {
@@ -7,7 +8,7 @@ module.exports = function handler(req, res) {
     return res.status(405).json({ success:false, error:'Method Not Allowed' });
   }
 
-  const result = queryHospitalResult(req.query || {});
+  const result = queryHospitalResult(parseRequestQuery(req));
 
   res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
   res.setHeader('X-Mosigo-Data', 'prototype');
