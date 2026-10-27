@@ -1,3 +1,4 @@
+require('../lib/dep0169-trace.js');
 const {
   BookingServiceError,
   applyBookingAction,
