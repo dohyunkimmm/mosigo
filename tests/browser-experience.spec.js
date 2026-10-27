@@ -144,10 +144,15 @@ test('share participant status follows server capability while retaining the edi
   const status = page.locator('#v12-share-status');
   await expect(status).toContainText('열람 전용');
   await expect(status).toContainText('소유자');
+  const cancel = page.locator('#order-cancel-btn');
+  await expect(cancel).toBeHidden();
+  await expect(cancel).toBeDisabled();
   await page.evaluate(() => {
     globalThis.MosigoV10BookingDurability.getCapability = () => ({ shareParticipantWriteAccess: 'edit' });
     globalThis.MosigoV12SecureSharingUi.refresh();
   });
   await expect(status).toContainText('임시 접근 중');
   await expect(status).not.toContainText('열람 전용');
+  await expect(cancel).toBeEnabled();
+  await expect(cancel).not.toHaveAttribute('hidden');
 });

@@ -100,6 +100,19 @@
         : '공유받은 예약 · 임시 접근 중';
     }
 
+    function syncReadOnlyCancelControl(mode){
+      const cancel=document.getElementById('order-cancel-btn');
+      if(!cancel) return;
+      const policy=globalThis.MosigoV10BookingDurability?.getCapability?.()?.shareParticipantWriteAccess;
+      // Only suppress this demo cancellation UI for an explicitly read-only
+      // share participant. The API enforces permission independently.
+      const denied=Boolean(mode.shared && !mode.owner && policy==='read-only');
+      cancel.hidden=denied;
+      cancel.disabled=denied;
+      if(denied) cancel.setAttribute('aria-label','열람 전용 공유에서는 예약을 취소할 수 없습니다');
+      else cancel.removeAttribute('aria-label');
+    }
+
     function removeOwnerActions(){
       document.getElementById('v11-recovery-copy')?.remove?.();
       document.getElementById('v12-share-copy')?.remove?.();
@@ -123,6 +136,7 @@
       const orderCard=getOrderCard();
       if(!orderCard) return;
       const mode=accessMode();
+      syncReadOnlyCancelControl(mode);
       const status=ensureStatus(orderCard);
 
       if(!mode.owner){
