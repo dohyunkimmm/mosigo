@@ -1,4 +1,5 @@
 require('../lib/dep0169-trace.js');
+const { readRequestQuery: readQuery } = require('../lib/request-query.js');
 const { BookingServiceError, validBookingId } = require('../lib/booking-service.js');
 const {
   BookingStoreError,
@@ -30,11 +31,6 @@ function readBody(req) {
   }
 }
 
-function readQuery(req, name) {
-  const value = req?.query?.[name];
-  if (Array.isArray(value)) return String(value[0] || '').trim();
-  return String(value || '').trim();
-}
 
 function readRecoveryKey(req, body = {}) {
   const header = req?.headers?.['x-mosigo-recovery-key'] || req?.headers?.['X-Mosigo-Recovery-Key'];
