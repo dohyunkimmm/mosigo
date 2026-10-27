@@ -182,3 +182,29 @@ test('manual read-only audit never writes and is absent from CI jobs', () => {
     assert.doesNotMatch(workflow,/audit-isolated-retention|MOSIGO_ISOLATED_AUDIT_READ_ONLY/);
   }
 });
+
+
+test('remote lab E2E marker is recognized for retention counts but never for deletion',async()=>{
+  const live=marker(Date.parse('2026-10-28T00:00:00Z'),'fedcba9876543210',{
+    evidenceRef:'isolated-vercel-build-e2e'
+  });
+  const invalid=marker(Date.parse('2026-10-27T00:00:00Z'),'0123456789abcdef',{
+    evidenceRef:'untrusted-self-declaration'
+  });
+  const calls=[];
+  const report=await auditIsolatedRetention({
+    context,now:NOW,pageSize:3,maxPages:1,
+    blob:mockedBlob([{blobs:[
+      {pathname:live.pathname,size:300},{pathname:invalid.pathname,size:300}
+    ],hasMore:false}],{
+      [live.pathname]:live.record,[invalid.pathname]:invalid.record
+    },calls)
+  });
+  assert.equal(report.active,1);
+  assert.equal(report.unattributed,1);
+  assert.equal(report.safeToDelete,false);
+  assert.equal(report.candidateDeletions,0);
+  assert.equal(report.complete,true);
+  assert.deepEqual(calls.map(x=>x.method),['list','get','get']);
+  assert.ok(calls.every(x=>x.storeId===TEST&&x.oidcToken===TOKEN));
+});
