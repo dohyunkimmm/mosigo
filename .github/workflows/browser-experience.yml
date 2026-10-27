@@ -9,6 +9,11 @@ permissions:
 jobs:
   browser-journey:
     runs-on: ubuntu-latest
+    # Playwright's matching image includes browsers and system dependencies;
+    # avoid apt package downloads from flaky runner Ubuntu mirrors.
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-noble
+      options: --user 1001
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -17,11 +22,10 @@ jobs:
           node-version: '24'
       - name: Install test runner only
         run: npm install --no-save --no-package-lock @playwright/test@1.56.0
-      - name: Install Chromium and WebKit
-        timeout-minutes: 6
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: npx playwright install --with-deps chromium webkit
+      - name: Check preinstalled browser runtime
+        run: |
+          test -d /ms-playwright
+          npx playwright --version
       - name: Check key journeys and accessibility
         run: npx playwright test --config=playwright.config.cjs
       - name: Check mobile media on Android Chromium and iPhone WebKit
