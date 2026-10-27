@@ -156,3 +156,72 @@ test('share participant status follows server capability while retaining the edi
   await expect(cancel).toBeEnabled();
   await expect(cancel).not.toHaveAttribute('hidden');
 });
+
+
+test('read-only share holders cannot activate booking mutation controls until edit capability arrives', async ({page}) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean(
+    globalThis.MosigoV12SecureSharingUi && globalThis.MosigoV12SecureSharing &&
+    globalThis.MosigoV10BookingDurability && globalThis.MosigoV6BookingSync
+  ));
+  await page.evaluate(() => {
+    globalThis.MosigoV12SecureSharing.getState=()=>({bookingId:'M10ABCD1234'});
+    globalThis.MosigoV12SecureSharing.hasOwnerAccess=()=>false;
+    globalThis.MosigoV6BookingSync.getShareToken=()=> 'test-share-token';
+    globalThis.MosigoV10BookingDurability.getCapability=()=>null;
+    globalThis.MosigoV12SecureSharingUi.refresh();
+  });
+  const actions=[
+    page.locator('#order-cancel-btn'),
+    page.locator('#modal-bk-cancel .dlg-btn.danger'),
+    page.locator('button[onclick="completeReturn()"]')
+  ];
+  for(const action of actions){
+    await expect(action).toBeDisabled();
+    await expect(action).toHaveAttribute('hidden','');
+  }
+  await expect(page.locator('#v12-share-status')).toContainText('권한 확인 중');
+
+  await page.evaluate(()=>{
+    globalThis.MosigoV10BookingDurability.getCapability=()=>({shareParticipantWriteAccess:'read-only'});
+    window.dispatchEvent(new Event('mosigo:booking-capability'));
+  });
+  for(const action of actions) await expect(action).toBeDisabled();
+  await expect(page.locator('#v12-share-status')).toContainText('열람 전용');
+
+  await page.evaluate(()=>{
+    globalThis.MosigoV10BookingDurability.getCapability=()=>({shareParticipantWriteAccess:'edit'});
+    window.dispatchEvent(new Event('mosigo:booking-capability'));
+  });
+  for(const action of actions){
+    await expect(action).toBeEnabled();
+    await expect(action).not.toHaveAttribute('hidden');
+  }
+  await expect(page.locator('#v12-share-status')).toContainText('임시 접근 중');
+
+  await page.evaluate(()=>{
+    globalThis.MosigoV10BookingDurability.getCapability=()=>({shareParticipantWriteAccess:'read-only'});
+    globalThis.MosigoV12SecureSharing.hasOwnerAccess=()=>true;
+    globalThis.MosigoV12SecureSharingUi.refresh();
+  });
+  for(const action of actions) await expect(action).toBeEnabled();
+});
+
+test('a view-only share does not optimistically cancel the local booking', async ({page}) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean(
+    globalThis.MosigoV12SecureSharing && globalThis.MosigoV10BookingDurability &&
+    globalThis.MosigoV6BookingSync && globalThis.v4BookingState
+  ));
+  const unchanged=await page.evaluate(()=>{
+    const id='M10ABCD1234';
+    globalThis.MosigoV6BookingSync.hydrate({bookingId:id, phase:'requesting', revision:1});
+    globalThis.MosigoV6BookingSync.setShareToken(id,'test-share-token');
+    globalThis.MosigoV12SecureSharing.hasOwnerAccess=()=>false;
+    globalThis.MosigoV10BookingDurability.getCapability=()=>({shareParticipantWriteAccess:'read-only'});
+    const before=JSON.stringify(globalThis.v4BookingState);
+    confirmBkCancel();
+    return before===JSON.stringify(globalThis.v4BookingState);
+  });
+  expect(unchanged).toBe(true);
+});
