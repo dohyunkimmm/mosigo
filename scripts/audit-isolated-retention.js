@@ -9,6 +9,8 @@ const { assertIsolatedStore, planRetention } = require('./smoke-retention-prefli
 const PREFIX = 'mosigo-isolated-smoke/';
 const PATH = /^mosigo-isolated-smoke\/(smoke-[0-9]{8}T[0-9]{6}Z-[a-f0-9]{16})\.json$/;
 const MAX_MARKER_BYTES = 4096;
+// Both recognized fixture origins are self-declared and NEVER authorize deletion.
+const EVIDENCE_REFS = new Set(['local-write-read-self-check', 'isolated-vercel-build-e2e']);
 
 function authorizeIsolatedAudit(env = process.env) {
   if (env.CI || env.GITHUB_ACTIONS || env.VERCEL ||
@@ -124,7 +126,7 @@ async function auditIsolatedRetention({
       // declared run ID to the listed object name to reject mismatched markers.
       if (!value || typeof value !== 'object' || Array.isArray(value) ||
           value.runId !== match[1] ||
-          value.evidenceRef !== 'local-write-read-self-check') {
+          !EVIDENCE_REFS.has(value.evidenceRef)) {
         records.push(null);
         continue;
       }
