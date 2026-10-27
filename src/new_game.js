@@ -184,6 +184,13 @@ function onRetry(){
     if(!v) return;
     v.pause();
     try { v.currentTime = 0; } catch(e) {}
+    // Drop the prior media resource (including a failed fetch) before retry.
+    // playLayer reattaches data-src on the next user gesture; Safari/WebKit
+    // otherwise may retain the old failed media state after network recovery.
+    if(v.hasAttribute('src')){
+      v.removeAttribute('src');
+      v.load();
+    }
   });
   goStep(1);
 }
