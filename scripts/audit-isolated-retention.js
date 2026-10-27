@@ -28,7 +28,7 @@ function authorizeIsolatedAudit(env = process.env) {
       env.MOSIGO_SMOKE_CONFIRMED_TEST_STORE_ID !== testStoreId) {
     throw new Error('Independently confirmed production and test IDs required');
   }
-  if ((env.BLOB_STORE_ID && env.BLOB_STORE_ID !== productionStoreId) ||
+  if ((env.BLOB_STORE_ID && env.BLOB_STORE_ID !== testStoreId) ||
       (env.MOSIGO_BLOB_STORE_ID && env.MOSIGO_BLOB_STORE_ID !== productionStoreId)) {
     throw new Error('Application production store ID mismatch');
   }
