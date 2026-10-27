@@ -45,7 +45,7 @@ test('video retry fetches media again after a simulated network outage', async (
   let unavailable = true;
   let failedRequests = 0;
   let recoveredRequests = 0;
-  await page.route(/\\.mp4(?:\\?|$)/i, route => {
+  await page.route(/\.mp4(?:\?|$)/i, route => {
     if (unavailable) {
       failedRequests += 1;
       return route.abort('failed');
@@ -55,7 +55,7 @@ test('video retry fetches media again after a simulated network outage', async (
   });
   await page.goto('/new_game.html?win=0');
   await page.locator('#g-cast').click();
-  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\\.mp4$/);
+  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\.mp4$/);
   await expect.poll(() => failedRequests).toBeGreaterThan(0);
   await expect(page.locator('#g-cast')).toHaveAttribute('aria-label', '잡은 것 확인하기', {timeout:7000});
   await page.evaluate(() => onRetry());
@@ -64,5 +64,5 @@ test('video retry fetches media again after a simulated network outage', async (
   unavailable = false;
   await page.locator('#g-cast').click();
   await expect.poll(() => recoveredRequests, {timeout:7000}).toBeGreaterThan(0);
-  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\\.mp4$/);
+  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\.mp4$/);
 });
