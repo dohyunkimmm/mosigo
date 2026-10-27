@@ -1,3 +1,4 @@
+require('../lib/dep0169-trace.js');
 const { BookingServiceError, validBookingId } = require('../lib/booking-service.js');
 const { createIpBurstLimiter } = require('../lib/ip-burst-limiter.js');
 const { BookingStoreError, createBookingStore, recoveryKeyMatches } = require('../lib/booking-store.js');
