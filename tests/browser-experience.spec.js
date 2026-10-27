@@ -151,3 +151,54 @@ test('share participant status follows server capability while retaining the edi
   await expect(status).toContainText('임시 접근 중');
   await expect(status).not.toContainText('열람 전용');
 });
+
+
+test('read-only share holders cannot use optimistic booking mutation buttons', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean(
+    globalThis.MosigoV12SecureSharingUi &&
+    globalThis.MosigoV12SecureSharing &&
+    globalThis.MosigoV10BookingDurability
+  ));
+  await page.evaluate(() => {
+    globalThis.MosigoV12SecureSharing.getState = () => ({ bookingId: 'M10ABCD1234' });
+    globalThis.MosigoV12SecureSharing.hasOwnerAccess = () => false;
+    globalThis.MosigoV6BookingSync.getShareToken = () => 'test_share_token';
+    globalThis.MosigoV10BookingDurability.getCapability = () => null;
+    globalThis.MosigoV12SecureSharingUi.refresh();
+  });
+  const buttons = [
+    page.locator('#order-cancel-btn'),
+    page.locator('#modal-bk-cancel .dlg-btn.danger'),
+    page.locator('#s-live button[onclick="completeReturn()"]')
+  ];
+  for (const button of buttons) {
+    await expect(button).toBeDisabled();
+    await expect(button).toHaveAttribute('hidden', '');
+  }
+  await expect(page.locator('#v12-share-status')).toContainText('권한 확인 중');
+
+  await page.evaluate(() => {
+    globalThis.MosigoV10BookingDurability.getCapability = () => ({ shareParticipantWriteAccess: 'read-only' });
+    window.dispatchEvent(new Event('mosigo:booking-capability'));
+  });
+  for (const button of buttons) await expect(button).toBeDisabled();
+  await expect(page.locator('#v12-share-status')).toContainText('열람 전용');
+
+  await page.evaluate(() => {
+    globalThis.MosigoV10BookingDurability.getCapability = () => ({ shareParticipantWriteAccess: 'edit' });
+    window.dispatchEvent(new Event('mosigo:booking-capability'));
+  });
+  for (const button of buttons) {
+    await expect(button).toBeEnabled();
+    await expect(button).not.toHaveAttribute('hidden', '');
+  }
+  await expect(page.locator('#v12-share-status')).toContainText('임시 접근 중');
+
+  await page.evaluate(() => {
+    globalThis.MosigoV10BookingDurability.getCapability = () => ({ shareParticipantWriteAccess: 'read-only' });
+    globalThis.MosigoV12SecureSharing.hasOwnerAccess = () => true;
+    globalThis.MosigoV12SecureSharingUi.refresh();
+  });
+  for (const button of buttons) await expect(button).toBeEnabled();
+});
