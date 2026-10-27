@@ -61,3 +61,21 @@ test('Production Smoke never writes real booking, account, or share records', ()
   assert.match(smoke, /for \(const asset of \[/);
   assert.match(smoke, /requiresDurableStorage\(RELEASE_VERSION\)/);
 });
+
+test('CSP is report-only, scoped to audited third-party origins, and cannot silently become blocking', () => {
+  const config = JSON.parse(read('vercel.json'));
+  const globalRule = config.headers.find(entry => entry.source === '/(.*)');
+  const headers = Object.fromEntries(globalRule.headers.map(({ key, value }) => [key.toLowerCase(), value]));
+  const csp = headers['content-security-policy-report-only'];
+  assert.equal(typeof csp, 'string');
+  assert.equal(headers['content-security-policy'], undefined, 'Enforcement requires a separate compatibility review');
+  assert.match(csp, /(?:^|; )default-src 'self'(?:;|$)/);
+  assert.match(csp, /(?:^|; )object-src 'none'(?:;|$)/);
+  assert.match(csp, /(?:^|; )frame-ancestors 'self'(?:;|$)/);
+  assert.match(csp, /(?:^|; )form-action 'self'(?:;|$)/);
+  assert.match(csp, /script-src 'self' 'unsafe-inline' https:\/\/unpkg\.com/);
+  assert.match(csp, /style-src [^;]*https:\/\/cdn-uicons\.flaticon\.com/);
+  assert.match(csp, /img-src [^;]*https:\/\/\*\.basemaps\.cartocdn\.com/);
+  assert.doesNotMatch(csp, /(?:^|\s)\*(?:\s|;|$)|default-src https:/);
+  assert.doesNotMatch(csp, /report-uri|report-to/, 'No unreviewed collection endpoint or sensitive report uploads');
+});
