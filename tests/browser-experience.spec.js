@@ -125,3 +125,29 @@ test('mobile game remains recoverable when video requests fail', async ({ page }
  await expect(page.locator('#g-result')).toBeHidden();
  await expect(page.locator('#g-bg1')).toHaveClass(/is-on/);
 });
+
+
+test('share participant status follows server capability while retaining the edit default', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean(
+    globalThis.MosigoV12SecureSharingUi &&
+    globalThis.MosigoV12SecureSharing &&
+    globalThis.MosigoV10BookingDurability
+  ));
+  await page.evaluate(() => {
+    globalThis.MosigoV12SecureSharing.getState = () => ({ bookingId: 'M10ABCD1234' });
+    globalThis.MosigoV12SecureSharing.hasOwnerAccess = () => false;
+    globalThis.MosigoV6BookingSync.getShareToken = () => 'test_share_token';
+    globalThis.MosigoV10BookingDurability.getCapability = () => ({ shareParticipantWriteAccess: 'read-only' });
+    globalThis.MosigoV12SecureSharingUi.refresh();
+  });
+  const status = page.locator('#v12-share-status');
+  await expect(status).toContainText('열람 전용');
+  await expect(status).toContainText('소유자');
+  await page.evaluate(() => {
+    globalThis.MosigoV10BookingDurability.getCapability = () => ({ shareParticipantWriteAccess: 'edit' });
+    globalThis.MosigoV12SecureSharingUi.refresh();
+  });
+  await expect(status).toContainText('임시 접근 중');
+  await expect(status).not.toContainText('열람 전용');
+});

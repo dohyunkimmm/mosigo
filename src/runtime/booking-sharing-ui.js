@@ -93,6 +93,13 @@
       return { bookingId, owner, shared };
     }
 
+    function sharedAccessDescription(){
+      const policy=globalThis.MosigoV10BookingDurability?.getCapability?.()?.shareParticipantWriteAccess;
+      return policy==='read-only'
+        ? '공유받은 예약 · 열람 전용 · 예약 변경은 소유자에게 요청해 주세요.'
+        : '공유받은 예약 · 임시 접근 중';
+    }
+
     function removeOwnerActions(){
       document.getElementById('v11-recovery-copy')?.remove?.();
       document.getElementById('v12-share-copy')?.remove?.();
@@ -121,7 +128,7 @@
       if(!mode.owner){
         removeOwnerActions();
         if(mode.shared){
-          status.textContent='공유받은 예약 · 임시 접근 중';
+          status.textContent=sharedAccessDescription();
           status.hidden=false;
         }else{
           status.textContent='';
@@ -202,7 +209,7 @@
       const mode=accessMode();
       if(!mode.owner && mode.shared){
         status.hidden=false;
-        status.textContent='공유받은 예약 · 임시 접근 중';
+        status.textContent=sharedAccessDescription();
         return;
       }
       if(detail.status==='copied' || detail.status==='issued'){
