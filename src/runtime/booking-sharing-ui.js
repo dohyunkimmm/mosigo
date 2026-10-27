@@ -93,11 +93,42 @@
       return { bookingId, owner, shared };
     }
 
+    function shareWriteAccess(){
+      return globalThis.MosigoV10BookingDurability?.getCapability?.()?.shareParticipantWriteAccess || '';
+    }
+
     function sharedAccessDescription(){
-      const policy=globalThis.MosigoV10BookingDurability?.getCapability?.()?.shareParticipantWriteAccess;
-      return policy==='read-only'
-        ? '공유받은 예약 · 열람 전용 · 예약 변경은 소유자에게 요청해 주세요.'
-        : '공유받은 예약 · 임시 접근 중';
+      const policy=shareWriteAccess();
+      if(policy==='read-only') return '공유받은 예약 · 열람 전용 · 예약 변경은 소유자에게 요청해 주세요.';
+      if(policy==='edit') return '공유받은 예약 · 임시 접근 중';
+      return '공유받은 예약 · 권한 확인 중';
+    }
+
+    function syncViewerMutationControls(mode){
+      // Unknown capabilities are read-only until the API confirms editing.
+      // Client controls are usability guardrails; the server remains authoritative.
+      const blocked=Boolean(mode.shared && !mode.owner && shareWriteAccess()!=='edit');
+      for(const selector of [
+        '#order-cancel-btn',
+        '#modal-bk-cancel .dlg-btn.danger',
+        '#s-live button[onclick="completeReturn()"]'
+      ]){
+        const button=document.querySelector(selector);
+        if(!button) continue;
+        if(blocked){
+          if(button.dataset.mosigoSharedOriginalHidden===undefined){
+            button.dataset.mosigoSharedOriginalHidden=String(button.hidden);
+            button.dataset.mosigoSharedOriginalDisabled=String(button.disabled);
+          }
+          button.hidden=true;
+          button.disabled=true;
+        }else if(button.dataset.mosigoSharedOriginalHidden!==undefined){
+          button.hidden=button.dataset.mosigoSharedOriginalHidden==='true';
+          button.disabled=button.dataset.mosigoSharedOriginalDisabled==='true';
+          delete button.dataset.mosigoSharedOriginalHidden;
+          delete button.dataset.mosigoSharedOriginalDisabled;
+        }
+      }
     }
 
     function removeOwnerActions(){
@@ -123,6 +154,7 @@
       const orderCard=getOrderCard();
       if(!orderCard) return;
       const mode=accessMode();
+      syncViewerMutationControls(mode);
       const status=ensureStatus(orderCard);
 
       if(!mode.owner){
@@ -240,6 +272,7 @@
         applyContentOrder();
         ensureSharingControls();
       });
+      window.addEventListener('mosigo:booking-capability',ensureSharingControls);
       window.addEventListener('mosigo:secure-share',(event)=>{
         ensureSharingControls();
         updateStatus(event?.detail||{});
