@@ -1,3 +1,4 @@
+const { readRequestQuery: readQuery } = require('../lib/request-query.js');
 const { BookingServiceError, validBookingId } = require('../lib/booking-service.js');
 const { createIpBurstLimiter } = require('../lib/ip-burst-limiter.js');
 const { BookingStoreError, createBookingStore, recoveryKeyMatches } = require('../lib/booking-store.js');
@@ -18,11 +19,6 @@ function readBody(req) {
   catch (error) { throw new AccountStoreError('invalid_json', 'Request body must be valid JSON.', 400); }
 }
 
-function readQuery(req, name) {
-  const value = req?.query?.[name];
-  if (Array.isArray(value)) return String(value[0] || '').trim();
-  return String(value || '').trim();
-}
 
 function writeCommonHeaders(res) {
   res.setHeader('Cache-Control', 'no-store');
