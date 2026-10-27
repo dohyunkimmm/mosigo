@@ -95,9 +95,9 @@
 
     function sharedAccessDescription(){
       const policy=globalThis.MosigoV10BookingDurability?.getCapability?.()?.shareParticipantWriteAccess;
-      return policy==='read-only'
-        ? '공유받은 예약 · 열람 전용 · 예약 변경은 소유자에게 요청해 주세요.'
-        : '공유받은 예약 · 임시 접근 중';
+      if(policy==='read-only') return '공유받은 예약 · 열람 전용 · 예약 변경은 소유자에게 요청해 주세요.';
+      if(policy==='edit') return '공유받은 예약 · 임시 접근 중';
+      return '공유받은 예약 · 권한 확인 중';
     }
 
     function syncReadOnlyCancelControl(mode){
