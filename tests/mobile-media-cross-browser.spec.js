@@ -66,3 +66,31 @@ test('video retry fetches media again after a simulated network outage', async (
   await expect.poll(() => recoveredRequests, {timeout:7000}).toBeGreaterThan(0);
   await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\.mp4$/);
 });
+
+
+test('leaving a failed media session and re-entering never preloads video', async ({page}) => {
+  let unavailable = true, firstFailures = 0, recoveredRequests = 0;
+  await page.route(/\.mp4(?:\?|$)/i, route => {
+    if (unavailable) {
+      firstFailures++;
+      return route.abort('failed');
+    }
+    recoveredRequests++;
+    return route.continue();
+  });
+  await page.goto('/new_game.html?win=0');
+  await page.locator('#g-cast').click();
+  await expect.poll(() => firstFailures).toBeGreaterThan(0);
+  // Navigate away mid-game, as when a mobile user leaves the game screen.
+  await page.goto('/new_event.html');
+  unavailable = false;
+  await page.goto('/new_game.html?win=0');
+  for (const id of ['g-bg2','g-bg3','g-bg4']) {
+    await expect(page.locator('#' + id)).not.toHaveAttribute('src', /.+/);
+  }
+  await expect(page.locator('#g-cast')).toHaveAttribute('aria-label','낚시대 던지기');
+  await page.waitForTimeout(300);
+  expect(recoveredRequests).toBe(0);
+  await page.locator('#g-cast').click();
+  await expect.poll(() => recoveredRequests, {timeout:7000}).toBeGreaterThan(0);
+});
