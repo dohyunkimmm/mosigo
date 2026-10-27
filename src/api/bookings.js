@@ -23,6 +23,7 @@ const {
   createAccountStore
 } = require('../lib/account-store.js');
 const { createIpBurstLimiter } = require('../lib/ip-burst-limiter.js');
+const { resolveShareWritePolicy } = require('../lib/share-write-policy.js');
 
 function readBody(req) {
   if (!req || req.body == null) return {};
@@ -118,7 +119,8 @@ function createHandler({
   store = createBookingStore(),
   shareStore = createBookingShareStore(),
   accountStore = createAccountStore(),
-  creationLimiter = createIpBurstLimiter({ maxAttempts: 20 })
+  creationLimiter = createIpBurstLimiter({ maxAttempts: 20 }),
+  shareWritePolicy = resolveShareWritePolicy()
 } = {}) {
   function requireCreationCapacity(req, res) {
     // Per-instance best effort; a shared WAF/edge rule is still required.
@@ -147,6 +149,7 @@ function createHandler({
             shareRevocable: secureSharing,
             shareRotatable: secureSharing,
             shareServerValidation: secureSharing,
+            shareParticipantWriteAccess: secureSharing ? shareWritePolicy : 'unavailable',
             accountOwnership,
             accountEndpoint: accountOwnership ? '/api/account' : null,
             accountSessionCredential: accountOwnership ? 'http-only-secure-cookie' : 'unavailable',
@@ -279,6 +282,9 @@ function createHandler({
           throw new BookingServiceError('booking_not_found', 'No durable booking was found for this ID.', 404);
         }
         const access = await assertBookingAccess(current, req, body, bookingId, shareStore, accountStore);
+        if (access.type === 'share-token' && shareWritePolicy === 'read-only') {
+          throw new BookingServiceError('booking_share_read_only', 'This share link is limited to viewing the booking.', 403);
+        }
 
         const expectedRevision = Number(body.expectedRevision ?? body.booking?.revision);
         const canonicalRevision = Number(current.record.booking?.revision);

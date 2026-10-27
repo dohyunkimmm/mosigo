@@ -71,6 +71,16 @@ MOSIGO_AUDIT_BLOB_METADATA_ONLY=yes node scripts/audit-blob-inventory.js
 
 Chromium 모바일 뷰포트에서 게임 MP4 지연 로딩과 MP4 전송 실패 후 기본 흐름 복구를 자동화했습니다. 이것은 시뮬레이션이며 **실제 iPhone/Android, LTE/5G 통신망 QA의 대체가 아닙니다**.
 
+### #90: 안전한 공유 링크 권한 전환 준비
+
+배포 환경변수 `MOSIGO_SHARE_WRITE_POLICY`의 명시적 값으로 **`edit` 또는 `read-only`**를 선택할 수 있는 서버 측 권한 게이트를 구현했습니다. **기본값은 `edit`**이며, 별도 운영 설정을 변경하지 않는 한 이전처럼 유효한 공유 링크로 예약 상태를 수정할 수 있습니다.
+
+- `edit`(현행): 유효한 공유 토큰으로 조회·PATCH 모두 가능
+- `read-only`(향후 선택): 공유 토큰으로 조회는 가능하지만 예약 PATCH는 403 `booking_share_read_only`; 복구 키와 예약 소유 계정 세션은 정상 변경 가능
+- `GET /api/bookings` capability에 `shareParticipantWriteAccess` 값을 표시해 UI가 실제 권한을 확인할 수 있도록 했습니다. 기존 UI는 현재와 동일하게 유지합니다.
+- 만료·철회 토큰은 기존처럼 401이며, 권한 미충족 요청에 저장소 쓰기가 일어나지 않도록 자동 검사합니다.
+- `read-only` 운영 전환은 **아직 하지 않았습니다**. 실제로 전환하려면 공유자 UI의 수정 버튼·설명·403 처리 검증, 복구 UX, 정책 결정과 단계적 배포가 선행되어야 합니다.
+
 ## 릴리스 판단
 - **이번 변경 배포 가능:** Production Smoke 영구 읽기 전용화, 회귀 테스트, 현재 권한 계약 설명 문서.
 - **이번 변경에 포함하지 않음:** 기존 Blob 데이터 삭제/만료, 신규 WAF 차단 활성화, 공유 토큰 권한 변경, 실기기 QA 완료 선언.
