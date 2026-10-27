@@ -7,8 +7,8 @@ const port=Number(process.env.PORT||4177);
 // Keep browser QA response headers aligned with the deployed global Vercel rule.
 // This is only a local GET/HEAD server; it never writes to Production APIs.
 const deployConfig=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8'));
-const deployedHeaders=Object.fromEntries((deployConfig.headers||[])
- .filter(rule=>rule.source==='/(.*)')
+const deployedHeaders=(pathname)=>Object.fromEntries((deployConfig.headers||[])
+ .filter(rule=>rule.source==='/(.*)' || rule.source===pathname)
  .flatMap(rule=>rule.headers||[])
  .map(({key,value})=>[key,value]));
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.gif':'image/gif','.ico':'image/x-icon','.woff2':'font/woff2'};
@@ -21,7 +21,7 @@ const server=http.createServer((req,res)=>{
  if(!(target===root||target.startsWith(root+path.sep))){res.writeHead(403);res.end();return;}
  fs.stat(target,(err,stat)=>{
   if(err||!stat?.isFile()){res.writeHead(404);res.end();return;}
-  res.writeHead(200,{...deployedHeaders,'Content-Type':mime[path.extname(target)]||'application/octet-stream','Cache-Control':'no-store'});
+  res.writeHead(200,{...deployedHeaders(pathname),'Content-Type':mime[path.extname(target)]||'application/octet-stream','Cache-Control':'no-store'});
   if(req.method==='HEAD'){res.end();return;}
   fs.createReadStream(target).pipe(res);
  });
