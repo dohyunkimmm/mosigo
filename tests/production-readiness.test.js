@@ -97,8 +97,8 @@ test('scoped Operations CSP enforces no inline scripts without affecting the boo
     assert.match(csp, /(?:^|; )object-src 'none'(?:;|$)/);
     assert.doesNotMatch(csp, /script-src[^;]*unsafe-inline/);
     const html = read(route.slice(1));
-    assert.doesNotMatch(html, /<script\\b(?![^>]*\\bsrc=)/i);
-    assert.doesNotMatch(html, /\\bon(?:click|error|load|submit|change)\\s*=/i);
+    assert.doesNotMatch(html, /<script\b(?![^>]*\bsrc=)/i);
+    assert.doesNotMatch(html, /\bon(?:click|error|load|submit|change)\s*=/i);
   }
   assert.equal(rules.some(r => r.source === '/' || r.source === '/new_game.html' || r.source === '/index.html'), false);
 });
