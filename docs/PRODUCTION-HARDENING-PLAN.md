@@ -130,6 +130,29 @@ Chromium 모바일 뷰포트에서 게임 MP4 지연 로딩과 MP4 전송 실패
 - Browser QA는 같은 출처 iframe 안에서 이벤트→게임 이동 및 클릭이 정상 동작하는지, CSP 위반 이벤트가 없는지 검증합니다. Production Smoke는 각 경로의 실제 응답 헤더를 읽기 전용으로 확인합니다.
 - **실제 LTE/5G 단말 검증이나 전체 앱 강제 CSP 완료를 의미하지 않습니다.** 이후 CSP를 더 강화할 때는 메인 화면의 인라인 코드 제거 및 WebKit/Android 실기기 호환성 검증이 필요합니다.
 
+### #88: 격리 Blob의 수동 쓰기·읽기 E2E 준비 (실행 전 권한 검증 필요)
+
+- 2026-10-27에 별도 생성한 테스트용 Private Blob 저장소는 현재 운영 프로젝트와 연결되지 않았습니다. `scripts/check-isolated-blob-store.js`는 향후 **테스트 전용 OIDC 권한을 정상 구성한 후** 지정한 저장소에 **작은 JSON 마커 한 건만 쓰고 → 읽고 → 목록에서 찾는** 수동 E2E 검증기입니다.
+- 실행은 승인된 **로컬 셸**로 한정합니다. `CI`, `GITHUB_ACTIONS`, `VERCEL`, `VERCEL_ENV`, `VERCEL_URL` 컨텍스트를 모두 거부하고, 토큰이 없는 경우·기존 `BLOB_READ_WRITE_TOKEN`이 있는 경우·테스트 저장소 ID 이중 확인이 안 된 경우·운영/테스트 저장소 ID가 같은 경우 실행하지 않습니다.
+- 모든 Blob SDK 요청은 명시적 `storeId`와 짧은 `VERCEL_OIDC_TOKEN`을 사용합니다. 새 객체는 `mosigo-isolated-smoke/` 네임스페이스, 독립 실행 `runId`, 소유자, 7일 `expiresAt` 메타데이터를 지닙니다. **7일 후 자동 삭제/만료를 적용하지 않으며** 어떤 `del`도 호출하지 않습니다. 쓰기 실패 또는 읽기 검증 실패 후에도 마커가 남을 수 있으므로 별도의 수동 검토가 필요합니다.
+- **중요:** 현재 격리 Blob에는 연결된 프로젝트가 없으므로, 이 검증을 실제 실행하기 위해서는 별도 테스트 프로젝트/환경을 먼저 만들고 **운영 프로젝트가 아닌** 해당 프로젝트의 최소 권한 OIDC 연동을 검증해야 합니다. 공유된 운영 세션의 토큰 사용, 프로덕션 연결, 자동 CI 실행은 금지합니다.
+- 승인된 로컬 셸의 명시적 설정 예시(아래 값은 운영 저장소/격리 저장소의 관리자가 각각 안전하게 제공하고, 자격 증명을 출력하거나 리포지토리에 저장하지 않음):
+
+```bash
+# Test-only OIDC credentials must be injected securely beforehand.
+unset BLOB_READ_WRITE_TOKEN
+export MOSIGO_SMOKE_PRODUCTION_STORE_ID="<verified-production-store-id>"
+export MOSIGO_SMOKE_TEST_STORE_ID="<verified-isolated-test-store-id>"
+export MOSIGO_SMOKE_CONFIRMED_TEST_STORE_ID="<independently-confirmed-isolated-store-id>"
+export MOSIGO_ISOLATED_WRITE_ONCE=yes
+export MOSIGO_ISOLATED_ACCEPT_RETAINED_MARKER=yes
+npm --prefix src ci --omit=dev
+node scripts/check-isolated-blob-store.js
+```
+
+- 결과는 객체 경로/저장소 ID/토큰을 출력하지 않는 집계형 검증 상태만 제공합니다. **이 저장소에 대한 실제 원격 쓰기/읽기는 이번 변경에서 실행하지 않았습니다.**
+- 실제 셀룰러 실기기 QA의 재현·증빙 절차는 `docs/DEVICE-QA-RUNBOOK.md`에 추가했습니다. Android Chromium / iPhone WebKit 테스트에서 **영상 로딩 실패 후 이탈·재진입**과 선제 미디어 요청이 발생하지 않는지 별도 검증합니다. 실제 LTE/5G 결과로 대체하지 않습니다.
+
 ## 릴리스 판단
 - **이번 변경 배포 가능:** Production Smoke 영구 읽기 전용화, 회귀 테스트, 현재 권한 계약 설명 문서.
 - **이번 변경에 포함하지 않음:** 기존 Blob 데이터 삭제/만료, 신규 WAF 차단 활성화, 공유 토큰 권한 변경, 실기기 QA 완료 선언.
