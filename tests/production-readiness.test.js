@@ -114,8 +114,8 @@ test('event and game CSP disallow inline handlers without changing root policy',
     assert.match(csp,/frame-ancestors 'self'/);
     assert.doesNotMatch(csp,/script-src[^;]*'unsafe-inline'/);
     const html=read(route.slice(1));
-    assert.doesNotMatch(html,/\\bon(?:click|error|load|submit|change|input)\\s*=/i);
-    assert.doesNotMatch(html,/<script\\b(?![^>]*\\bsrc=)/i);
+    assert.doesNotMatch(html,/\bon(?:click|error|load|submit|change|input)\s*=/i);
+    assert.doesNotMatch(html,/<script\b(?![^>]*\bsrc=)/i);
   }
   const root=config.headers.find(r=>r.source==='/(.*)');
   assert.equal(root.headers.some(h=>h.key.toLowerCase()==='content-security-policy'),false);
