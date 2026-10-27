@@ -1,4 +1,3 @@
-require('../lib/dep0169-trace.js');
 const { readRequestQuery: readQuery } = require('../lib/request-query.js');
 const {
   BookingServiceError,
