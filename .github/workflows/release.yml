@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: release-${{ github.event.workflow_run.head_sha || github.ref }}
@@ -23,7 +24,7 @@ jobs:
        github.event.workflow_run.head_branch == 'main') ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
 
     steps:
       - name: Resolve release target
@@ -67,6 +68,30 @@ jobs:
         if: steps.current.outputs.eligible == 'true'
         run: npm run quality
 
+      - name: Require successful main-branch browser QA for release commit
+        if: steps.current.outputs.eligible == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          set -euo pipefail
+          # Production Smoke and Browser QA are independent. Never publish a
+          # release tag before browser QA passes on this same push SHA.
+          for attempt in $(seq 1 60); do
+            conclusion="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?event=push&head_sha=$TARGET_SHA&per_page=100" \
+              | jq -r --arg sha "$TARGET_SHA" '[.workflow_runs[] | select(.name == "Browser Experience QA" and .head_branch == "main" and .head_sha == $sha)] | sort_by(.created_at) | last | (.conclusion // "pending")')"
+            case "$conclusion" in
+              success) echo "Browser QA passed for $TARGET_SHA"; exit 0 ;;
+              failure|cancelled|timed_out|action_required|skipped|stale)
+                echo "Browser QA for $TARGET_SHA ended with: $conclusion" >&2; exit 1 ;;
+              pending|null|"") echo "Waiting for Browser QA ($attempt/60)..." ;;
+              *) echo "Unexpected Browser QA result: $conclusion" >&2; exit 1 ;;
+            esac
+            sleep 15
+          done
+          echo "Browser QA not successful within 15 minutes: $TARGET_SHA" >&2
+          exit 1
       - name: Resolve release version
         if: steps.current.outputs.eligible == 'true'
         id: version
