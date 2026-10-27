@@ -21,7 +21,9 @@ function authorizeIsolatedWrite(env = process.env) {
   const productionStoreId = String(env.MOSIGO_SMOKE_PRODUCTION_STORE_ID || '').trim();
   const testStoreId = String(env.MOSIGO_SMOKE_TEST_STORE_ID || '').trim();
   const confirmed = String(env.MOSIGO_SMOKE_CONFIRMED_TEST_STORE_ID || '').trim();
+  const confirmedProduction = String(env.MOSIGO_SMOKE_CONFIRMED_PRODUCTION_STORE_ID || '').trim();
   assertIsolatedStore(productionStoreId, testStoreId);
+  if (confirmedProduction !== productionStoreId) throw new Error('Independent production store ID confirmation required');
   if (confirmed !== testStoreId) throw new Error('Independent test store ID confirmation required');
   if ((env.MOSIGO_BLOB_STORE_ID && env.MOSIGO_BLOB_STORE_ID !== productionStoreId) ||
       (env.BLOB_STORE_ID && env.BLOB_STORE_ID !== productionStoreId)) {
