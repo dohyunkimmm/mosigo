@@ -211,3 +211,50 @@ test('share holders cannot issue, rotate, or revoke share grants without owner c
   assert.equal(ownerState.body.share.active, true);
   assert.equal(ownerState.body.share.generation, 1);
 });
+
+
+test('expired or revoked share tokens cannot PATCH a booking and do not alter its revision', async () => {
+  const blobApi = fakeBlobApi();
+  const env = { BLOB_READ_WRITE_TOKEN: 'test-token' };
+  let now = Date.parse('2026-10-27T00:00:00Z');
+  const store = createBookingStore({ env, blobApi });
+  const shareStore = createBookingShareStore({ env, blobApi, now: () => now });
+  const bookings = createBookingsHandler({ store, shareStore });
+  const shares = createSharesHandler({ store, shareStore });
+
+  const created = await invoke(bookings, { method: 'POST', body: { booking: sample } });
+  assert.equal(created.statusCode, 201);
+  const { bookingId } = created.body.booking;
+  const ownerHeaders = { 'x-mosigo-recovery-key': created.body.recoveryKey };
+  const firstShare = await invoke(shares, {
+    method: 'POST', headers: ownerHeaders, body: { bookingId, ttlMinutes: 5 }
+  });
+  assert.equal(firstShare.statusCode, 201);
+  const expiredToken = firstShare.body.shareToken;
+  now += 5 * 60 * 1000 + 1;
+  const expiredPatch = await invoke(bookings, {
+    method: 'PATCH', headers: { 'x-mosigo-share-token': expiredToken },
+    body: { bookingId, action: 'confirm', expectedRevision: 1 }
+  });
+  assert.equal(expiredPatch.statusCode, 401);
+  assert.equal(expiredPatch.body.error, 'booking_share_expired');
+
+  const secondShare = await invoke(shares, {
+    method: 'POST', headers: ownerHeaders, body: { bookingId, ttlMinutes: 60 }
+  });
+  assert.equal(secondShare.statusCode, 201);
+  const revoke = await invoke(shares, {
+    method: 'DELETE', headers: ownerHeaders, body: { bookingId }
+  });
+  assert.equal(revoke.statusCode, 200);
+  const revokedPatch = await invoke(bookings, {
+    method: 'PATCH', headers: { 'x-mosigo-share-token': secondShare.body.shareToken },
+    body: { bookingId, action: 'confirm', expectedRevision: 1 }
+  });
+  assert.equal(revokedPatch.statusCode, 401);
+  assert.equal(revokedPatch.body.error, 'booking_share_revoked');
+  const canonical = await invoke(bookings, { query: { bookingId }, headers: ownerHeaders });
+  assert.equal(canonical.statusCode, 200);
+  assert.equal(canonical.body.booking.revision, 1);
+  assert.equal(canonical.body.booking.phase, 'requesting');
+});

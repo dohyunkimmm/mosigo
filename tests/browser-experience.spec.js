@@ -97,3 +97,31 @@ test('guide routes and completion dialog work without inline event handlers',asy
  await expect(complete).not.toHaveClass(/show/);
  await expect(guide).toHaveClass(/show/);
 });
+
+
+test('mobile game does not eagerly download MP4 before the first action', async ({ page }) => {
+ const mediaRequests = [];
+ page.on('request', request => {
+  if (/\\.mp4(?:\\?|$)/.test(request.url())) mediaRequests.push(request.url());
+ });
+ await page.goto('/new_game.html?win=0');
+ await expect(page.locator('#g-cast')).toHaveAttribute('aria-label', '낚시대 던지기');
+ for (const id of ['g-bg2', 'g-bg3', 'g-bg4']) {
+  await expect(page.locator('#' + id)).toHaveAttribute('preload', 'none');
+ }
+ await page.waitForTimeout(800);
+ expect(mediaRequests).toEqual([]);
+});
+
+test('mobile game remains recoverable when video requests fail', async ({ page }) => {
+ await page.route(/\\.mp4(?:\\?|$)/, route => route.abort('failed'));
+ await page.goto('/new_game.html?win=0');
+ await page.locator('#g-cast').click();
+ await expect(page.locator('#g-cast')).toBeHidden();
+ // Media failure must not trap the user in the rolling state.
+ await expect(page.locator('#g-cast')).toHaveAttribute('aria-label', '잡은 것 확인하기', { timeout: 7000 });
+ await page.evaluate(() => onRetry());
+ await expect(page.locator('#g-cast')).toHaveAttribute('aria-label', '낚시대 던지기');
+ await expect(page.locator('#g-result')).toBeHidden();
+ await expect(page.locator('#g-bg1')).toHaveClass(/is-on/);
+});
