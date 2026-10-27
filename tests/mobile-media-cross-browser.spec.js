@@ -94,3 +94,52 @@ test('leaving a failed media session and re-entering never preloads video', asyn
   await page.locator('#g-cast').click();
   await expect.poll(() => recoveredRequests, {timeout:7000}).toBeGreaterThan(0);
 });
+
+
+test('returning from a backgrounded video requires a fresh user tap', async ({page}) => {
+  let unavailable = true, failedRequests = 0, retriedRequests = 0;
+  await page.route(/\.mp4(?:\?|$)/i, route => {
+    if (unavailable) {
+      failedRequests++;
+      return route.abort('failed');
+    }
+    retriedRequests++;
+    return route.continue();
+  });
+  await page.goto('/new_game.html?win=0');
+  await page.locator('#g-cast').click();
+  await expect.poll(() => failedRequests).toBeGreaterThan(0);
+  // Deterministic lifecycle event emulation, NOT a physical iPhone/Android
+  // background test; real devices can suspend timers and media differently.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', {configurable:true, get:()=>true});
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('#g-bg2')).toHaveJSProperty('paused', true);
+  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\.mp4$/);
+  unavailable = false;
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', {configurable:true, get:()=>false});
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('#g-cast')).toHaveAttribute('aria-label','낚시대 던지기');
+  await expect(page.locator('#g-bg2')).not.toHaveAttribute('src', /.+/);
+  await expect(page.locator('#g-result')).toBeHidden();
+  expect(retriedRequests).toBe(0);
+  await page.locator('#g-cast').click();
+  await expect.poll(() => retriedRequests, {timeout:7000}).toBeGreaterThan(0);
+});
+
+test('BFCache pagehide/pageshow does not skip an unfinished video', async ({page}) => {
+  await page.route(/\.mp4(?:\?|$)/i, route => route.abort('failed'));
+  await page.goto('/new_game.html?win=0');
+  await page.locator('#g-cast').click();
+  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\.mp4$/);
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('pagehide'));
+    window.dispatchEvent(new Event('pageshow'));
+  });
+  await expect(page.locator('#g-cast')).toHaveAttribute('aria-label','낚시대 던지기');
+  await expect(page.locator('#g-bg2')).not.toHaveAttribute('src', /.+/);
+  await expect(page.locator('#g-result')).toBeHidden();
+});
