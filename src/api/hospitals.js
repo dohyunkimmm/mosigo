@@ -1,4 +1,3 @@
-require('../lib/dep0169-trace.js');
 const { parseRequestQuery } = require('../lib/request-query.js');
 const { queryHospitalResult } = require('../lib/hospital-query');
 
