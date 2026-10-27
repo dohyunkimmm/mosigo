@@ -8,20 +8,62 @@
     }
   },
   "rewrites": [
-    { "source": "/v4-functional.js", "destination": "/runtime/hospital-search.js" },
-    { "source": "/v4-booking.js", "destination": "/runtime/booking-runtime.js" },
-    { "source": "/v6-booking.js", "destination": "/runtime/booking-sync.js" },
-    { "source": "/v7-booking.js", "destination": "/runtime/booking-recovery.js" },
-    { "source": "/v8-booking.js", "destination": "/runtime/booking-trace.js" },
-    { "source": "/v9-booking.js", "destination": "/runtime/booking-coordination.js" },
-    { "source": "/v10-booking.js", "destination": "/runtime/booking-durable.js" },
-    { "source": "/v11-booking.js", "destination": "/runtime/booking-handoff.js" },
-    { "source": "/v11-ui.js", "destination": "/runtime/booking-handoff-ui.js" },
-    { "source": "/v12-sharing.js", "destination": "/runtime/booking-sharing.js" },
-    { "source": "/v12-ui.js", "destination": "/runtime/booking-sharing-ui.js" },
-    { "source": "/v13-account.js", "destination": "/runtime/account-ownership.js" },
-    { "source": "/v13-ui.js", "destination": "/runtime/account-ui.js" },
-    { "source": "/v13-ui.css", "destination": "/runtime/account-ui.css" }
+    {
+      "source": "/v4-functional.js",
+      "destination": "/runtime/hospital-search.js"
+    },
+    {
+      "source": "/v4-booking.js",
+      "destination": "/runtime/booking-runtime.js"
+    },
+    {
+      "source": "/v6-booking.js",
+      "destination": "/runtime/booking-sync.js"
+    },
+    {
+      "source": "/v7-booking.js",
+      "destination": "/runtime/booking-recovery.js"
+    },
+    {
+      "source": "/v8-booking.js",
+      "destination": "/runtime/booking-trace.js"
+    },
+    {
+      "source": "/v9-booking.js",
+      "destination": "/runtime/booking-coordination.js"
+    },
+    {
+      "source": "/v10-booking.js",
+      "destination": "/runtime/booking-durable.js"
+    },
+    {
+      "source": "/v11-booking.js",
+      "destination": "/runtime/booking-handoff.js"
+    },
+    {
+      "source": "/v11-ui.js",
+      "destination": "/runtime/booking-handoff-ui.js"
+    },
+    {
+      "source": "/v12-sharing.js",
+      "destination": "/runtime/booking-sharing.js"
+    },
+    {
+      "source": "/v12-ui.js",
+      "destination": "/runtime/booking-sharing-ui.js"
+    },
+    {
+      "source": "/v13-account.js",
+      "destination": "/runtime/account-ownership.js"
+    },
+    {
+      "source": "/v13-ui.js",
+      "destination": "/runtime/account-ui.js"
+    },
+    {
+      "source": "/v13-ui.css",
+      "destination": "/runtime/account-ui.css"
+    }
   ],
   "headers": [
     {
@@ -38,6 +80,10 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(self), microphone=(), geolocation=(self)"
+        },
+        {
+          "key": "Content-Security-Policy-Report-Only",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; frame-src 'self'; form-action 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn-uicons.flaticon.com https://unpkg.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdn-uicons.flaticon.com; img-src 'self' data: blob: https://unpkg.com https://*.basemaps.cartocdn.com; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:"
         }
       ]
     }
