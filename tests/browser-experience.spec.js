@@ -170,7 +170,7 @@ test('read-only share holders cannot use optimistic booking mutation buttons', a
   const buttons = [
     page.locator('#order-cancel-btn'),
     page.locator('#modal-bk-cancel .dlg-btn.danger'),
-    page.locator('#s-live button[onclick="completeReturn()"]')
+    page.locator('button[onclick="completeReturn()"]')
   ];
   for (const button of buttons) {
     await expect(button).toBeDisabled();
