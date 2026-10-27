@@ -104,3 +104,13 @@ test('probe never writes if its destination or credential is invalid',async()=>{
   }),/required/);
   assert.equal(writes,0);
 });
+
+
+test('manual write probe is never invoked by CI or production smoke workflows',()=>{
+  for(const name of ['quality.yml','production-smoke.yml','browser-experience.yml','release.yml']){
+    const content=fs.readFileSync(path.join(__dirname,'../.github/workflows',name),'utf8');
+    assert.doesNotMatch(content,/check-isolated-blob-store|MOSIGO_ISOLATED_WRITE_ONCE/);
+  }
+  const packageJson=fs.readFileSync(path.join(__dirname,'../package.json'),'utf8');
+  assert.doesNotMatch(packageJson,/"(?:quality|test|smoke:production)"[^\n]*check-isolated/);
+});
