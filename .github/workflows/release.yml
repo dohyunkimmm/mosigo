@@ -80,7 +80,7 @@ jobs:
           # release tag before browser QA passes on this same push SHA.
           for attempt in $(seq 1 60); do
             conclusion="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?event=push&head_sha=$TARGET_SHA&per_page=100" \
-              --jq '.workflow_runs | map(select(.name == "Browser Experience QA" and .head_branch == "main" and .head_sha == env.TARGET_SHA)) | sort_by(.created_at) | last | (.conclusion // "pending")')"
+              | jq -r --arg sha "$TARGET_SHA" '[.workflow_runs[] | select(.name == "Browser Experience QA" and .head_branch == "main" and .head_sha == $sha)] | sort_by(.created_at) | last | (.conclusion // "pending")')"
             case "$conclusion" in
               success) echo "Browser QA passed for $TARGET_SHA"; exit 0 ;;
               failure|cancelled|timed_out|action_required|skipped|stale)
