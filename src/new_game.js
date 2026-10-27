@@ -118,6 +118,39 @@ function veil(on){
   $('g-cast').classList.toggle('is-veiled', on);
 }
 
+// Mobile browsers suspend media independently from JavaScript timers in the
+// background. Never let an old timer reveal a result for a video that stopped
+// playing while the user switched apps or restored a BFCache page.
+let interruptedGamePlayback = false;
+
+function suspendGamePlayback() {
+  if (![2,4,5].includes(step) || !$('g-result').hidden) return;
+  interruptedGamePlayback = true;
+  clearAllTimers();
+  clearTimeout(layerTimer);
+  for (const id of ['g-bg2','g-bg3','g-bg4']) {
+    const video = $(id);
+    if (video) video.pause();
+  }
+}
+
+function resumeGamePlayback() {
+  if (!interruptedGamePlayback || document.hidden) return;
+  interruptedGamePlayback = false;
+  if (![2,4,5].includes(step) || !$('g-result').hidden) return;
+  // Don't autoplay after a background gesture was lost. Drop any failed or
+  // suspended media request and let the next deliberate tap start a fresh one.
+  onRetry();
+  showToast('잠시 중단되었어요. 다시 시작해 주세요.');
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) suspendGamePlayback();
+  else resumeGamePlayback();
+});
+window.addEventListener('pagehide', suspendGamePlayback);
+window.addEventListener('pageshow', resumeGamePlayback);
+
 document.addEventListener('DOMContentLoaded', ()=>{
   // Event listeners replace inline onclick/onerror under scoped CSP.
   document.querySelector('.g-back')?.addEventListener('click',goBackPage);
@@ -137,9 +170,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const dd=String(expiry.getDate()).padStart(2,'0');
     expiryEl.textContent=`${expiry.getFullYear()}.${mm}.${dd}까지 사용 가능`;
   }
-  $('g-bg2').addEventListener('ended', ()=>{ if(step === 2) goStep(3); });
-  $('g-bg3').addEventListener('ended', ()=>{ if(step === 4) goStep(5); });
-  $('g-bg4').addEventListener('ended', ()=>{ if(step === 5) showResult(); });
+  $('g-bg2').addEventListener('ended', ()=>{ if(!interruptedGamePlayback && !document.hidden && step === 2) goStep(3); });
+  $('g-bg3').addEventListener('ended', ()=>{ if(!interruptedGamePlayback && !document.hidden && step === 4) goStep(5); });
+  $('g-bg4').addEventListener('ended', ()=>{ if(!interruptedGamePlayback && !document.hidden && step === 5) showResult(); });
 });
 
 function onCast(){
