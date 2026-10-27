@@ -142,6 +142,7 @@ Chromium 모바일 뷰포트에서 게임 MP4 지연 로딩과 MP4 전송 실패
 # Test-only OIDC credentials must be injected securely beforehand.
 unset BLOB_READ_WRITE_TOKEN
 export MOSIGO_SMOKE_PRODUCTION_STORE_ID="<verified-production-store-id>"
+export MOSIGO_SMOKE_CONFIRMED_PRODUCTION_STORE_ID="<independently-confirmed-production-store-id>"
 export MOSIGO_SMOKE_TEST_STORE_ID="<verified-isolated-test-store-id>"
 export MOSIGO_SMOKE_CONFIRMED_TEST_STORE_ID="<independently-confirmed-isolated-store-id>"
 export MOSIGO_ISOLATED_WRITE_ONCE=yes
@@ -152,6 +153,12 @@ node scripts/check-isolated-blob-store.js
 
 - 결과는 객체 경로/저장소 ID/토큰을 출력하지 않는 집계형 검증 상태만 제공합니다. **이 저장소에 대한 실제 원격 쓰기/읽기는 이번 변경에서 실행하지 않았습니다.**
 - 실제 셀룰러 실기기 QA의 재현·증빙 절차는 `docs/DEVICE-QA-RUNBOOK.md`에 추가했습니다. Android Chromium / iPhone WebKit 테스트에서 **영상 로딩 실패 후 이탈·재진입**과 선제 미디어 요청이 발생하지 않는지 별도 검증합니다. 실제 LTE/5G 결과로 대체하지 않습니다.
+
+### #88·#99: 생산 저장소 식별 이중확인 / 모바일 앱 복귀 복원
+
+- 격리 Blob 수동 검증은 테스트 저장소 확인에 더해 **운영 저장소 ID도 두 번 독립 입력하여 일치 확인**하도록 강화했습니다. 어느 한쪽이 없거나 서로 다르면 Blob 호출 전 즉시 중단됩니다. 아직 테스트 저장소에 연결한 별도 프로젝트·OIDC가 없으므로 원격 읽기/쓰기는 미실시입니다.
+- 모바일 게임에서 `visibilitychange` 및 `pagehide/pageshow`를 다뤄 영상 진행 중 앱 전환·브라우저 페이지 캐시 복귀 시 **중단된 타이머를 해제하고 영상을 멈춘 뒤**, 다시 보일 때 사용자 클릭으로 재시작하게 합니다. 자동 재생하거나 백그라운드에서 결과를 확정하지 않습니다.
+- Playwright의 Android Chromium/iPhone WebKit에서 브라우저 생명주기 이벤트를 *모의 발생*시켜 새 요청과 재시작 버튼을 검사합니다. 진짜 iOS/Android 백그라운드와 LTE/5G 기기 확인은 여전히 미실시이며, `docs/DEVICE-QA-RUNBOOK.md`에 실기기 승인 기준을 유지합니다.
 
 ## 릴리스 판단
 - **이번 변경 배포 가능:** Production Smoke 영구 읽기 전용화, 회귀 테스트, 현재 권한 계약 설명 문서.
