@@ -11,7 +11,11 @@ test('mobile game defers every MP4 until a user starts playing', async ({ page }
   for (const id of ['g-bg2', 'g-bg3', 'g-bg4']) {
     await expect(page.locator('#' + id)).toHaveAttribute('preload', 'none');
     await expect(page.locator('#' + id)).toHaveAttribute('playsinline', '');
+    await expect(page.locator('#' + id)).toHaveAttribute('data-src', /\.mp4$/);
+    await expect(page.locator('#' + id)).not.toHaveAttribute('src', /.+/);
   }
+  await expect(page.locator('video.g-result-art')).toHaveAttribute('data-src', /\.mp4$/);
+  await expect(page.locator('video.g-result-art')).not.toHaveAttribute('src', /.+/);
   await page.waitForTimeout(650);
   expect(mediaRequests).toEqual([]);
 });
@@ -24,6 +28,8 @@ test('broken video downloads recover to an actionable state and allow retry', as
   });
   await page.goto('/new_game.html?win=0');
   await page.locator('#g-cast').click();
+  await expect(page.locator('#g-bg2')).toHaveAttribute('src', /game2\.mp4$/);
+  await expect(page.locator('#g-bg3')).not.toHaveAttribute('src', /.+/);
   await expect(page.locator('#g-cast')).toHaveAttribute('aria-label', '잡은 것 확인하기', { timeout: 7000 });
   await page.locator('#g-cast').click();
   await expect(page.locator('#g-result')).toBeVisible({ timeout: 14000 });
