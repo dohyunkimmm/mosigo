@@ -92,6 +92,15 @@ Chromium 모바일 뷰포트에서 게임 MP4 지연 로딩과 MP4 전송 실패
 
 `playwright.mobile.config.cjs`로 **Android Chromium(Pixel 5 에뮬레이션)**과 **iPhone WebKit(iPhone 13 에뮬레이션)**의 영상 지연 로딩·MP4 네트워크 실패 복구 테스트를 PR/메인 브랜치 필수 Browser Experience QA에 추가했습니다. 기존 모바일 미디어 회귀 검사의 잘못 이스케이프된 MP4 매칭 정규식을 실제 `.mp4` URL과 일치하도록 수정했습니다. WebKit 교차 검사에서 **`preload="none"`을 준 video도 첫 클릭 전 4개 MP4를 요청**하는 회귀를 발견했고, `<video data-src>`로 파일 경로를 보관한 뒤 사용자 시작·결과 표시 시에만 `src`를 할당하도록 수정했습니다. 이 동작은 자동 테스트에서 MP4 실제 요청 목록과 `src` 부재를 모두 확인합니다. 해당 테스트는 실제 네트워크를 사용하지 않는 브라우저 에뮬레이션으로서 LTE/5G 실제 기기 검증을 대체하지 않습니다.
 
+
+### #90: CSP 모니터링 모드 첫 단계 (외부 리소스 조사 후)
+
+- 현행 HTML 표면(메인, Operations, 이벤트, 게임)과 지도 스크립트에서 확인된 외부 경로는 Leaflet(`unpkg.com`), Pretendard/GmarketSans(`cdn.jsdelivr.net`), Flaticon 아이콘(`cdn-uicons.flaticon.com`), CARTO 지도 타일(`*.basemaps.cartocdn.com`)입니다. 외부 iframe/embed/object의 정적 선언은 발견되지 않았습니다.
+- `src/vercel.json`에 **`Content-Security-Policy-Report-Only`만** 설정했습니다. `default-src 'self'`, `object-src 'none'`, `frame-ancestors 'self'`, `form-action 'self'`와 필요한 외부 출처의 세분화 지시문을 관찰합니다. 기존 동작·권한·운영 데이터를 차단하거나 변경하지 않습니다.
+- 현재 마크업에 다수의 인라인 `style=`과 `onclick`·`onerror` 핸들러가 있어 `script-src/style-src 'unsafe-inline'`을 임시 호환 조치로 두었습니다. **강제 CSP로 바로 전환하면 안 되며**, 인라인 이벤트 제거·nonce/hash 전환과 외부 CDN 로딩/오프라인/모바일 경로를 확인해야 합니다.
+- 외부 보고 수집 경로(`report-uri`/`report-to`)는 아직 연결하지 않았습니다. 따라서 현재 헤더는 브라우저 경고/개발자도구 관찰용으로, 위반 로그를 중앙 집계한다고 주장할 수 없습니다. 보고 수집 도입 시 공유 토큰·개인정보가 보고서에 담기지 않게 수집 범위와 보존 정책을 먼저 검증합니다.
+- 메인·Operations·게임 경로의 실제 배포 헤더와 브라우저 회귀 검사를 확인하고, 이후 안전한 환경에서 프레임 삽입 의존성/오탐을 검증한 뒤 강제 CSP·X-Frame-Options 적용 여부를 별도로 결정합니다. 이 단계는 **CSP 강제 보호 완료가 아님**.
+
 ## 릴리스 판단
 - **이번 변경 배포 가능:** Production Smoke 영구 읽기 전용화, 회귀 테스트, 현재 권한 계약 설명 문서.
 - **이번 변경에 포함하지 않음:** 기존 Blob 데이터 삭제/만료, 신규 WAF 차단 활성화, 공유 토큰 권한 변경, 실기기 QA 완료 선언.
