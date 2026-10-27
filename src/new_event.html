@@ -13,16 +13,16 @@
 </head>
 <body>
 
-<img class="status-img" src="bar.png" alt="" aria-hidden="true" onerror="this.remove()">
+<img class="status-img" src="bar.png" alt="" aria-hidden="true" data-remove-on-error>
 
 <div class="page-main">
   <div class="fish-nav">
-    <button onclick="closeEvent()" aria-label="뒤로 가기">
+    <button  aria-label="뒤로 가기">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M20 12H4M11 5l-7 7 7 7"/>
       </svg>
     </button>
-    <button onclick="shareEvent()" aria-label="공유하기">
+    <button  aria-label="공유하기">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
         <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>
@@ -30,7 +30,7 @@
     </button>
   </div>
 
-  <img class="fish-art" src="bg.webp" alt="" aria-hidden="true" onerror="this.remove()">
+  <img class="fish-art" src="bg.webp" alt="" aria-hidden="true" data-remove-on-error>
 
   <div class="fish-wrap">
     <h2 class="fish-hello" id="fish-hello"></h2>
@@ -55,11 +55,11 @@
     <p class="mtg-sr-only">다른 참여자들이 아메리카노, 편의점 상품권, 아이스크림 등 다양한 선물 쿠폰에 당첨되고 있습니다.</p>
 
     <div class="fish-spacer"></div>
-    <button class="fish-cta" onclick="goNext()">지금 바로 확인하기</button>
+    <button class="fish-cta" >지금 바로 확인하기</button>
   </div>
 </div>
 
-<img class="home-img" src="bottom.png" alt="" aria-hidden="true" onerror="this.remove()">
+<img class="home-img" src="bottom.png" alt="" aria-hidden="true" data-remove-on-error>
 
 <script src="new_event.js"></script>
 </body>
