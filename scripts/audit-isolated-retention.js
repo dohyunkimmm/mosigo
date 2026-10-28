@@ -9,6 +9,7 @@ const { assertIsolatedStore, planRetention } = require('./smoke-retention-prefli
 const PREFIX = 'mosigo-isolated-smoke/';
 const PATH = /^mosigo-isolated-smoke\/(smoke-[0-9]{8}T[0-9]{6}Z-[a-f0-9]{16})\.json$/;
 const MAX_MARKER_BYTES = 4096;
+const MAX_TIMESTAMP_SKEW_MS = 5 * 60 * 1000;
 // Both recognized fixture origins are self-declared and NEVER authorize deletion.
 const EVIDENCE_REFS = new Set(['local-write-read-self-check', 'isolated-vercel-build-e2e']);
 
@@ -115,6 +116,16 @@ async function auditIsolatedRetention({
           item.size > MAX_MARKER_BYTES) {
         throw new Error('Isolated marker metadata size invalid');
       }
+      // uploadedAt is returned by Blob, independent of the marker's own JSON.
+      // Missing/implausible server time can never qualify a marker for review.
+      const uploaded = item.uploadedAt instanceof Date ? item.uploadedAt.getTime()
+        : (typeof item.uploadedAt === 'string' ? Date.parse(item.uploadedAt) : NaN);
+      const auditTime = typeof now === 'number' ? now : Date.parse(now);
+      if (!Number.isFinite(uploaded) || uploaded < 0 ||
+          !Number.isFinite(auditTime) || uploaded > auditTime + MAX_TIMESTAMP_SKEW_MS) {
+        records.push(null);
+        continue;
+      }
       const response = await blob.get(pathname, {
         ...auth, access: 'private', useCache: false
       });
@@ -126,7 +137,9 @@ async function auditIsolatedRetention({
       // declared run ID to the listed object name to reject mismatched markers.
       if (!value || typeof value !== 'object' || Array.isArray(value) ||
           value.runId !== match[1] ||
-          !EVIDENCE_REFS.has(value.evidenceRef)) {
+          !EVIDENCE_REFS.has(value.evidenceRef) ||
+          !Number.isFinite(Date.parse(value.createdAt)) ||
+          Math.abs(Date.parse(value.createdAt) - uploaded) > MAX_TIMESTAMP_SKEW_MS) {
         records.push(null);
         continue;
       }
