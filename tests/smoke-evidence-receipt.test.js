@@ -63,8 +63,12 @@ test('independent receipt must match bytes, identity, server clock and size',()=
   const alternate=JSON.stringify({...JSON.parse(content),evidenceRef:'untrusted'});
   assert.throws(()=>makeReadOnlyReceipt({...options,content:alternate,
     listedSize:Buffer.byteLength(alternate)}),/provenance/);
+  const reordered=JSON.stringify({
+    evidenceRef:'isolated-vercel-build-e2e',...run
+  });
+  assert.equal(Buffer.byteLength(reordered),Buffer.byteLength(content));
   assert.throws(()=>verifyReadOnlyReceipt(receipt,{
-    ...options,content:content+' ',listedSize:Buffer.byteLength(content)+1
+    ...options,content:reordered,listedSize:Buffer.byteLength(reordered)
   }),/digest/);
 });
 
