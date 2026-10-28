@@ -84,9 +84,10 @@ function verifyReadOnlyReceipt(receipt, input) {
         'safeToDelete','deletionAuthorized'].sort().join(',')) {
     throw new Error('Invalid independent receipt structure');
   }
-  const expected = makeReadOnlyReceipt({
-    ...input, sourceDeploymentId: receipt.sourceDeploymentId
-  });
+  if (receipt.sourceDeploymentId !== input?.sourceDeploymentId) {
+    throw new Error('Independent deployment identity mismatch');
+  }
+  const expected = makeReadOnlyReceipt(input);
   for (const key of ['version','purpose','sourceDeploymentId','uploadedAt',
     'expiresAt','sizeBytes','safeToDelete','deletionAuthorized']) {
     if (receipt[key] !== expected[key]) throw new Error('Evidence receipt mismatch');
