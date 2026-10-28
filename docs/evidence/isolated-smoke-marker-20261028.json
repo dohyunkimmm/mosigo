@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "purpose": "mosigo-isolated-fixture-readonly-review",
+  "sourceDeploymentId": "dpl_2T8cPtmzRP7EgqJwdMabxu3PMXDH",
+  "markerContentSha256": "476fa477b0a26aa8e674b23fd3a3694a0cf344896966523abdbbccec83eaf83b",
+  "markerPathSha256": "1adaab4ffbfebbd0c1add60231e4d2f30ff5bd3e84aa89ffd2732746b21a6cef",
+  "uploadedAt": "2026-10-27T23:47:34.000Z",
+  "expiresAt": "2026-11-03T23:47:33.005Z",
+  "sizeBytes": 242,
+  "safeToDelete": false,
+  "deletionAuthorized": false
+}
