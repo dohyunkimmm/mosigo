@@ -87,3 +87,21 @@ test('receipt logic is offline-only and never calls Blob read/write/delete SDKs'
   const source=fs.readFileSync(path.join(__dirname,'../scripts/smoke-evidence-receipt.js'),'utf8');
   assert.doesNotMatch(source,/@vercel\/blob|\bfetch\(|\bblob\.(?:list|get|put|del|copy)\s*\(|\bunlink\(/);
 });
+
+
+test('archived production-independent lab fingerprint is review-only and has valid timing',()=>{
+  const receipt=JSON.parse(fs.readFileSync(
+    path.join(__dirname,'../docs/evidence/isolated-smoke-marker-20261028.json'),'utf8'));
+  assert.equal(receipt.version,1);
+  assert.equal(receipt.purpose,'mosigo-isolated-fixture-readonly-review');
+  assert.match(receipt.sourceDeploymentId,/^dpl_[A-Za-z0-9]+$/);
+  assert.match(receipt.markerContentSha256,/^[a-f0-9]{64}$/);
+  assert.match(receipt.markerPathSha256,/^[a-f0-9]{64}$/);
+  assert.equal(receipt.sizeBytes,242);
+  assert.equal(receipt.deletionAuthorized,false);
+  assert.equal(receipt.safeToDelete,false);
+  assert.equal(Date.parse(receipt.expiresAt)-Date.parse(receipt.uploadedAt)<=TTL_MS,true);
+  assert.equal(TTL_MS-(Date.parse(receipt.expiresAt)-Date.parse(receipt.uploadedAt))<300000,true);
+  const serialized=JSON.stringify(receipt);
+  assert.doesNotMatch(serialized,/BLOB_READ_WRITE_TOKEN|VERCEL_OIDC_TOKEN|store_[A-Za-z0-9]+|smoke-[0-9]{8}|\.json\//);
+});
