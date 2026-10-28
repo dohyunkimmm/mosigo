@@ -4,6 +4,13 @@
 >
 > 관련 이슈: [#88](https://github.com/dohyunkimmm/mosigo/issues/88), [#90](https://github.com/dohyunkimmm/mosigo/issues/90).
 
+### #88 마커 바이트 지문과 검토용 독립 기록 (2026-10-28)
+
+- 격리 Blob에서 **읽기 전용 OIDC**로 이전 E2E 마커 1건의 정확한 원본 바이트, 경로 및 Vercel 서버 업로드 시각을 가져온 후 `scripts/smoke-evidence-receipt.js`로 SHA-256 기록을 생성했습니다. 증빙 빌드: `dpl_D2sHYws7JQc45oigSiT8EWZ36UrA` (`READY`). 원격 쓰기·삭제 없이 조회했으며, 메타데이터에서 업로드 시각과 JSON 생성 시각이 5분 이내이고 7일 만료 값이 일치하는지 확인했습니다.
+- `docs/evidence/isolated-smoke-marker-20261028.json`에는 **원본 내용과 경로는 빼고** 각각 SHA-256 해시, 242바이트, 서버 업로드 시각, 만료 시각, 기존 OIDC 검증 배포 ID만 보존합니다. 이 Git 커밋이 **향후 다시 조회한 객체가 이 당시 검증한 바이트와 동일한지** 비교할 독립 기록이 됩니다. 자세한 경로/인증 정보/토큰은 출력·커밋하지 않았습니다.
+- `verifyReadOnlyReceipt(receipt, input)`는 범위가 다른 저장소, 다른 객체 경로/바이트, 타임스탬프 불일치, 다른 증빙 배포 ID, 변경된 증빙 구조를 거절합니다. **해시 일치만으로 작성자 소유권·삭제 승인이 자동 증명되는 것은 아니므로**, 모든 결과는 `reviewOnly=true`, `safeToDelete=false`, `candidateDeletions=0`입니다. 백업/복구 실증과 관리자 승인 전에는 `del` 사용을 금지합니다.
+- 기록된 JSON 마커의 만료 시각은 **2026-11-03 23:47:33 UTC (2026-11-04 08:47:33 KST)**입니다. 만료시각 도달도 자동 객체 삭제가 아닙니다. 만료 후 독립 지문 재확인, 별도 복구 가능한 백업과 승인된 청소 절차가 아직 필요하며, 마커 1건은 그대로 남아 있습니다.
+
 ### 최신 추가 검증 — #88 단기 OIDC와 업로드 시각 대조 (2026-10-28)
 
 - Vercel 테스트 전용 프로젝트 `mosigo-isolated-smoke-lab`에서만 프로젝트 OIDC 설정을 활성화했습니다. 별도 일회성 배포 `dpl_22zsUry2L4NoNJiL7RYNxzFgryGz`는 `VERCEL_OIDC_TOKEN`과 정확한 **격리 테스트 스토어 ID**를 `@vercel/blob`의 `oidcToken` / `storeId` 옵션에 명시하여 비공개 JSON 마커 **1건을 실제 원격 list/get으로 읽고** 빌드 로그 `MOSIGO_ISOLATED_OIDC_READ_VERIFIED`를 기록했습니다. RW 토큰을 Blob SDK 옵션으로 전달하지 않았고, 변경/삭제 요청도 없었습니다.
