@@ -44,7 +44,15 @@ function mockedBlob(pages, values, calls) {
     async list(options) {
       calls.push({ method: 'list', ...options });
       const page = options.cursor === 'page-2' ? 1 : 0;
-      return pages[page];
+      const result = pages[page];
+      // SDK's uploadedAt comes from the store, not the marker JSON. Test mocks
+      // supply an independent list timestamp; explicit overrides model drift.
+      return {...result, blobs: result.blobs?.map(item => ({
+        ...item,
+        uploadedAt: item.uploadedAt === undefined
+          ? values[item.pathname]?.createdAt
+          : item.uploadedAt
+      }))};
     },
     async get(pathname, options) {
       calls.push({ method: 'get', pathname, ...options });
@@ -165,7 +173,7 @@ test('size limits, pagination ambiguity and malformed responses are rejected', a
   }),/distinct/);
   // Listing metadata may understate remote bytes; stream read is bounded too.
   const tooLarge = {
-    async list(){return {blobs:[{pathname:one.pathname,size:400}],hasMore:false};},
+    async list(){return {blobs:[{pathname:one.pathname,size:400,uploadedAt:one.record.createdAt}],hasMore:false};},
     async get(){return {stream:streamFor('x'.repeat(4097))};}
   };
   await assert.rejects(()=>auditIsolatedRetention({
@@ -207,4 +215,46 @@ test('remote lab E2E marker is recognized for retention counts but never for del
   assert.equal(report.complete,true);
   assert.deepEqual(calls.map(x=>x.method),['list','get','get']);
   assert.ok(calls.every(x=>x.storeId===TEST&&x.oidcToken===TOKEN));
+});
+
+
+test('missing or drifted server upload timestamps are always unattributed, not delete candidates', async()=>{
+  const run=marker(Date.parse('2026-10-27T12:00:00Z'));
+  for (const uploadedAt of [null, '', 'invalid', '2026-10-27T11:45:00Z',
+    '2026-10-27T12:06:00Z', '2026-10-30T12:00:00Z']) {
+    const calls=[];
+    const audit=await auditIsolatedRetention({
+      context,now:NOW,
+      blob:mockedBlob([{blobs:[
+        {pathname:run.pathname,size:320,uploadedAt}
+      ],hasMore:false}],{[run.pathname]:run.record},calls)
+    });
+    assert.equal(audit.inspected,1);
+    assert.equal(audit.unattributed,1);
+    assert.equal(audit.active,0);
+    assert.equal(audit.safeToDelete,false);
+    assert.equal(audit.candidateDeletions,0);
+    // Invalid/future server metadata fails before get. Valid-but-drifted
+    // server time can only be rejected after reading the marker's createdAt.
+    const plausibleServerTime = ['2026-10-27T11:45:00Z',
+      '2026-10-27T12:06:00Z'].includes(uploadedAt);
+    assert.deepEqual(calls.map(call=>call.method),
+      plausibleServerTime ? ['list','get'] : ['list']);
+  }
+});
+
+test('server-verified upload time within five minutes permits an active marker review only',async()=>{
+  const run=marker(Date.parse('2026-10-27T12:00:00Z'));
+  const calls=[];
+  const audit=await auditIsolatedRetention({
+    context,now:NOW,blob:mockedBlob([{blobs:[
+      {pathname:run.pathname,size:320,
+        uploadedAt:new Date(Date.parse(run.record.createdAt)+240000)}
+    ],hasMore:false}],{[run.pathname]:run.record},calls)
+  });
+  assert.equal(audit.active,1);
+  assert.equal(audit.unattributed,0);
+  assert.equal(audit.safeToDelete,false);
+  assert.equal(audit.candidateDeletions,0);
+  assert.deepEqual(calls.map(x=>x.method),['list','get']);
 });

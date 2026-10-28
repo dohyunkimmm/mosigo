@@ -4,6 +4,14 @@
 >
 > 관련 이슈: [#88](https://github.com/dohyunkimmm/mosigo/issues/88), [#90](https://github.com/dohyunkimmm/mosigo/issues/90).
 
+### 최신 추가 검증 — #88 단기 OIDC와 업로드 시각 대조 (2026-10-28)
+
+- Vercel 테스트 전용 프로젝트 `mosigo-isolated-smoke-lab`에서만 프로젝트 OIDC 설정을 활성화했습니다. 별도 일회성 배포 `dpl_22zsUry2L4NoNJiL7RYNxzFgryGz`는 `VERCEL_OIDC_TOKEN`과 정확한 **격리 테스트 스토어 ID**를 `@vercel/blob`의 `oidcToken` / `storeId` 옵션에 명시하여 비공개 JSON 마커 **1건을 실제 원격 list/get으로 읽고** 빌드 로그 `MOSIGO_ISOLATED_OIDC_READ_VERIFIED`를 기록했습니다. RW 토큰을 Blob SDK 옵션으로 전달하지 않았고, 변경/삭제 요청도 없었습니다.
+- **중요한 차이:** OIDC 인증이 실제로 작동한 것은 검증됐지만 **기존 프로젝트 연결에 암호화된 `BLOB_READ_WRITE_TOKEN`도 아직 남아 있어 장기 자격 증명 제거가 완료된 것은 아닙니다.** 기존 연결은 Vercel Storage → 해당 테스트 스토어 → Projects → `mosigo-isolated-smoke-lab` 메뉴의 **Upgrade to OIDC**를 운영자가 수행하고, 기존 RW 토큰 제거와 재검증을 확인해야 합니다. 운영 Mosigo 프로젝트는 변경하지 않습니다.
+- 읽기 전용 `scripts/audit-isolated-retention.js`는 마커가 주장하는 `createdAt`을 Vercel Blob 목록이 반환하는 **별도의 서버 업로드 시각(`uploadedAt`)**과 비교하도록 강화했습니다. 누락·파싱 오류·5분 초과 불일치·미래 업로드 시간은 미분류로 처리합니다. **서버 시각 확인도 독립적인 삭제 승인이나 자동 보존 정책은 아닙니다.** `safeToDelete=false`, `candidateDeletions=0`은 그대로입니다.
+- **서버 시각 실측 완료:** 추가 읽기 전용 검증 빌드 `dpl_2T8cPtmzRP7EgqJwdMabxu3PMXDH`에서 실제 OIDC `list/get`로 기존 마커 1건의 서버 `uploadedAt`과 JSON `createdAt` 오차가 5분 이내, 만료 시각이 생성 후 정확히 7일, 마커가 아직 활성 상태임을 검증했습니다. 원격 쓰기·삭제는 0건입니다.
+- 검증 마커는 여전히 객체 **1건(242바이트)**이고 만료 메타데이터 7일 이후의 복구 가능한 정리/삭제는 아직 검증하지 않았습니다. 개인정보/운영 Blob 객체는 조회·변경·삭제하지 않았습니다.
+
 ### 최신 실측 결과 — #88 (2026-10-28)
 
 - **실제 원격 검증 완료:** 격리 테스트 프로젝트 `mosigo-isolated-smoke-lab`에 연결된 비공개 `mosigo-smoke-lab-linked-20261028`만 대상으로, Vercel 별도 배포 빌드에서 토큰의 스토어 ID를 대조한 뒤 `mosigo-isolated-smoke/`에 단일 JSON 테스트 마커를 **한 번 쓰고, 동일 본문 읽기와 경로 목록 확인**을 성공했습니다. 증빙 빌드: `dpl_G54yiPzBfM4BXU55gpEUjvJfabGj`.
