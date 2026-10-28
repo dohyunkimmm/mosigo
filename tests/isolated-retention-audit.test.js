@@ -234,8 +234,12 @@ test('missing or drifted server upload timestamps are always unattributed, not d
     assert.equal(audit.active,0);
     assert.equal(audit.safeToDelete,false);
     assert.equal(audit.candidateDeletions,0);
-    // Reject impossible server metadata before retrieving untrusted contents.
-    assert.deepEqual(calls.map(call=>call.method),['list']);
+    // Invalid/future server metadata fails before get. Valid-but-drifted
+    // server time can only be rejected after reading the marker's createdAt.
+    const plausibleServerTime = ['2026-10-27T11:45:00Z',
+      '2026-10-27T12:06:00Z'].includes(uploadedAt);
+    assert.deepEqual(calls.map(call=>call.method),
+      plausibleServerTime ? ['list','get'] : ['list']);
   }
 });
 
