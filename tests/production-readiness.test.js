@@ -75,7 +75,7 @@ test('CSP is report-only, scoped to audited third-party origins, and cannot sile
   assert.match(csp, /(?:^|; )form-action 'self'(?:;|$)/);
   assert.match(csp, /script-src 'self' 'unsafe-inline' https:\/\/unpkg\.com/);
   assert.match(csp, /style-src [^;]*https:\/\/cdn-uicons\.flaticon\.com/);
-  assert.match(csp, /img-src [^;]*https:\/\/\*\.basemaps\.cartocdn\.com/);
+  assert.match(csp, /img-src [^;]*https:\/\/tile\.openstreetmap\.org/);
   assert.doesNotMatch(csp, /(?:^|\s)\*(?:\s|;|$)|default-src https:/);
   assert.doesNotMatch(csp, /report-uri|report-to/, 'No unreviewed collection endpoint or sensitive report uploads');
 });

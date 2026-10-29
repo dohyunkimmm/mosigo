@@ -10,13 +10,11 @@ let hospitalMarker = null;
 let selectedHospital = null;
 
 function createMap(elId, center){
-  const map=L.map(elId,{ zoomControl:false, attributionControl:false, dragging:true, scrollWheelZoom:false });
-  // CARTO Voyager: 기본 OSM 타일보다 채도가 낮고 도로/라벨이 정리된 스타일(네이버·카카오 지도 톤).
-  // {r}은 고해상도 화면에서 @2x 타일을 받아 라벨이 또렷해진다. 키 불필요, 출처 표기 조건.
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
-    maxZoom:20,
-    subdomains:'abcd',
-    attribution:'&copy; OpenStreetMap, &copy; CARTO'
+  const map=L.map(elId,{ zoomControl:false, attributionControl:true, dragging:true, scrollWheelZoom:false });
+  // OpenStreetMap Standard tiles: API 키 없이 사용하며 지도에 출처를 항상 표시한다.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
   }).addTo(map);
   map.setView(center, 15);
   return map;
