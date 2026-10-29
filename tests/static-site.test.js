@@ -362,3 +362,14 @@ test('P0/P1/P2 journeys explicitly disclose simulations and keep account data is
   assert.match(css, /mosigo-compare-dialog/);
   assert.match(readSrc('runtime/post-ui.js'), /\.mp-menu-i\[onclick\]/);
 });
+
+test('interactive maps use keyless OSM tiles and show required attribution', () => {
+  const map = readSrc('core/map-experience.js');
+  const css = readSrc('index.css');
+  assert.match(map, /https:\/\/tile\.openstreetmap\.org\/\{z\}\/\{x\}\/\{y\}\.png/);
+  assert.doesNotMatch(map, /basemaps\.cartocdn\.com/);
+  assert.match(map, /attributionControl:true/);
+  assert.match(map, /openstreetmap\.org\/copyright/);
+  assert.doesNotMatch(css, /\.map-area \.leaflet-control-container\s*\{\s*display\s*:\s*none/);
+  assert.doesNotMatch(css, /\.hd-map \.leaflet-control-container\s*\{\s*display\s*:\s*none/);
+});
