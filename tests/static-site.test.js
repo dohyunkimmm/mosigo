@@ -366,6 +366,9 @@ test('P0/P1/P2 journeys explicitly disclose simulations and keep account data is
 test('interactive maps use keyless OSM tiles and show required attribution', () => {
   const map = readSrc('core/map-experience.js');
   const css = readSrc('index.css');
+  const vercel = readSrc('vercel.json');
+  assert.match(vercel, /https:\/\/tile\.openstreetmap\.org/);
+  assert.doesNotMatch(vercel, /basemaps\.cartocdn\.com/);
   assert.match(map, /https:\/\/tile\.openstreetmap\.org\/\{z\}\/\{x\}\/\{y\}\.png/);
   assert.doesNotMatch(map, /basemaps\.cartocdn\.com/);
   assert.match(map, /attributionControl:true/);
