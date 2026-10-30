@@ -825,8 +825,10 @@ const SYMPTOM_DEPT = {
   '산부인과':['생리','폐경','자궁'],
 };
 function detectDeptCode(q){
-  for(const [kw,code] of Object.entries(DEPT_KEYWORDS)){
-    if(q.includes(kw)) return code;
+  // Match the most specific department first: 정형외과 must not resolve to 외과.
+  const text=String(q||'').trim();
+  for(const [kw,code] of Object.entries(DEPT_KEYWORDS).sort((a,b)=>b[0].length-a[0].length)){
+    if(text.includes(kw)) return code;
   }
   for(const [dept,words] of Object.entries(SYMPTOM_DEPT)){
     if(words.some(w=>q.includes(w))) return DEPT_KEYWORDS[dept] || '';
@@ -939,7 +941,22 @@ async function loadNearbyHospitals(){
 }
 
 // 최근 검색어 / 인기 검색어 (프로토타입이라 로컬 배열로만 관리)
-let siRecents=['똑똑연세내과의원','당뇨','향남서울내과의원','정형외과'];
+// Only retain search terms in this tab; avoid durable storage of symptom searches.
+const SI_RECENTS_KEY='mosigo-search-recents-session';
+let siRecents=[];
+try{
+  const stored=JSON.parse(sessionStorage.getItem(SI_RECENTS_KEY)||'[]');
+  if(Array.isArray(stored)) siRecents=stored.filter(v=>typeof v==='string'&&v.trim()).slice(0,8);
+}catch(error){}
+function saveRecents(){
+  try{sessionStorage.setItem(SI_RECENTS_KEY,JSON.stringify(siRecents));}catch(error){}
+}
+function rememberSearchQuery(query){
+  const value=String(query||'').trim().slice(0,80);
+  if(!value) return;
+  siRecents=[value,...siRecents.filter(item=>item!==value)].slice(0,8);
+  saveRecents();
+}
 const SI_RANKS=[
   ['내과',0],['정형외과',1],['당뇨',-1],['건강검진',0],['향남연세내과',1],
   ['이비인후과',-1],['무릎',1],['안과',0],['치매',1],['혈압',-1],
@@ -954,8 +971,8 @@ function renderRecents(){
       <span class="x" onclick="event.stopPropagation();removeRecent(${i})"><i class="fi fi-rr-cross-small"></i></span>
     </div>`).join('') : '<div class="si-empty">최근 검색어가 없습니다</div>';
 }
-function removeRecent(i){ siRecents.splice(i,1); renderRecents(); }
-function clearRecents(){ siRecents=[]; renderRecents(); showToast('최근 검색어를 삭제했습니다'); }
+function removeRecent(i){ siRecents.splice(i,1); saveRecents(); renderRecents(); }
+function clearRecents(){ siRecents=[]; saveRecents(); renderRecents(); showToast('이번 세션의 검색어를 삭제했습니다'); }
 function renderRanks(){
   const el=document.getElementById('si-rank');
   if(el) el.innerHTML=SI_RANKS.map(([nm,mv],i)=>
@@ -964,10 +981,7 @@ function renderRanks(){
       <span class="mv ${mv>0?'up':mv<0?'dn':''}">${mv>0?'▲':mv<0?'▼':'—'}</span>
     </div>`).join('');
   const t=document.getElementById('si-rank-time');
-  if(t){
-    const d=new Date();
-    t.textContent=String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':00 기준';
-  }
+  if(t) t.textContent='시연용 예시 순위 · 실시간 통계 아님';
 }
 
 function openSearch(){
@@ -1031,6 +1045,7 @@ async function doSearch(queryOrIdx){
   }
   const q=queryOrIdx || document.getElementById('si-input')?.value.trim();
   if(!q) return;
+  rememberSearchQuery(q);
   showToast('병원을 검색 중입니다…');
   try{
     // 병원명 검색은 이름으로, 그 외에는 진료과 코드로 조회한다
@@ -1088,27 +1103,37 @@ function openHospDetail(idx){
   },340);
 }
 function pickHdTab(el){
-  el.parentElement.querySelectorAll('.hd-tab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on');
-  showToast(el.textContent+' 탭은 준비 중입니다');
+  const tabs=document.getElementById('hd-tabs');
+  const scroller=document.getElementById('hd-scroll');
+  if(!tabs||!scroller) return;
+  const idx=[...tabs.querySelectorAll('.hd-tab')].indexOf(el);
+  tabs.querySelectorAll('.hd-tab').forEach(t=>{
+    t.classList.toggle('on',t===el);
+    if(t===el) t.setAttribute('aria-current','true');
+    else t.removeAttribute('aria-current');
+  });
+  const sections=scroller.querySelectorAll('.hd-sec');
+  const target=idx===1?sections[1]:idx===2?sections[4]:idx===3?sections[0]:null;
+  const top=target?target.getBoundingClientRect().top-scroller.getBoundingClientRect().top+scroller.scrollTop-tabs.offsetHeight-8:0;
+  scroller.scrollTo({top:Math.max(0,top),behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
 }
 function renderHospDetail(h){
   syncHospitalSourceUI();
   const seed=hashStr(h.name);
   const dept=h.dept||h.type||'의료기관';
-  const rating=(4.4+(seed%6)/10).toFixed(1);
-  const revCnt=60+(seed%240);
+  const rating=Number.isFinite(h.rating)?h.rating.toFixed(1):'–';
+  const revCnt=Number.isFinite(h.reviewCount)?h.reviewCount:0;
   const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.innerHTML=v; };
 
   set('hd-bar-nm', esc(h.name));
   set('hd-dept', esc(dept));
   set('hd-nm', esc(h.name));
-  set('hd-loc', '<i class="fi fi-rr-marker"></i> '+[hospitalDistance(h), esc(h.addr||'')].filter(Boolean).join(' · '));
+  set('hd-loc', '<i class="fi fi-rr-marker"></i> '+[hospitalDistance(h)?'예시 위치에서 직선거리 '+hospitalDistance(h):'', esc(h.addr||'')].filter(Boolean).join(' · '));
   set('hd-addr', esc(h.addr||'주소 정보 없음'));
   set('hd-rating', rating);
-  set('hd-revcnt', '진료후기 '+revCnt+'개');
+  set('hd-revcnt', '예시 후기 '+revCnt+'개');
   set('hd-revcnt2', revCnt);
-  set('hd-notice', esc(h.name.slice(0,10))+' 8월 진료 안내 — 8/15(광복절) 휴진, 토요일은 오후 1시까지 진료합니다.');
+  set('hd-notice', '시연용 공지입니다. 실제 휴진일과 운영시간은 의료기관에 확인해 주세요.');
 
   // 외부 병원 사진을 임의로 꾸며 쓰지 않고, 실제 데이터 기반의 정보형 비주얼로 구성한다.
   set('hd-gallery', `
@@ -1124,7 +1149,7 @@ function renderHospDetail(h){
       <span>${esc(h.addr||'주소 정보 없음')}</span>
     </div>`);
 
-  // 진료시간: 평일 09:00~18:00, 토 09:00~13:00, 일·공휴일 휴진 (오늘 강조)
+  // Sample opening hours only. Never infer real-time clinic status from this schedule.
   const today=new Date().getDay();
   const hours=[
     {d:'월~금', t:'09:00 ~ 18:00 (점심 13:00~14:00)', match:[1,2,3,4,5]},
@@ -1132,11 +1157,10 @@ function renderHospDetail(h){
     {d:'일요일·공휴일', t:'휴진', match:[0], off:true},
   ];
   set('hd-hours', hours.map(r=>
-    `<div class="hd-hr${r.match.includes(today)?' today':''}${r.off?' off':''}"><span class="d">${r.d}</span><span class="t">${r.t}</span></div>`
+    `<div class="hd-hr${r.match.includes(today)?' today':''}${r.off?' off':''}"><span class="d">${r.d}</span><span class="t">예시 · ${r.t}</span></div>`
   ).join(''));
-  const open = today>=1 && today<=6;
-  set('hd-open', open?'진료중':'진료 종료');
-  set('hd-lunch', open?'13:00 부터 점심시간':'다음 진료 '+HD_DAYS[(today+1)%7]+'요일 09:00');
+  set('hd-open', '실시간 진료 여부 미확인');
+  set('hd-lunch', '아래 진료시간은 시연용 예시입니다');
 
   // 의료진 2~3명
   const docN=2+(seed%2);
@@ -1146,7 +1170,7 @@ function renderHospDetail(h){
     docs+=`<div class="hd-doc">
       <div class="hd-doc-av">🧑‍⚕️</div>
       <div><div class="hd-doc-nm">${sur}○○ 원장</div>
-      <div class="hd-doc-sub">${esc(dept)} 전문의 · ${8+((seed+i*3)%15)}년차</div></div>
+      <div class="hd-doc-sub">예시 프로필 · ${esc(dept)} · 가상 경력 ${8+((seed+i*3)%15)}년</div></div>
     </div>`;
   }
   set('hd-docs', docs);
@@ -1155,12 +1179,18 @@ function renderHospDetail(h){
   set('hd-revs', [0,1,2].map(i=>{
     const t=HD_REVIEW_TEXTS[(seed+i)%HD_REVIEW_TEXTS.length];
     return `<div class="hd-rev">
-      <div class="hd-rev-top">${starIcons(5-(i%2)*0.5)}<span style="margin-left:4px">2026.0${6-i}.1${i+2} · 보호자</span></div>
+      <div class="hd-rev-top">${starIcons(5-(i%2)*0.5)}<span style="margin-left:4px">가상 후기 예시 · 실제 이용자 작성 아님</span></div>
       <div class="hd-rev-tx">${esc(t)}</div>
     </div>`;
   }).join(''));
 
   const sc=document.getElementById('hd-scroll'); if(sc) sc.scrollTop=0;
+  const tabs=document.getElementById('hd-tabs'); if(tabs){
+    tabs.querySelectorAll('.hd-tab').forEach((tab,i)=>{
+      tab.classList.toggle('on',i===0);
+      if(i===0) tab.setAttribute('aria-current','true'); else tab.removeAttribute('aria-current');
+    });
+  }
 }
 // 상세에서 접수/예약 → 이 병원에 동행 가능한 매니저 목록으로
 function bookHospital(kind){
