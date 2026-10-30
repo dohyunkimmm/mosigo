@@ -839,7 +839,7 @@ function detectDeptCode(q){
 function searchHospitalsFallback({ qn='', qd='', numOfRows=10 }={}){
   let list=[...FALLBACK_HOSPITALS];
   if(qd){
-    const kw=Object.entries(DEPT_KEYWORDS).find(([,c])=>c===qd)?.[0]||'';
+    const kw=Object.entries(DEPT_KEYWORDS).find(([,c])=>c===qd)?.[0]||String(qd);
     list=list.filter(h=>(h.dept||'').includes(kw));
   }else if(qn){
     list=list.filter(h=>h.name.includes(qn) || (h.dept||'').includes(qn) || qn.includes(h.dept||''));
@@ -965,7 +965,7 @@ function renderRecents(){
   const el=document.getElementById('si-recents');
   if(!el) return;
   el.innerHTML = siRecents.length ? siRecents.map((v,i)=>
-    `<div class="si-row" onclick="doSearchDirect('${esc(v)}')">
+    `<div class="si-row" onclick="doSearchDirect(siRecents[${i}])">
       <span class="ic"><i class="fi fi-rr-clock"></i></span>
       <span class="tx">${esc(v)}</span>
       <span class="x" onclick="event.stopPropagation();removeRecent(${i})"><i class="fi fi-rr-cross-small"></i></span>
@@ -1038,7 +1038,9 @@ function enterMgrSearch(hospital){
   goTo('s-search');
 }
 
+let hospitalDirectSearchId=0;
 async function doSearch(queryOrIdx){
+  const requestId=++hospitalDirectSearchId;
   if(typeof queryOrIdx==='number'){       // 목록/핀에서 인덱스로 들어온 경우
     enterMgrSearch(hospitalCache[queryOrIdx]);
     return;
@@ -1052,6 +1054,7 @@ async function doSearch(queryOrIdx){
     const isName=looksLikeHospitalName(q);
     const qd=isName ? '' : detectDeptCode(q);
     const list=await searchHospitals({ qn:qd ? '' : q, qd, numOfRows:12 });
+    if(requestId!==hospitalDirectSearchId) return;
     hospitalCache=list;
     if(!list.length){ showToast('검색 결과가 없습니다'); return; }
 
