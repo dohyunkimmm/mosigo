@@ -9,13 +9,38 @@ let hospMapPins=[];
 let hospitalMarker = null;
 let selectedHospital = null;
 
+function showMapUnavailable(elId,message='배경지도를 불러오지 못했습니다. 병원 주소와 목록을 이용해 주세요.'){
+  const container=document.getElementById(elId);
+  if(!container) return;
+  let notice=container.querySelector('.mosigo-map-unavailable');
+  if(!notice){
+    notice=document.createElement('div');
+    notice.className='mosigo-map-unavailable';
+    notice.setAttribute('role','status');
+    Object.assign(notice.style,{position:'absolute',zIndex:'700',inset:'auto 8px 20px',padding:'9px 12px',borderRadius:'8px',background:'rgba(255,255,255,.96)',color:'#333',fontSize:'12px',lineHeight:'1.4',pointerEvents:'none',boxShadow:'0 1px 6px rgba(0,0,0,.15)'});
+    container.appendChild(notice);
+  }
+  notice.textContent=message;
+}
 function createMap(elId, center){
+  if(typeof L==='undefined'){showMapUnavailable(elId);return null;}
+  const el=document.getElementById(elId);
+  if(!el)return null;
   const map=L.map(elId,{ zoomControl:false, attributionControl:true, dragging:true, scrollWheelZoom:false });
-  // OpenStreetMap Standard tiles: API 키 없이 사용하며 지도에 출처를 항상 표시한다.
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  // Keyless OSM tiles; retain attribution and expose a readable loading failure.
+  const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
     maxZoom:19,
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-  }).addTo(map);
+  });
+  let tileFailures=0;
+  tiles.on('tileerror',()=>{
+    if(++tileFailures>=3) showMapUnavailable(elId);
+  });
+  tiles.on('tileload',()=>{
+    tileFailures=0;
+    el.querySelector('.mosigo-map-unavailable')?.remove();
+  });
+  tiles.addTo(map);
   map.setView(center, 15);
   return map;
 }
@@ -29,14 +54,17 @@ function addMyLocationMarker(map){
     zIndexOffset:1000,
     icon:L.divIcon({
       className:'',
-      html:'<div class="map-me"><img src="Group 7385.png" alt="내 위치"></div>',
+      html:'<div class="map-me"><img src="Group 7385.png" alt="시연용 향남읍 출발지"></div>',
       iconSize:[60,60], iconAnchor:[30,30]
     })
   }).addTo(map);
 }
 
 function initMaps(){
-  if(typeof L==='undefined') return;
+  if(typeof L==='undefined'){
+    ['map-search','map-mgr','map-live','map-hospmap','map-hosp'].forEach(id=>showMapUnavailable(id));
+    return;
+  }
   searchMap=createMap('map-search', MAP_HOME);
   mgrMap=createMap('map-mgr', MAP_HOME);
   liveMap=createMap('map-live', MAP_HOME);
@@ -230,7 +258,7 @@ function showHospitalOnMap(h){
       zIndexOffset:1000,
       icon:L.divIcon({
         className:'',
-        html:'<div class="map-me"><img src="Group 7385.png" alt="'+esc(h.name||'선택한 병원')+'"></div>',
+        html:'<div class="map-me"><img src="Group 7385.png" alt="선택한 예시 병원: '+esc(h.name||'병원')+'"></div>',
         iconSize:[60,60], iconAnchor:[30,30]
       })
     }).addTo(searchMap);
@@ -254,7 +282,7 @@ function refreshActiveMaps(){
 function recenterSearchMap(){
   if(!searchMap){ showToast('지도를 불러오는 중입니다'); return; }
   searchMap.setView(MAP_HOME, 15);
-  showToast('출발지로 이동했습니다');
+  showToast('향남읍 예시 출발지로 이동했습니다');
 }
 
 function updateHospitalMarkers(hospital){
