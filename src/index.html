@@ -85,7 +85,7 @@
         <div class="perm-row"><div class="ic"><i class="fi fi-rr-bell"></i></div>
           <div><div class="tt">알림</div><div class="ds">서비스 이용을 위해 필요한 알림 기능 제공</div></div></div>
         <div class="perm-row"><div class="ic"><i class="fi fi-rr-marker"></i></div>
-          <div><div class="tt">위치</div><div class="ds">현재 위치 기준 정확한 병원 정보 표시</div></div></div>
+          <div><div class="tt">위치</div><div class="ds">향남읍 예시 위치 기반 지도 제공 (실제 GPS 사용 안 함)</div></div></div>
         <div class="perm-row"><div class="ic"><i class="fi fi-rr-camera"></i></div>
           <div><div class="tt">카메라</div><div class="ds">사진 촬영</div></div></div>
         <div class="perm-row"><div class="ic"><i class="fi fi-rr-picture"></i></div>
@@ -532,25 +532,25 @@
       <div class="ob-ov" id="ov-loc">
         <div class="modal-sheet" style="border-radius:24px;width:calc(100% - 24px);margin:0 12px 12px;padding:24px 20px 12px;align-self:flex-end;transform:none">
           <div style="text-align:center;font-size:26px;color:var(--teal);margin-bottom:12px"><i class="fi fi-rr-marker"></i></div>
-          <div style="text-align:center;font-size:15px;font-weight:600;color:var(--g900);line-height:1.5;margin-bottom:14px"><b>모시고</b>에서 이 기기의 위치 정보에<br>액세스하도록 허용하시겠습니까?</div>
+          <div style="text-align:center;font-size:15px;font-weight:600;color:var(--g900);line-height:1.5;margin-bottom:14px"><b>모시고</b> 시연 지도는<br>향남읍 예시 위치를 사용합니다</div>
           <div style="display:flex;align-items:center;gap:11px;border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:18px">
             <i class="fi fi-rr-shield-exclamation" style="color:var(--g600);font-size:19px;flex-shrink:0"></i>
-            <div style="flex:1;font-size:13px;color:var(--g600);line-height:1.45">앱에서 위치 데이터를 서드 파티와 공유할 수 있다고 명시했습니다.</div>
+            <div style="flex:1;font-size:13px;color:var(--g600);line-height:1.45">이 화면은 실제 위치 권한을 요청하거나 기기 GPS를 조회하지 않습니다.</div>
             <span style="color:var(--g400);font-size:17px"><i class="fi fi-rr-angle-small-right"></i></span>
           </div>
           <div style="display:flex;justify-content:center;gap:30px;margin-bottom:18px">
             <div style="text-align:center">
               <svg viewBox="0 0 96 96" style="width:88px;height:88px;border-radius:50%"><defs><clipPath id="lc1"><circle cx="48" cy="48" r="48"/></clipPath></defs><g clip-path="url(#lc1)"><rect width="96" height="96" fill="#EEF0F3"/><path d="M0 30 H96 M0 62 H96 M30 0 V96 M66 0 V96" stroke="#DDE0E6" stroke-width="3"/><path d="M48 40 a12 12 0 0 1 12 12 c0 9 -12 22 -12 22 c0 0 -12 -13 -12 -22 a12 12 0 0 1 12 -12 Z" fill="#1FB24A"/><circle cx="48" cy="52" r="4.5" fill="#fff"/></g></svg>
-              <div style="font-size:13.5px;font-weight:600;color:var(--g900);margin-top:8px">정확한 위치</div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--g900);margin-top:8px">예시 출발지</div>
             </div>
             <div style="text-align:center">
               <svg viewBox="0 0 96 96" style="width:88px;height:88px;border-radius:50%"><defs><clipPath id="lc2"><circle cx="48" cy="48" r="48"/></clipPath></defs><g clip-path="url(#lc2)"><rect width="96" height="96" fill="#EEF0F3"/><path d="M10 0 C30 30 20 60 40 96" stroke="#A9DDB6" stroke-width="5" fill="none"/><path d="M50 0 C60 24 80 30 96 40" stroke="#A9DDB6" stroke-width="5" fill="none"/><rect x="30" y="70" width="9" height="6" rx="1" fill="#1FB24A"/><rect x="60" y="40" width="9" height="6" rx="1" fill="#1FB24A"/></g></svg>
-              <div style="font-size:13.5px;font-weight:600;color:var(--g600);margin-top:8px">대략적인 위치</div>
+              <div style="font-size:13.5px;font-weight:600;color:var(--g600);margin-top:8px">예시 주변</div>
             </div>
           </div>
-          <div style="text-align:center;font-size:16px;font-weight:600;color:var(--g900);padding:15px;cursor:pointer" onclick="closeLoc()">앱 사용 중에만 허용</div>
-          <div style="text-align:center;font-size:16px;font-weight:600;color:var(--g900);padding:15px;cursor:pointer" onclick="closeLoc()">이번만 허용</div>
-          <div style="text-align:center;font-size:16px;font-weight:600;color:var(--g900);padding:15px;cursor:pointer" onclick="closeLoc()">허용 안함</div>
+          <div style="text-align:center;font-size:16px;font-weight:600;color:var(--g900);padding:15px;cursor:pointer" onclick="closeLoc()">예시 위치로 계속</div>
+          <div style="text-align:center;font-size:16px;font-weight:600;color:var(--g900);padding:15px;cursor:pointer" onclick="closeLoc()">위치 안내 확인</div>
+          <div style="text-align:center;font-size:16px;font-weight:600;color:var(--g900);padding:15px;cursor:pointer" onclick="closeLoc()">위치 설정 건너뛰기</div>
         </div>
       </div>
       <!-- 카메라 권한 (검색바 QR 아이콘 진입 시) -->
@@ -714,13 +714,13 @@
         <div id="si-default">
           <!-- 최근 검색어 -->
           <div class="si-sec">
-            <div class="si-sec-h"><b>최근 검색어</b><span class="si-clear" onclick="clearRecents()">전체삭제</span></div>
+            <div class="si-sec-h"><b>이번 세션 검색어</b><span class="si-clear" onclick="clearRecents()">전체삭제</span></div>
             <div id="si-recents"></div>
           </div>
 
           <!-- 인기 검색어 (2열 랭킹) -->
           <div class="si-sec">
-            <div class="si-sec-h"><b>모시고 인기 검색어</b><span class="si-time" id="si-rank-time">기준</span></div>
+            <div class="si-sec-h"><b>예시 인기 검색어</b><span class="si-time" id="si-rank-time">기준</span></div>
             <div class="si-rank" id="si-rank"></div>
           </div>
 
@@ -811,13 +811,13 @@
           <div class="search-sheet-scroll">
             <div class="sec" style="padding:0 14px 4px">
               <div class="filter-row">
-                <div class="filter-pill set" onclick="showToast('진료중인 병원만')"><i class="fi fi-rr-clock"></i> 진료중</div>
+                <div class="filter-pill set" onclick="showToast('실시간 진료 상태는 제공되지 않는 시연용 데이터입니다')"><i class="fi fi-rr-clock"></i> 예시 상태</div>
                 <div class="filter-pill set" id="hospmap-dept-pill" onclick="openDeptSheet()"><span id="hospmap-dept-txt">정형외과</span> <i class="fi fi-rr-angle-small-down"></i></div>
-                <div class="filter-pill" onclick="showToast('지도에 보이는 범위 기준')">지도기준 <i class="fi fi-rr-angle-small-down"></i></div>
+                <div class="filter-pill" onclick="showToast('향남읍 예시 위치에 표시한 병원 목록입니다')">예시 지도 <i class="fi fi-rr-angle-small-down"></i></div>
                 <div class="filter-pill" onclick="showToast('관련도순 정렬')">관련순 <i class="fi fi-rr-angle-small-down"></i></div>
               </div>
             </div>
-            <div class="hospital-source-note" id="hospmap-source-note" aria-live="polite"><span class="dot" aria-hidden="true"></span><span><strong>병원 검색 · 데이터 확인 중</strong><br>진료시간·접수 가능 여부 등 일부 상태는 화면 검증용 예시입니다.</span></div>
+            <div class="hospital-source-note" id="hospmap-source-note" aria-live="polite"><span class="dot" aria-hidden="true"></span><span><strong>병원 검색 · 데이터 확인 중</strong><br>병원·위치·진료 상태·거리는 향남읍 시연용 예시이며 실제 진료 가능 여부는 확인되지 않았습니다.</span></div>
             <div id="hospmap-list"></div>
           </div>
         </div>
@@ -839,7 +839,7 @@
       <div class="app-bar">
         <button class="back-btn" onclick="goBack()"><i class="fi fi-rr-angle-left"></i></button>
         <div class="app-bar-center"><div class="app-bar-title" id="hd-bar-nm">병원 상세</div></div>
-        <button class="icon-right" onclick="showToast('병원 정보를 공유했어요')"><i class="fi fi-rr-share"></i></button>
+        <button class="icon-right" onclick="showPrototypeNotice('병원 정보 공유')"><i class="fi fi-rr-share"></i></button>
       </div>
       <div class="body-scroll" id="hd-scroll">
         <!-- 이미지 갤러리 -->
@@ -852,17 +852,17 @@
               <div class="hd-dept" id="hd-dept">내과</div>
               <div class="hd-nm" id="hd-nm">병원명</div>
             </div>
-            <button class="hd-call" onclick="showToast('병원으로 전화를 겁니다')"><i class="fi fi-rr-phone-flip"></i></button>
+            <button class="hd-call" onclick="showPrototypeNotice('병원 전화 연결')"><i class="fi fi-rr-phone-flip"></i></button>
           </div>
           <div class="hd-loc" id="hd-loc"><i class="fi fi-rr-marker"></i> 228m · 경기도 화성시 향남읍</div>
           <div class="hd-meta">
-            <span class="hd-open" id="hd-open">진료중</span>
+            <span class="hd-open" id="hd-open">실시간 상태 미확인</span>
             <span class="hd-meta-dot">·</span>
-            <span id="hd-lunch">13:00 부터 점심시간</span>
+            <span id="hd-lunch">진료시간은 예시입니다</span>
           </div>
-          <div class="hd-rev-sum" onclick="showToast('진료후기 전체보기')">
+          <div class="hd-rev-sum" onclick="pickHdTab(document.querySelectorAll('#hd-tabs .hd-tab')[2])">
             <i class="fi fi-sr-star"></i><b id="hd-rating">4.8</b>
-            <span id="hd-revcnt">진료후기 262개</span>
+            <span id="hd-revcnt">예시 진료후기</span>
             <i class="fi fi-rr-angle-small-right"></i>
           </div>
           <div class="mosigo-demo-data-note" id="hd-data-note">병원 검색 결과의 출처를 구분해 표시하며, 운영시간·의료진·후기 등 일부 상세 정보는 프로토타입용 예시 데이터입니다.</div>
@@ -880,7 +880,7 @@
         <div class="hd-sec">
           <div class="hd-notice">
             <span class="hd-notice-tag">공지</span>
-            <div class="hd-notice-tx" id="hd-notice">8월 진료 안내 — 8/15(광복절) 휴진, 토요일은 오후 1시까지 진료합니다.</div>
+            <div class="hd-notice-tx" id="hd-notice">시연용 공지입니다. 실제 휴진일과 운영시간은 의료기관에 확인해 주세요.</div>
           </div>
         </div>
 
@@ -898,20 +898,20 @@
             <div class="hd-addr" id="hd-addr">경기도 화성시 향남읍</div>
             <button class="hd-copy" onclick="showToast('주소를 복사했어요')">복사</button>
           </div>
-          <div class="hd-park"><i class="fi fi-rr-parking"></i> 건물 내 주차장 이용 가능 (진료 시 2시간 무료)</div>
+          <div class="hd-park"><i class="fi fi-rr-parking"></i> 주차 정보는 시연용 예시입니다. 실제 이용 가능 여부는 병원에 확인해 주세요.</div>
         </div>
 
         <!-- 의료진 -->
         <div class="hd-sec">
-          <div class="hd-sec-h">의료진</div>
+          <div class="hd-sec-h">예시 의료진</div>
           <div class="hd-docs" id="hd-docs"></div>
         </div>
 
         <!-- 진료후기 -->
         <div class="hd-sec">
-          <div class="hd-sec-h">진료후기 <span id="hd-revcnt2">262</span></div>
+          <div class="hd-sec-h">예시 진료후기 <span id="hd-revcnt2">262</span></div>
           <div class="hd-revs" id="hd-revs"></div>
-          <button class="hd-more" onclick="showToast('진료후기 전체보기')">진료후기 전체보기</button>
+          <button class="hd-more" onclick="showToast('실제 후기가 아닌 시연용 예시 3건입니다')">예시 후기 안내</button>
         </div>
       </div>
       <div class="hd-cta">
@@ -925,7 +925,7 @@
       <div class="search-stage">
         <!-- 지도 (화면 최상단까지 꽉 차게) -->
         <div id="map-search" class="map-canvas"></div>
-        <div class="map-ctrl r3" id="search-recenter" onclick="recenterSearchMap()"><i class="fi fi-rr-location-crosshairs"></i></div>
+        <div class="map-ctrl r3" id="search-recenter" onclick="recenterSearchMap()" title="향남읍 예시 출발지로 이동" aria-label="향남읍 예시 출발지로 이동"><i class="fi fi-rr-location-crosshairs"></i></div>
 
         <!-- 지도 위 플로팅: 경로 검색바 + 날짜 -->
         <div class="search-toolbar">
