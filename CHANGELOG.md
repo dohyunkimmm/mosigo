@@ -6,6 +6,18 @@ All notable Mosigo changes are tracked here as the prototype advances progressiv
 
 ## Unreleased
 
+### 운영·보안·미디어·지도 보완 — 2026-10-25~30
+
+- [#87](https://github.com/dohyunkimmm/mosigo/pull/87)·[#89](https://github.com/dohyunkimmm/mosigo/pull/89): 예약 생성 요청 제한과 iframe 메시지 출처 검증을 강화하고, 이벤트·게임 페이지의 스타일·스크립트를 외부 파일로 분리했습니다.
+- [#92](https://github.com/dohyunkimmm/mosigo/pull/92)~[#95](https://github.com/dohyunkimmm/mosigo/pull/95): 리포트·혜택 이미지를 검증된 WebP로 최적화하고, API의 구식 쿼리 접근을 제거하고, v14/브라우저 QA 릴리스 게이트를 보강했습니다. Production Smoke는 영속 데이터 생성·변경 없이 읽기 전용으로 전환했습니다.
+- [#96](https://github.com/dohyunkimmm/mosigo/pull/96)·[#102](https://github.com/dohyunkimmm/mosigo/pull/102): 기존 Blob의 메타데이터 점검을 승인된 저장소 및 단기 OIDC 읽기 범위로 제한했습니다. 운영 데이터를 테스트 데이터로 단정하거나 삭제하지 않습니다.
+- [#97](https://github.com/dohyunkimmm/mosigo/pull/97)·[#100](https://github.com/dohyunkimmm/mosigo/pull/100)·[#103](https://github.com/dohyunkimmm/mosigo/pull/103)·[#105](https://github.com/dohyunkimmm/mosigo/pull/105): 공유 토큰에 `MOSIGO_SHARE_WRITE_POLICY=read-only` 선택 기능을 추가하고, 서버 권한을 공유자 화면에 반영하며 읽기 전용 공유자의 예약 변경·로컬 상태 변경을 차단했습니다. **기본값은 기존 `edit`**이고 운영 정책을 일괄 전환한 것은 아닙니다.
+- [#98](https://github.com/dohyunkimmm/mosigo/pull/98)·[#107](https://github.com/dohyunkimmm/mosigo/pull/107)·[#112](https://github.com/dohyunkimmm/mosigo/pull/112): WebKit/Chromium 영상 재진입·재시도를 자동 검사하고, 모바일 앱 백그라운드·BFCache 복귀 시 중단된 게임을 사용자 조작으로 안전하게 재시작하도록 보완했습니다. **실제 LTE/5G 기기 QA는 미실시**입니다.
+- [#106](https://github.com/dohyunkimmm/mosigo/pull/106)·[#108](https://github.com/dohyunkimmm/mosigo/pull/108)·[#110](https://github.com/dohyunkimmm/mosigo/pull/110): CSP 관찰 정책을 도입하고 Operations·이벤트·게임 페이지에는 경로별 스크립트 CSP를 강제 적용했습니다. 메인 예약 화면의 전역 정책은 계속 관찰 모드입니다.
+- [#109](https://github.com/dohyunkimmm/mosigo/pull/109)·[#111](https://github.com/dohyunkimmm/mosigo/pull/111)·[#113](https://github.com/dohyunkimmm/mosigo/pull/113)~[#117](https://github.com/dohyunkimmm/mosigo/pull/117): 운영 저장소와 분리된 테스트 Blob의 단일 마커 쓰기·읽기·목록 및 OIDC 읽기·서버 업로드 시각을 검증하고, SHA-256 검토용 증빙을 기록했습니다. 기존 장기 RW 토큰 제거, 만료 후 복구 가능한 정리·자동 삭제 검증은 미완료입니다.
+- [#118](https://github.com/dohyunkimmm/mosigo/pull/118): 데모 지도를 키가 필요한 CARTO 타일에서 OpenStreetMap 표준 타일로 바꾸고 모든 지도에 출처 표시를 복원했습니다. 공용 타일 서버는 대규모 서비스 트래픽을 보장하지 않습니다.
+- **검증 경계:** 이 항목은 `main`에 병합된 후속 소스 변경의 요약이며 새 제품 버전 발행 또는 최신 Production 배포·실기기 검증 완료를 뜻하지 않습니다. 안정 버전 표기는 `v14.0.0`을 유지합니다.
+
 ### 사용자 경험·런타임 정리 — 2026-10-09~10
 
 - [#71](https://github.com/dohyunkimmm/mosigo/pull/71): 로그인 없는 읽기 전용 `/ops-preview.html`을 추가했습니다. 예시 예약 3건의 개요·검색·필터·상세 확인은 실제 계정·예약 변경·공유 발급 API와 분리됩니다. 홈의 다음 행동, 예시 매니저 비교, 리포트·데모 안내를 개선하고 Chromium 사용자 여정 테스트를 추가했습니다.
