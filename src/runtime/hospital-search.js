@@ -95,7 +95,7 @@ function v4HighlightHospitalName(name, highlight) {
 
 renderSiItem = function(h, idx, highlight) {
   const availability=h.availability||{};
-  const isOpen=availability.openNow!==false;
+  const isOpen=availability.openNow===true;
   const sameDay=availability.sameDay===true;
   const wait=Number.isFinite(availability.waitMin) ? ' · 예시 대기 '+availability.waitMin+'분' : '';
   const managerCount=Array.isArray(h.mgrIds)?h.mgrIds.length:0;
@@ -105,14 +105,14 @@ renderSiItem = function(h, idx, highlight) {
   const shortAddr=h.addr ? h.addr.split(' ').slice(0,3).join(' ') : '';
   const tags=[...(h.specialties||hospitalTags(h)).slice(0,3), managerCount?'동행 매니저 '+managerCount+'명':'매니저 연결 대기'].filter(Boolean);
   const badges=sameDay
-    ? '<span class="hosp-badge">＋ 당일접수</span><span class="hosp-badge">＋ 예약</span>'
-    : '<span class="hosp-badge">＋ 예약</span>';
-  const quickest=(idx===0 && isOpen) ? '<div class="hosp-fast"><span>추천 결과</span><b>'+(sameDay?'당일 접수 가능':'예약 가능')+'</b></div>' : '';
+    ? '<span class="hosp-badge">예시 · 당일접수</span><span class="hosp-badge">동행 신청 체험</span>'
+    : '<span class="hosp-badge">동행 신청 체험</span>';
+  const quickest=(idx===0 && isOpen) ? '<div class="hosp-fast"><span>예시 추천 결과</span><b>실제 접수 가능 여부 미확인</b></div>' : '';
   return `<div class="hosp-card" onclick="openHospDetail(${idx})">
     <div class="hosp-badges">${badges}</div>
     <div class="hosp-nm">${v4HighlightHospitalName(h.name,highlight)}</div>
-    <div class="hosp-status"><span class="${isOpen?'on':''}">${isOpen?'진료중':'진료 종료'}</span>${wait}${rating?' <span class="dot">|</span> '+esc(rating):''}${reviewCount?' · '+esc(reviewCount):''}</div>
-    <div class="hosp-loc"><i class="fi fi-rr-marker"></i> ${dist?esc(dist)+' · ':''}${esc(shortAddr)}</div>
+    <div class="hosp-status"><span class="${isOpen?'on':''}">예시 진료상태 · ${isOpen?'진료중':'진료 종료'}</span>${wait}${rating?' <span class="dot">|</span> 예시 '+esc(rating):''}${reviewCount?' · 예시 '+esc(reviewCount):''}</div>
+    <div class="hosp-loc"><i class="fi fi-rr-marker"></i> ${dist?'예시 위치에서 직선거리 '+esc(dist)+' · ':''}${esc(shortAddr)}</div>
     <div class="hosp-tags">${esc(tags.join(' · '))}</div>
     ${quickest}
   </div>`;
@@ -141,17 +141,25 @@ async function retryHospitalSearch() {
   else await loadNearbyHospitals();
 }
 
+let v4NearbyRequestId=0;
 loadNearbyHospitals = async function() {
   const el=document.getElementById('si-nearby');
   if(!el) return;
-  el.innerHTML='<div class="si-loading" role="status">주변 병원을 불러오는 중…</div>';
+  const requestId=++v4NearbyRequestId;
+  el.innerHTML='<div class="si-loading" role="status">향남읍 예시 병원을 불러오는 중…</div>';
   const list=await searchHospitals({numOfRows:8,sort:'recommended'});
+  if(requestId!==v4NearbyRequestId) return;
   hospitalCache=list;
   if(!list.length){ el.innerHTML=v4EmptyNotice(); return; }
   el.innerHTML=v4FallbackNotice('loadNearbyHospitals()')+list.map((h,i)=>renderSiItem(h,i)).join('');
 };
 
+// Invalidate pending results immediately on every keystroke, not after debounce.
+let v4TypeSearchSequence=0;
+const v4OriginalSiType=siType;
+siType=function(){ v4TypeSearchSequence++; return v4OriginalSiType(); };
 siTypeFetch = async function() {
+  const sequence=++v4TypeSearchSequence;
   const input=document.getElementById('si-input');
   const v=input?.value.trim()||'';
   const def=document.getElementById('si-default');
@@ -161,19 +169,24 @@ siTypeFetch = async function() {
   if(sug){ sug.style.display=''; sug.innerHTML='<div class="si-loading" role="status">검색 중…</div>'; }
   const qd=detectDeptCode(v);
   const list=await searchHospitals({qn:qd?'':v,qd,numOfRows:12,sort:'recommended'});
+  if(sequence!==v4TypeSearchSequence || (input?.value.trim()||'')!==v) return;
   hospitalCache=list;
   if(!sug) return;
   if(!list.length){ sug.innerHTML=v4EmptyNotice(v); return; }
   sug.innerHTML=v4FallbackNotice('retryHospitalSearch()')+list.map((h,i)=>renderSiItem(h,i,v)).join('');
 };
 
+let v4DeptRequestId=0;
 pickDept = async function(label) {
+  const requestId=++v4DeptRequestId;
   const dt=document.getElementById('hospmap-dept-txt');
   if(dt) dt.textContent=label;
   closeModal('modal-dept');
   showToast(label+'로 필터링합니다');
-  const qd=label==='전체'?'':detectDeptCode(label);
+  // Unsupported departments must produce no matches, not silently show every clinic.
+  const qd=label==='전체'?'':(detectDeptCode(label)||label);
   const list=await searchHospitals({qd,numOfRows:12,sort:'recommended'});
+  if(requestId!==v4DeptRequestId) return;
   hospitalCache=list;
   renderHospMapList(list);
   renderHospMapPins(list);

@@ -263,3 +263,80 @@ test('embedded event can advance to game under enforced scoped CSP', async ({pag
   await page.frameLocator('.ext-host iframe.is-live').locator('#g-cast').click();
   await expect(page.frameLocator('.ext-host iframe.is-live').locator('#g-cast')).toBeHidden();
 });
+
+
+test('department search matches specific specialties and never broadens unknown filters',async({page})=>{
+  await page.goto('/');
+  await page.waitForFunction(()=>typeof window.pickDept==='function');
+  const codes=await page.evaluate(()=>[
+    detectDeptCode('정형외과'),detectDeptCode('외과'),detectDeptCode('정형외과 전문'),
+    detectDeptCode('가정의학과')
+  ]);
+  expect(codes).toEqual(['D006','D005','D006','']);
+  await page.evaluate(()=>pickDept('가정의학과'));
+  await expect(page.locator('#hospmap-list')).toContainText('검색 결과가 없습니다');
+});
+
+test('hospital detail discloses example status and tabs navigate existing sections',async({page})=>{
+  await page.goto('/');
+  await page.evaluate(()=>{
+    hospitalCache=[FALLBACK_HOSPITALS[0]];
+    openHospDetail(0);
+  });
+  await expect(page.locator('#hd-open')).toHaveText('실시간 진료 여부 미확인');
+  await expect(page.locator('#hd-notice')).toContainText('시연용 공지');
+  await expect(page.locator('#hd-hours')).toContainText('예시');
+  await expect(page.locator('#hd-revs')).toContainText('가상 후기 예시');
+  await page.locator('#hd-tabs .hd-tab').nth(2).click();
+  await expect(page.locator('#hd-tabs .hd-tab').nth(2)).toHaveClass(/on/);
+  await expect.poll(()=>page.locator('#hd-scroll').evaluate(node=>node.scrollTop)).toBeGreaterThan(0);
+  await page.locator('#hd-tabs .hd-tab').first().click();
+  await expect.poll(()=>page.locator('#hd-scroll').evaluate(node=>node.scrollTop)).toBeLessThan(10);
+});
+
+test('rapid hospital searches ignore an older response arriving last',async({page})=>{
+  await page.goto('/');
+  await page.waitForFunction(()=>typeof window.siTypeFetch==='function');
+  const result=await page.evaluate(async()=>{
+    const original=searchHospitals;
+    const pending=[];
+    searchHospitals=()=>new Promise(resolve=>pending.push(resolve));
+    const input=document.getElementById('si-input');
+    input.value='안과';
+    const first=siTypeFetch();
+    input.value='내과';
+    const second=siTypeFetch();
+    pending[1]([FALLBACK_HOSPITALS[0]]);
+    await second;
+    pending[0]([FALLBACK_HOSPITALS[4]]);
+    await first;
+    searchHospitals=original;
+    return {names:hospitalCache.map(h=>h.name),text:document.getElementById('si-suggest').textContent};
+  });
+  expect(result.names).toEqual(['똑똑연세내과의원']);
+  expect(result.text).toContain('똑똑연세내과의원');
+  expect(result.text).not.toContain('향남밝은안과의원');
+});
+
+test('recent searches are session-scoped and demo rankings have no fake live time',async({page})=>{
+  await page.goto('/');
+  await page.evaluate(()=>{
+    rememberSearchQuery('정형외과');
+    rememberSearchQuery('내과');
+    renderRecents();
+    renderRanks();
+  });
+  await expect(page.locator('#si-recents')).toContainText('내과');
+  await expect(page.locator('#si-rank-time')).toContainText('실시간 통계 아님');
+  const stored=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('mosigo-search-recents-session')));
+  expect(stored).toEqual(['내과','정형외과']);
+  await page.evaluate(()=>clearRecents());
+  await expect(page.locator('#si-recents')).toContainText('최근 검색어가 없습니다');
+});
+
+test('missing Leaflet CDN shows readable fallback rather than a silent empty map',async({page})=>{
+  await page.route('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',route=>route.abort());
+  await page.goto('/');
+  await expect(page.locator('#map-search .mosigo-map-unavailable')).toContainText('배경지도를 불러오지 못했습니다');
+  await expect(page.locator('#map-hosp .mosigo-map-unavailable')).toHaveCount(1);
+});
