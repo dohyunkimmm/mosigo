@@ -800,9 +800,9 @@ function hospitalSourceMeta(source=lastHospitalDataSource){
 function syncHospitalSourceUI(){
   const meta=hospitalSourceMeta();
   const note=document.getElementById('hospmap-source-note');
-  if(note) note.innerHTML='<span class="dot" aria-hidden="true"></span><span><strong>'+esc(meta.label)+'</strong><br>'+esc(meta.detail)+' 진료시간·접수 가능 여부 등 일부 상태는 화면 검증용 예시입니다.</span>';
+  if(note) note.innerHTML='<span class="dot" aria-hidden="true"></span><span><strong>'+esc(meta.label)+'</strong><br>'+esc(meta.detail)+' 진료 상태·위치·거리는 향남읍 기준 시연용 예시이며 실시간 정보가 아닙니다.</span>';
   const detail=document.getElementById('hd-data-note');
-  if(detail) detail.textContent=meta.label+'입니다. 운영시간·의료진·후기 등 일부 상세 정보는 프로토타입용 예시 데이터입니다.';
+  if(detail) detail.textContent=meta.label+'입니다. 운영시간·지도 좌표·거리·의료진·후기 등은 시연용 예시입니다. 실제 진료 여부는 확인되지 않았습니다.';
 }
 
 function esc(s){
@@ -1995,7 +1995,9 @@ function openAddrSearch(){
   if(inp) inp.value='';
   goTo('s-addr-search');
 }
+// Uses a fixed demonstration address; never requests device geolocation.
 function searchAddrByCurrentLocation(){
+  showToast('향남읍 예시 주소를 선택합니다');
   addrResolvedMain=ADDR_DEMO.main;
   addrResolvedSub=ADDR_DEMO.sub;
   goToAddrConfirm();
