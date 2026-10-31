@@ -27,6 +27,6 @@ jobs:
           test -d /ms-playwright
           npx playwright --version
       - name: Check key journeys and accessibility
-        run: npx playwright test --config=playwright.config.cjs
+        run: npx playwright test --config=tests/config/playwright.config.cjs
       - name: Check mobile media on Android Chromium and iPhone WebKit
-        run: npx playwright test --config=playwright.mobile.config.cjs
+        run: npx playwright test --config=tests/config/playwright.mobile.config.cjs
