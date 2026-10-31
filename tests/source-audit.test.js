@@ -31,10 +31,11 @@ test('source audit fails when inline style is introduced', () => {
     for (const source of sources) {
       fs.copyFileSync(path.join(root, 'src', source), path.join(fixture, 'src', source));
     }
-    fs.appendFileSync(path.join(fixture, 'src', 'index.html'), '\n<style>body { opacity: 1 }</style>\n');
+    fs.appendFileSync(path.join(fixture, 'src', 'index.html'), '\n<style>body { opacity: 1 }</style>\n<script data-src="ghost.js">window.demo = true;</script>\n');
     const result = runAudit(path.join(fixture, 'scripts', 'source-audit.js'));
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /inline <style> blocks are forbidden/);
+    assert.match(result.stderr, /inline <script> blocks are forbidden/);
   } finally {
     fs.rmSync(fixture, { recursive: true, force: true });
   }

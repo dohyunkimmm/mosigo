@@ -40,7 +40,7 @@ function collectTagBlocks(tagName) {
 }
 
 function getAttr(attrs, name) {
-  return attrs.match(new RegExp(`\\b${name}\\s*=\\s*["']([^"']+)["']`, 'i'))?.[1] || null;
+  return attrs.match(new RegExp(`(?:^|\\s)${name}\\s*=\\s*["']([^"']+)["']`, 'i'))?.[1] || null;
 }
 
 const styles = collectTagBlocks('style').map(({ body, index, ...block }) => block);
