@@ -6,6 +6,7 @@ on:
       - '.github/workflows/retire-audited-branches.yml'
 permissions:
   contents: write
+  pull-requests: read
 jobs:
   archive-and-retire:
     if: github.repository == 'dohyunkimmm/mosigo' && github.ref == 'refs/heads/main'
