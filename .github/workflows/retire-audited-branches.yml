@@ -55,3 +55,23 @@ jobs:
             echo "Archived and retired $branch -> $tag ($expected)"
             echo "- \`$branch\` -> \`$tag\` (\`$expected\`)" >> "$GITHUB_STEP_SUMMARY"
           done <<< "$entries"
+          # Also retire the source branch of this merged maintenance PR.
+          source_branch="chore/retire-audited-branches-20261031"
+          merged_pr="$(gh api "repos/$GH_REPO/pulls?state=closed&per_page=100" | jq --arg branch "$source_branch" '[.[] | select(.head.ref == $branch and .base.ref == "main" and .merged_at != null)] | sort_by(.merged_at) | last')"
+          source_sha="$(jq -r '.head.sha // empty' <<< "$merged_pr")"
+          if [[ -z "$source_sha" ]]; then
+            echo "::warning::Merged maintenance PR not found; leaving $source_branch untouched"
+          else
+            current="$(gh api "repos/$GH_REPO/git/ref/heads/$source_branch" --jq '.object.sha')"
+            [[ "$current" == "$source_sha" ]] || { echo "::error::Maintenance PR branch moved; refusing deletion"; exit 1; }
+            tag="archive/20261031/$source_branch"
+            if existing="$(gh api "repos/$GH_REPO/git/ref/tags/$tag" --jq '.object.sha' 2>/dev/null)"; then
+              [[ "$existing" == "$source_sha" ]] || { echo "::error::Maintenance archive tag mismatch"; exit 1; }
+            else
+              gh api --method POST "repos/$GH_REPO/git/refs" -f ref="refs/tags/$tag" -f sha="$source_sha" >/dev/null
+            fi
+            archived="$(gh api "repos/$GH_REPO/git/ref/tags/$tag" --jq '.object.sha')"
+            [[ "$archived" == "$source_sha" ]] || { echo "::error::Maintenance archive verification failed"; exit 1; }
+            gh api --method DELETE "repos/$GH_REPO/git/refs/heads/$source_branch"
+            echo "Archived and retired $source_branch -> $tag ($source_sha)" >> "$GITHUB_STEP_SUMMARY"
+          fi
