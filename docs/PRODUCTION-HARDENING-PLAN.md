@@ -112,7 +112,7 @@ Chromium 모바일 뷰포트에서 게임 MP4 지연 로딩과 MP4 전송 실패
 
 ### 2026-10-27 모바일 브라우저 추가 검증
 
-`playwright.mobile.config.cjs`로 **Android Chromium(Pixel 5 에뮬레이션)**과 **iPhone WebKit(iPhone 13 에뮬레이션)**의 영상 지연 로딩·MP4 네트워크 실패 복구 테스트를 PR/메인 브랜치 필수 Browser Experience QA에 추가했습니다. 기존 모바일 미디어 회귀 검사의 잘못 이스케이프된 MP4 매칭 정규식을 실제 `.mp4` URL과 일치하도록 수정했습니다. WebKit 교차 검사에서 **`preload="none"`을 준 video도 첫 클릭 전 4개 MP4를 요청**하는 회귀를 발견했고, `<video data-src>`로 파일 경로를 보관한 뒤 사용자 시작·결과 표시 시에만 `src`를 할당하도록 수정했습니다. 이 동작은 자동 테스트에서 MP4 실제 요청 목록과 `src` 부재를 모두 확인합니다. 해당 테스트는 실제 네트워크를 사용하지 않는 브라우저 에뮬레이션으로서 LTE/5G 실제 기기 검증을 대체하지 않습니다.
+`tests/config/playwright.mobile.config.cjs`로 **Android Chromium(Pixel 5 에뮬레이션)**과 **iPhone WebKit(iPhone 13 에뮬레이션)**의 영상 지연 로딩·MP4 네트워크 실패 복구 테스트를 PR/메인 브랜치 필수 Browser Experience QA에 추가했습니다. 기존 모바일 미디어 회귀 검사의 잘못 이스케이프된 MP4 매칭 정규식을 실제 `.mp4` URL과 일치하도록 수정했습니다. WebKit 교차 검사에서 **`preload="none"`을 준 video도 첫 클릭 전 4개 MP4를 요청**하는 회귀를 발견했고, `<video data-src>`로 파일 경로를 보관한 뒤 사용자 시작·결과 표시 시에만 `src`를 할당하도록 수정했습니다. 이 동작은 자동 테스트에서 MP4 실제 요청 목록과 `src` 부재를 모두 확인합니다. 해당 테스트는 실제 네트워크를 사용하지 않는 브라우저 에뮬레이션으로서 LTE/5G 실제 기기 검증을 대체하지 않습니다.
 
 
 ### #90: CSP 모니터링 모드 첫 단계 (외부 리소스 조사 후)
