@@ -54,6 +54,15 @@ npm run quality
 
 **이미지 유지보수:** 보고서·혜택 배너 원본 PNG를 교체할 때는 `ffmpeg`와 `ffprobe` 설치 후 `npm run optimize:images`를 실행합니다. 해상도, 최소 15% 용량 절감, SSIM 0.96 이상을 확인한 경우에만 WebP 참조로 변경하며 `tests/hero-image-assets.test.js`가 파일 정합성을 검사합니다.
 
+## 저장소 구성
+
+- `src/` — 배포되는 서비스 화면·정적 자료·API·런타임
+- `tests/` — 자동 테스트와 `tests/config/`의 Playwright 설정
+- `scripts/` — 소스 검사·운영 점검·미디어 최적화 스크립트
+- `docs/` — 운영 기록과 점검 절차
+- `.github/` — CI 및 저장소 운영 설정
+- 최상위 `package.json`, `vercel.json`, `VERSION`, `CHANGELOG.md` — 각각 테스트, 배포, 버전, 변경 이력 기준 파일
+
 ## 참고 자료
 
 - [저장소 운영·브랜치 보호·WAF 후속/Production Smoke 재검증](docs/REPO-OPERATIONS.md) — 2026-10-22 검증 기록
