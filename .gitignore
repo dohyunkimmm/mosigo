@@ -26,3 +26,9 @@ Thumbs.db
 playwright-report/
 test-results/
 coverage/
+
+# Temporary build and editor artifacts
+dist/
+.cache/
+*.tmp
+*.swp
