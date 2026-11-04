@@ -470,6 +470,8 @@ function openBkDetail(idx){
 function updateHomeState(){
   const active=document.getElementById('home-active-card');
   if(active) active.style.display = hasActiveBooking ? '' : 'none';
+  const date=document.getElementById('home-active-date');
+  if(date && hasActiveBooking) date.textContent=dsSelectedDate+' · '+dsSelectedTime+' · '+(selectedHospital?.name||'똑똑연세내과의원');
 }
 
 // ── s-live: 동행 있음/없음 상태 분기 ──
@@ -1641,6 +1643,12 @@ function updateConfirmRouteMeta(){
   if(dxEl) dxEl.textContent = confirmDx.trim() || '진단명 없음';
   const durEl=document.getElementById('confirm-duration');
   if(durEl) durEl.textContent = dsSelectedDuration+'시간';
+  const selectedSlot=dsSelectedDate+' · '+dsSelectedTime;
+  const selectedName=selectedHospital?.name||'똑똑연세내과의원';
+  const managerSub=document.getElementById('manager-date-sub');
+  if(managerSub) managerSub.textContent=selectedSlot+' · 화성 향남';
+  const confirmSub=document.getElementById('confirm-date-sub');
+  if(confirmSub) confirmSub.textContent=selectedName+' · '+selectedSlot;
 }
 
 // 진료 내용 전달 방식 — 배민 "수저·포크 안 받기" 체크박스 쌍과 같은 자리·같은 디자인
@@ -2166,15 +2174,15 @@ function toggleSearchSheet(){
 function doPay(){
   hasActiveBooking=true;
   updateHomeState();
-  showToast('예약이 접수됐습니다! 매니저에게 알림을 보냈어요 🎉');
+  showToast('시연 예약을 만들었어요. 실제 매니저에게 알림은 전송되지 않습니다.');
   renderOrder();
   goTo('s-order');
   setTimeout(()=>{
     const title=document.getElementById('order-status-title');
     const sub=document.getElementById('order-status-sub');
     const cancelBtn=document.getElementById('order-cancel-btn');
-    if(title) title.textContent='매니저가 예약을 수락했어요!';
-    if(sub) sub.textContent='곧 동행이 시작돼요.';
+    if(title) title.textContent='시연용 매니저 배정 완료';
+    if(sub) sub.textContent='예시 동행 화면으로 이동합니다.';
     if(cancelBtn) cancelBtn.style.display='none';
   },1600);
   setTimeout(()=>{ updateLiveState(); goTo('s-live'); },3200);
