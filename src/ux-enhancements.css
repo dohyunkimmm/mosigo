@@ -36,5 +36,11 @@
 
 @media(hover:hover){.mosigo-home-cta:hover{background:#116b37}.mosigo-compare-trigger:hover,.mosigo-compare-card button:hover{background:#e5f5e9}}
 
+
+/* Brand green is a fill/accent; small green text needs a darker readable ink. */
+:root{--mosigo-green-ink:#126b35}
+.pt-edit,.pt-auto-tag,.dur-note,.cost-total,.tab-item.on,.bk-tab.on{color:var(--mosigo-green-ink)}
+.pt-edit{min-height:44px;padding-inline:6px}
+
 /* Keep the demo source note flush without an inline style. */
 #modal-demo-guide .demo-guide-note{margin-bottom:0}
