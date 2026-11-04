@@ -26,13 +26,15 @@
 .mosigo-compare-card small{font-size:12px;color:#526457;line-height:1.5}
 .mosigo-compare-stats{display:grid;gap:7px;margin:3px 0}
 .mosigo-compare-stats div{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:3px;border-bottom:1px solid #e5ece6;padding-bottom:5px}
-.mosigo-compare-stats dt{font-size:11px;color:#607169}
+.mosigo-compare-stats dt{font-size:12px;color:#607169}
 .mosigo-compare-stats dd{margin:0;font-size:12px;font-weight:700}
-.mosigo-compare-card button{min-height:40px;padding:8px;border:1px solid #168044;border-radius:9px;background:#fff;color:#126a34;font-weight:700;cursor:pointer;font-family:inherit}
+.mosigo-compare-card button{min-height:44px;padding:8px;border:1px solid #168044;border-radius:9px;background:#fff;color:#126a34;font-weight:700;cursor:pointer;font-family:inherit}
 .mosigo-compare-card button:focus-visible,.mosigo-home-cta:focus-visible,.mosigo-compare-trigger:focus-visible,.mosigo-inline-action:focus-visible{outline:3px solid #236f38;outline-offset:2px}
 .mosigo-compare-disclaimer{margin-top:13px;font-size:12px;line-height:1.55;color:#506554}
 @media(max-width:500px){.mosigo-compare-grid{grid-template-columns:1fr}.mosigo-compare-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}.mosigo-compare-card h3,.mosigo-compare-stats,.mosigo-compare-card small{grid-column:1/-1}.mosigo-compare-card button{grid-column:1/-1}.mosigo-compare-dialog{max-height:calc(100dvh - 42px)}}
 @media(prefers-reduced-motion:reduce){.mosigo-home-cta,.mosigo-compare-trigger{transition:none}}
+
+@media(hover:hover){.mosigo-home-cta:hover{background:#116b37}.mosigo-compare-trigger:hover,.mosigo-compare-card button:hover{background:#e5f5e9}}
 
 /* Keep the demo source note flush without an inline style. */
 #modal-demo-guide .demo-guide-note{margin-bottom:0}
