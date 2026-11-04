@@ -37,3 +37,16 @@ test('comparison controls have a mobile-friendly target and visible focus', () =
   assert.match(css, /\.mosigo-compare-card button\{min-height:44px/);
   assert.match(css, /\.mosigo-compare-card button:focus-visible/);
 });
+
+
+test('demo bookings never claim real manager notification or stale August booking dates', () => {
+  assert.match(app, /실제 매니저에게 알림은 전송되지 않습니다/);
+  assert.match(app, /시연용 매니저 배정 완료/);
+  assert.match(app, /getElementById\('home-active-date'\)/);
+  assert.match(app, /getElementById\('manager-date-sub'\)/);
+  assert.match(app, /getElementById\('confirm-date-sub'\)/);
+  assert.match(html, /id="home-active-date"/);
+  assert.match(html, /id="manager-date-sub"/);
+  assert.match(html, /id="confirm-date-sub"/);
+  assert.doesNotMatch(html, /<div class="app-bar-sub">8월 13일 오전 10시/);
+});
