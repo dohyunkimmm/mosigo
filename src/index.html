@@ -442,9 +442,9 @@
         <!-- 오늘 동행 카드 (hasActiveBooking===true) -->
         <div class="sec" id="home-active-card" style="padding-top:10px;display:none">
           <div class="card teal" style="cursor:pointer" onclick="tabTo('s-live',2)">
-            <span class="badge teal" style="margin-bottom:6px">오늘 동행</span>
-            <div class="card-title" style="margin-top:6px">오늘 아버지 병원동행이 있어요</div>
-            <div class="card-sub">8월 13일 오전 10:00 · 똑똑연세내과의원</div>
+            <span class="badge teal" style="margin-bottom:6px">예시 동행</span>
+            <div class="card-title" style="margin-top:6px">선택한 동행 일정을 확인해요</div>
+            <div class="card-sub" id="home-active-date">선택한 일정 · 똑똑연세내과의원</div>
             <div class="mgr-card on" style="margin:10px 0 8px;background:var(--white);cursor:default" onclick="event.stopPropagation()">
               <div class="mgr-avatar">🧑‍⚕️</div>
               <div style="flex:1">
@@ -1234,7 +1234,7 @@
         <button class="back-btn" onclick="goBack()"><i class="fi fi-rr-angle-left"></i></button>
         <div class="app-bar-center">
           <div class="app-bar-title">매니저 선택</div>
-          <div class="app-bar-sub">8월 13일 오전 10시 · 화성 향남</div>
+          <div class="app-bar-sub" id="manager-date-sub">선택한 방문 일정 · 화성 향남</div>
         </div>
         <div style="width:32px"></div>
       </div>
@@ -1312,7 +1312,7 @@
             <div class="item-thumb" id="confirm-mgr-thumb"></div>
             <div class="item-body">
               <div class="item-title" id="confirm-mgr">김민준 매니저 · ★4.9</div>
-              <div class="item-sub">똑똑연세내과의원 · 8월 13일 오전 10:00</div>
+              <div class="item-sub" id="confirm-date-sub">선택한 방문 일정 · 똑똑연세내과의원</div>
             </div>
             <button class="item-edit" onclick="openModal('modal-target')">수정</button>
           </div>
