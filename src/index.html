@@ -432,7 +432,7 @@
     <div class="screen" id="s-home">
       <!-- 상단바 -->
       <div class="home-top">
-        <button class="home-name" id="home-place" onclick="pickHomePlace()">간병 장소 입력 <span class="caret">▾</span></button>
+        <button class="home-name" id="home-place" onclick="pickHomePlace()">동행 출발지 입력 <span class="caret">▾</span></button>
         <div class="home-top-spacer"></div>
         <div class="big-toggle" role="button" tabindex="0" aria-pressed="false" onclick="toggleLargeText()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLargeText();}">큰글 <span class="knob"></span></div>
         <button class="home-ic" onclick="showToast('알림 3건')"><i class="fi fi-rr-bell"></i><span class="dot"></span></button>
@@ -620,7 +620,7 @@
         </div>
 
         <!-- 프로모 배너 -->
-        <div class="mp-promo" onclick="showToast('이벤트 페이지로 이동합니다')">
+        <div class="mp-promo" onclick="showPrototypeNotice('적립 이벤트')">
           <div class="mp-promo-t">1일부터 7일 더블 혜택<br>선착순 적립 이벤트</div>
           <div class="mp-promo-s">2배 적립 &amp; 10% 사용</div>
           <div class="mp-promo-e">🎁</div>
@@ -630,22 +630,22 @@
         <div class="mp-sec">
           <div class="mp-sec-h">놓칠 수 없는 오늘의 혜택 <span onclick="showToast('전체보기')">더보기 ›</span></div>
           <div class="mp-benefits">
-            <div class="mp-benefit" onclick="showToast('미션 페이지로 이동합니다')"><em>매일 미션하고</em><b>5,000원 쿠폰받기</b></div>
-            <div class="mp-benefit" onclick="showToast('건강 팁을 확인하세요')"><em>어르신 건강</em><b>이번주 체크리스트</b></div>
+            <div class="mp-benefit" onclick="showPrototypeNotice('미션·쿠폰')"><em>매일 미션하고</em><b>5,000원 쿠폰받기</b></div>
+            <div class="mp-benefit" onclick="showPrototypeNotice('건강 체크리스트')"><em>어르신 건강</em><b>이번주 체크리스트</b></div>
           </div>
         </div>
 
         <!-- 메뉴 목록 -->
         <div class="mp-menu">
           <div class="mp-menu-lb">고객센터</div>
-          <div class="mp-menu-i" onclick="showToast('1:1 문의를 접수합니다')">1:1 문의</div>
+          <div class="mp-menu-i" onclick="showPrototypeNotice('1:1 문의 접수')">1:1 문의</div>
           <div class="mp-menu-i" onclick="showToast('공지사항')">공지사항 <span class="nd"></span></div>
           <div class="mp-menu-i" onclick="showToast('자주 묻는 질문')">자주 묻는 질문</div>
         </div>
         <div class="mp-menu">
           <div class="mp-menu-lb">돌봄 · 참여</div>
           <div class="mp-menu-i" onclick="showToast('가족 구성원 관리')">가족 구성원 관리</div>
-          <div class="mp-menu-i" onclick="openAddrSearch()">간병 장소 관리</div>
+          <div class="mp-menu-i" onclick="openAddrSearch()">동행 출발지 관리</div>
           <div class="mp-menu-i" onclick="showToast('찜한 매니저')">찜한 매니저</div>
           <div class="mp-menu-i" onclick="showToast('친구 초대 리워드')">친구 초대 리워드</div>
         </div>
@@ -658,7 +658,7 @@
 
         <!-- 사업자 정보 -->
         <div class="mp-foot">
-          <b>(주)모시고 사업자 정보</b>
+          <b>가상 사업자 정보 · 시연용</b>
           <div>대표이사　김현수</div>
           <div>주소　경기도 화성시 향남읍 행정중앙로 27</div>
           <div>문의전화　1670-0000</div>
@@ -666,7 +666,7 @@
           <div>사업자등록번호　000-00-00000</div>
           <div class="mp-foot-links"><span>이용약관</span> · <span>개인정보 처리방침</span></div>
           <p>(주)모시고는 병원동행 매칭 중개자로서 의료행위의 당사자가 아니며, 진료 결과에 대한 책임을 지지 않습니다.</p>
-          <div class="mosigo-prototype-note"><b>포트폴리오 프로토타입</b> · 병원 상세, 매니저 프로필, 건강 데이터 일부는 서비스 흐름 검증을 위한 예시 정보입니다.</div>
+          <div class="mosigo-prototype-note"><b>포트폴리오 프로토타입</b> · 병원 상세, 매니저 프로필, 건강 데이터 일부와 위 사업자명·연락처·등록번호는 모두 시연용 예시입니다. 실제 사업자 정보가 아닙니다.</div>
         </div>
       </div>
       <div class="tab-bar">
@@ -737,7 +737,7 @@
       </div>
       <div class="body-scroll">
         <div class="sec" style="padding-top:20px">
-          <div class="addr-hero">간병 장소를<br>입력해 주세요</div>
+          <div class="addr-hero">동행 출발지를<br>입력해 주세요</div>
           <div class="srch-field" style="margin-top:18px">
             <i class="fi fi-rr-search"></i>
             <input id="addr-input" placeholder="도로명, 건물명, 지번으로 검색" onkeyup="if(event.key==='Enter')searchAddrByText()">
@@ -1324,7 +1324,7 @@
             <div id="confirm-stops"></div>
             <div class="addr-row"><span class="addr-tag end">도착</span><span class="addr-txt">똑똑연세내과의원</span></div>
             <div class="addr-row"><span class="addr-tag">대상</span><span class="addr-txt" id="confirm-target">아버지 (이순자, 74세)</span></div>
-            <div class="addr-row"><span class="addr-tag">간병시간</span><span class="addr-txt" id="confirm-duration">2시간</span></div>
+            <div class="addr-row"><span class="addr-tag">동행 시간</span><span class="addr-txt" id="confirm-duration">2시간</span></div>
             <div class="addr-row"><span class="addr-tag">진단명</span><span class="addr-txt" id="confirm-dx-display">진단명 없음</span></div>
           </div>
 
@@ -1364,7 +1364,7 @@
           <div id="mode-list"></div>
 
           <!-- 결제수단 — 동행 종료 후 이 수단으로 자동 청구된다 -->
-          <div class="label">결제수단 <span class="label-opt">동행 종료 후 자동 청구</span></div>
+          <div class="label">결제 방식 <span class="label-opt">시연용 · 실제 청구 없음</span></div>
           <div id="pay-list"></div>
 
           <!-- 예상 금액 (후불 결제) -->
@@ -1374,14 +1374,14 @@
             <div class="cost-total"><span>예상 합계</span><span id="cost-total">45,000원</span></div>
           </div>
           <div class="postpay-note">
-            <div class="postpay-h"><i class="fi fi-rr-info"></i> 후불 결제로 진행됩니다</div>
-            <p>정확한 시간 계산이 불가능한 병원 진료 특성상, 서비스 요금의 투명성을 위해 후불 결제를 진행하고 있습니다.</p>
-            <p>서비스 시간은 <b>초 단위로 자동 계산</b>되니, 안심하고 서비스를 받으세요.</p>
+            <div class="postpay-h"><i class="fi fi-rr-info"></i> 후불 결제 방식 안내 · 시연</div>
+            <p>병원 진료 시간에 따라 이용 시간이 달라질 수 있어, 종료 후 이용 시간을 기준으로 요금을 산정하는 방식을 화면으로 보여줍니다.</p>
+            <p>표시된 시간과 금액은 예시입니다. 이 데모에서는 <b>실제 결제·자동 청구가 발생하지 않습니다.</b></p>
           </div>
         </div>
       </div>
       <div class="pay-bar">
-        <div class="pay-bar-amt"><span id="pay-bar-total">45,000원</span><em>예상 금액 · 후불 결제</em></div>
+        <div class="pay-bar-amt"><span id="pay-bar-total">45,000원</span><em>예시 금액 · 실제 결제 없음</em></div>
         <button class="btn primary" id="pay-btn" onclick="openAgreeSheet()">동행 신청하기</button>
       </div>
 
@@ -1584,7 +1584,7 @@
             </div>
           </div>
           <div class="order-info-row"><span>예약번호</span><b id="order-no">M26H13-KTQAS</b></div>
-          <div class="order-info-row"><span>간병 장소</span><b id="order-addr">화성 향남읍 자택</b></div>
+          <div class="order-info-row"><span>동행 출발지</span><b id="order-addr">화성 향남읍 자택</b></div>
           <div class="order-info-note"><span>매니저에게</span><p id="order-note">-</p></div>
         </div>
         <div class="order-cs">
@@ -1647,7 +1647,7 @@
 
               <div class="label" style="margin-top:0">동행 정보</div>
               <div class="live-info-box">
-                <div class="live-info-line"><span>간병 장소</span><b id="live-info-addr">화성 향남읍 자택</b></div>
+                <div class="live-info-line"><span>동행 출발지</span><b id="live-info-addr">화성 향남읍 자택</b></div>
                 <div class="live-info-line"><span>병원</span><b id="live-info-hosp">똑똑연세내과의원</b></div>
               </div>
 
