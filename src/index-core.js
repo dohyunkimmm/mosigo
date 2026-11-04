@@ -2050,7 +2050,7 @@ function saveAddrDetail(){
   if(btn) btn.innerHTML = esc(label)+' <span class="caret">▾</span>';
   renderStopList();
   tabTo('s-home');
-  showToast('간병 장소를 등록했어요');
+  showToast('동행 출발지를 저장했어요');
 }
 
 // 검색바 = 경로. 출발지·경유지·도착지가 한 줄씩 쌓이고, 각 줄 오른쪽 +/− 로 경유지를 조작한다.
