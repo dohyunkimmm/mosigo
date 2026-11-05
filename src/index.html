@@ -338,7 +338,7 @@
         <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:6px" id="otp-sub">시연용 6자리 숫자를 입력하세요. 실제 문자는 발송되지 않습니다.</div>
         <div class="label" style="margin-top:16px">인증번호</div>
         <input class="input filled" id="otp-input" type="tel" maxlength="6" placeholder="6자리 숫자 입력" style="letter-spacing:6px;text-align:center;cursor:text">
-        <div class="ob-link" id="otp-resend" onclick="resendOtp()" style="text-align:left;padding:12px 0;text-decoration:none;color:var(--teal);font-weight:600;font-size:13px">시연 코드 다시 입력 (0:59)</div>
+        <div class="ob-link" id="otp-resend" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();resendOtp()}" onclick="resendOtp()" style="text-align:left;padding:12px 0;text-decoration:none;color:var(--teal);font-weight:600;font-size:13px">시연 코드 다시 입력 (0:59)</div>
       </div>
       <div class="ob-foot"><button class="ob-btn" onclick="verifyOtp()">인증하기</button></div>
     </div>
@@ -352,7 +352,7 @@
       </div>
       <div class="body-scroll">
         <div class="sec">
-          <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:16px">모시고에서 사용할 정보를 입력해주세요</div>
+          <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:16px">시연용 회원가입 화면입니다. 실제 이름·생년월일·전화번호를 입력하지 말고 가상 정보를 사용하세요. 실제 계정은 생성되지 않습니다.</div>
 
           <!-- 토스처럼 한 단계씩 아래로 열리는 입력 폼.
                각 단계는 su-step(기본 숨김) → .show가 붙으면 슬라이드업 애니메이션으로 나타난다. -->
@@ -369,10 +369,10 @@
           <div class="su-step" id="su-step-carrier">
             <div class="label">통신사</div>
             <div class="chip-group chip-single" id="su-carriers">
-              <div class="chip" onclick="suPickCarrier(this,'SKT')">SKT</div>
-              <div class="chip" onclick="suPickCarrier(this,'KT')">KT</div>
-              <div class="chip" onclick="suPickCarrier(this,'LG U+')">LG U+</div>
-              <div class="chip" onclick="suPickCarrier(this,'알뜰폰')">알뜰폰</div>
+              <div class="chip" role="button" tabindex="0" aria-label="SKT 선택" onclick="suPickCarrier(this,'SKT')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();suPickCarrier(this,'SKT')}">SKT</div>
+              <div class="chip" role="button" tabindex="0" aria-label="KT 선택" onclick="suPickCarrier(this,'KT')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();suPickCarrier(this,'KT')}">KT</div>
+              <div class="chip" role="button" tabindex="0" aria-label="LG U+ 선택" onclick="suPickCarrier(this,'LG U+')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();suPickCarrier(this,'LG U+')}">LG U+</div>
+              <div class="chip" role="button" tabindex="0" aria-label="알뜰폰 선택" onclick="suPickCarrier(this,'알뜰폰')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();suPickCarrier(this,'알뜰폰')}">알뜰폰</div>
             </div>
           </div>
 
