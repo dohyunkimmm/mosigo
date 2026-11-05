@@ -67,3 +67,8 @@
 #otp-resend[role="button"]{min-height:44px;cursor:pointer}
 .mosigo-sos-choice{min-height:56px;cursor:pointer}
 .phone-shell :is(.mosigo-sos-choice,#su-carriers .chip[role="button"],#otp-resend):focus-visible{outline:3px solid #126b35;outline-offset:3px}
+
+/* P0/P1: mock medical-record consent is never a real data linkage. */
+.mosigo-checkup-demo-note{margin:6px 0 15px;padding:10px 12px;border:1px solid #cfe6d5;border-radius:10px;background:#f4fbf6;color:#205736;font-size:13px;line-height:1.55;word-break:keep-all}
+.phone-shell :is(.auth-row[role="button"],.agree-item[role="checkbox"],.agree-all[role="checkbox"]){cursor:pointer;min-height:44px}
+.phone-shell :is(.auth-row[role="button"],.agree-item[role="checkbox"],.agree-all[role="checkbox"]):focus-visible{outline:3px solid #126b35;outline-offset:-3px}
