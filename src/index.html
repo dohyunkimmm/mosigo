@@ -319,12 +319,12 @@
         <div style="width:32px"></div>
       </div>
       <div class="ob-body" style="padding:22px 20px 0">
-        <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:18px">휴대폰 번호로 본인인증하면 모시고 서비스를 바로 이용할 수 있어요.</div>
+        <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:18px">휴대폰 인증 과정을 체험합니다. 실제 본인확인·문자 발송·계정 생성은 하지 않습니다.</div>
         <div class="label">전화번호</div>
         <input class="input filled" id="phone-input" type="tel" placeholder="010-0000-0000" style="cursor:text">
-        <div style="font-size:11px;color:var(--g400);margin-top:8px">체험용 번호: 010-1111-2222 입력 시 기존 회원으로 처리됩니다</div>
+        <div style="font-size:11px;color:var(--g400);margin-top:8px">개인 번호 대신 체험용 번호 010-1111-2222를 사용하세요. 실제 인증 문자는 보내지 않습니다.</div>
       </div>
-      <div class="ob-foot"><button class="ob-btn" onclick="goPhoneOtp()">인증번호 받기</button></div>
+      <div class="ob-foot"><button class="ob-btn" onclick="goPhoneOtp()">인증 화면 체험하기</button></div>
     </div>
 
     <!-- ══ O5: 인증번호 입력 ══ -->
@@ -335,10 +335,10 @@
         <div style="width:32px"></div>
       </div>
       <div class="ob-body" style="padding:22px 20px 0">
-        <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:6px" id="otp-sub">010-****-1234로 6자리 번호를 보냈어요</div>
+        <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:6px" id="otp-sub">시연용 6자리 숫자를 입력하세요. 실제 문자는 발송되지 않습니다.</div>
         <div class="label" style="margin-top:16px">인증번호</div>
         <input class="input filled" id="otp-input" type="tel" maxlength="6" placeholder="6자리 숫자 입력" style="letter-spacing:6px;text-align:center;cursor:text">
-        <div class="ob-link" id="otp-resend" onclick="resendOtp()" style="text-align:left;padding:12px 0;text-decoration:none;color:var(--teal);font-weight:600;font-size:13px">인증번호 재전송 (0:59)</div>
+        <div class="ob-link" id="otp-resend" onclick="resendOtp()" style="text-align:left;padding:12px 0;text-decoration:none;color:var(--teal);font-weight:600;font-size:13px">시연 코드 다시 입력 (0:59)</div>
       </div>
       <div class="ob-foot"><button class="ob-btn" onclick="verifyOtp()">인증하기</button></div>
     </div>
@@ -393,7 +393,7 @@
               </div>
               <button class="su-side-btn" id="su-verify-btn" disabled onclick="suVerifyCode()">확인</button>
             </div>
-            <div class="su-hint" id="su-code-hint">문자로 받은 인증번호를 입력해주세요 · 체험에서는 임의의 6자리 숫자를 입력할 수 있어요</div>
+            <div class="su-hint" id="su-code-hint">실제 문자 발송 없이 임의의 숫자 6자리를 입력해 주세요. 개인정보는 입력하지 마세요.</div>
           </div>
 
           <div class="su-step" id="su-step-agree">
@@ -588,7 +588,7 @@
           <i class="fi fi-rr-angle-small-right"></i>
         </div>
 
-        <div class="mp-banner yellow" onclick="showToast('카카오 계정을 연결합니다')">
+        <div class="mp-banner yellow" onclick="showPrototypeNotice('카카오 계정 연결')">
           <span><i class="fi fi-rr-comment"></i> 3초 연결하고 <b>맞춤형 혜택</b> 받기</span>
           <i class="fi fi-rr-cross-small" onclick="event.stopPropagation();this.parentElement.remove()"></i>
         </div>
@@ -1136,7 +1136,7 @@
         </div>
       </div>
       <div style="padding:8px 18px 12px;display:flex;gap:8px">
-        <button class="btn ghost" style="width:auto;padding:14px 18px" onclick="showToast('이 매니저를 차단했습니다')">차단하기</button>
+        <button class="btn ghost" style="width:auto;padding:14px 18px" onclick="showPrototypeNotice('매니저 차단')">차단하기</button>
         <button class="btn primary" id="mgr-p-btn" style="flex:1" onclick="startBooking()">김민준 매니저로 접수하기</button>
       </div>
 
@@ -1144,10 +1144,10 @@
         <div class="modal-sheet" onclick="event.stopPropagation()">
           <div class="modal-handle"></div>
           <div class="modal-title">매니저에게 문의</div>
-          <div class="modal-sub">접수 전 궁금한 점을 매니저와 직접 연락하거나 채팅으로 물어볼 수 있습니다.</div>
+          <div class="modal-sub">시연용 문의 화면입니다. 실제 매니저와 채팅하거나 전화가 연결되지는 않습니다.</div>
           <div class="btn-row" style="padding:0">
-            <button class="btn ghost" style="flex:1" onclick="showToast('채팅을 시작합니다');closeModal('modal-call3')">💬 채팅 문의</button>
-            <button class="btn primary" style="flex:2" onclick="showToast('매니저에게 연결합니다');closeModal('modal-call3')">📞 전화 연결</button>
+            <button class="btn ghost" style="flex:1" onclick="showPrototypeNotice('매니저 채팅');closeModal('modal-call3')">💬 채팅 문의</button>
+            <button class="btn primary" style="flex:2" onclick="showPrototypeNotice('매니저 전화');closeModal('modal-call3')">📞 전화 연결</button>
           </div>
         </div>
       </div>
@@ -1201,7 +1201,7 @@
             </div>
             <div class="rc-actions">
               <button class="rc-act primary" onclick="closeModal('modal-bk-detail');startBooking()">재예약</button>
-              <button class="rc-act" onclick="showToast('매니저에게 연결합니다')">전화하기</button>
+              <button class="rc-act" onclick="showPrototypeNotice('매니저 전화')">전화하기</button>
             </div>
             <div class="rc-line"></div>
             <div class="rc-row head"><span><i class="fi fi-rr-route"></i> 병원동행</span><b id="bkd-state">동행완료</b></div>
@@ -1572,7 +1572,7 @@
         <div class="order-hero">
           <div class="order-hero-title" id="order-status-title">예약을 확인하고 있어요</div>
           <div class="order-hero-sub" id="order-status-sub">매니저 배정 전까지 취소가 가능해요.</div>
-          <button class="btn ghost" id="order-cancel-btn" style="margin-top:14px" onclick="showToast('예약을 취소했습니다');tabTo('s-home')">예약취소</button>
+          <button class="btn ghost" id="order-cancel-btn" style="margin-top:14px" onclick="cancelDemoBooking()">예약취소</button>
           <div class="order-hero-mascot" id="order-hero-mascot">🧑‍⚕️</div>
         </div>
         <div class="sec">
@@ -1580,7 +1580,7 @@
             <div class="item-thumb" id="order-mgr-thumb"></div>
             <div class="item-body">
               <div class="item-title" id="order-mgr">김민준 매니저 · ★4.9</div>
-              <div class="item-sub" id="order-sub">똑똑연세내과의원 · 8월 13일 오전 10:00</div>
+              <div class="item-sub" id="order-sub">선택한 동행 일정 · 시연용</div>
             </div>
           </div>
           <div class="order-info-row"><span>예약번호</span><b id="order-no">M26H13-KTQAS</b></div>
@@ -1588,7 +1588,7 @@
           <div class="order-info-note"><span>매니저에게</span><p id="order-note">-</p></div>
         </div>
         <div class="order-cs">
-          <div>고객센터 <b>1661-5489</b></div>
+          <div>예시 연락처(실제 연결 불가) <b>1661-5489</b></div>
           <div class="order-cs-time">운영시간 : 평일/주말 오전 9시 ~ 밤 12시</div>
         </div>
       </div>
@@ -1674,7 +1674,7 @@
           <div class="modal-sub">매니저와 직접 연락하거나 고객센터를 통해 현황을 안내받을 수 있습니다.</div>
           <div class="btn-row" style="padding:0">
             <button class="btn ghost" style="flex:1" onclick="closeModal('modal-call')">닫기</button>
-            <button class="btn primary" style="flex:2" onclick="showToast('매니저에게 연결합니다');closeModal('modal-call')">📞 전화 연결</button>
+            <button class="btn primary" style="flex:2" onclick="showPrototypeNotice('매니저 전화');closeModal('modal-call')">📞 전화 연결</button>
           </div>
         </div>
       </div>
@@ -1727,7 +1727,7 @@
         <div class="sec">
           <div class="card teal">
             <div class="ai-chip">✦ AI 진료요약 준비 중</div>
-            <div style="font-size:12px;color:var(--g600)">진료 완료 후 자동으로 리포트를 전송합니다</div>
+            <div style="font-size:12px;color:var(--g600)">시연용 리포트 화면입니다. 실제 의료정보 전송은 발생하지 않습니다.</div>
           </div>
         </div>
       </div>
@@ -1738,7 +1738,7 @@
           <div class="modal-sub">매니저와 직접 연락하거나 고객센터를 통해 현황을 안내받을 수 있습니다.</div>
           <div class="btn-row" style="padding:0">
             <button class="btn ghost" style="flex:1" onclick="closeModal('modal-call2')">닫기</button>
-            <button class="btn primary" style="flex:2" onclick="showToast('매니저에게 연결합니다');closeModal('modal-call2')">📞 전화 연결</button>
+            <button class="btn primary" style="flex:2" onclick="showPrototypeNotice('매니저 전화');closeModal('modal-call2')">📞 전화 연결</button>
           </div>
         </div>
       </div>
@@ -1936,7 +1936,7 @@
             <div style="font-size:13px;line-height:1.9">
               <div style="margin-bottom:4px">✅ 혈당 수치 개선 — 이전 방문 대비 호전</div>
               <div style="margin-bottom:4px">💊 메트포르민 1000mg 30일 처방</div>
-              <div>📅 다음 방문: 8월 13일 권고</div>
+              <div>📅 방문 권고일: 2026년 8월 13일 (과거 예시)</div>
             </div>
           </div>
           <div class="report-item">
@@ -1947,7 +1947,7 @@
           </div>
           <div class="report-item">
             <div class="report-label">다음 예약</div>
-            <div class="report-val" style="color:var(--teal)">8월 13일 오전 · 똑똑연세내과의원<br>
+            <div class="report-val" style="color:var(--teal)">2026년 8월 13일 오전 · 똑똑연세내과의원 (예시)<br>
               <span style="font-size:11px;color:var(--g600)">동일 매니저(김민준)로 재예약 권장</span>
             </div>
           </div>
@@ -2001,7 +2001,7 @@
             <div class="dr-row"><span class="k">다음 내원일</span><span class="v">08월 13일 (목) 10:00</span></div>
             <div class="dr-btns">
               <button class="dr-call ghost" onclick="openModal('modal-review')">후기 남기기 ★</button>
-              <button class="dr-call" onclick="goTo('s-rebook')">8월 13일 재예약</button>
+              <button class="dr-call" onclick="goTo('s-rebook')">재예약 화면 미리 보기</button>
             </div>
           </div>
 
@@ -2116,8 +2116,8 @@
               <div class="mgr-star">★★★★★ 4.9</div>
             </div>
           </div>
-          <div class="label">다음 예약일 (의사 권고)</div>
-          <input class="input filled" value="8월 13일 (목) 📅" readonly>
+          <div class="label">과거 권고일 (시연용 기록)</div>
+          <input class="input filled" value="2026년 8월 13일 · 과거 예시" readonly>
           <div class="label">진료 시간</div>
           <input class="input filled" value="오전 10:00 ⏰" readonly>
           <div class="label">병원</div>
@@ -2127,7 +2127,7 @@
             <div class="cost-row"><span>차량 이동 옵션</span><span class="val">10,000원</span></div>
             <div class="cost-total"><span>예상 합계</span><span>40,000원</span></div>
           </div>
-          <div class="sub-banner" onclick="showToast('구독 플랜을 안내해 드릴게요')">
+          <div class="sub-banner" onclick="showPrototypeNotice('구독 플랜')">
             <div style="font-size:22px">💡</div>
             <div style="flex:1">
               <div style="font-size:12px;font-weight:600;color:var(--amber)">단골 구독하면 더 저렴해요</div>
@@ -2138,7 +2138,7 @@
         </div>
       </div>
       <div style="padding:8px 18px 12px">
-        <button class="btn primary" onclick="confirmRebook()">재예약 확정</button>
+        <button class="btn primary" onclick="confirmRebook()">재예약 화면 체험 마치기</button>
       </div>
     </div>
 
@@ -2152,7 +2152,7 @@
             <div class="agree-item-check" style="color:var(--coral)">🚨</div>
             <div class="agree-item-body">
               <div class="agree-item-title">부모님께 이상이 생겼어요</div>
-              <div class="agree-item-sub">건강 이상, 응급 상황 등 — 모시고 고객센터로 즉시 연결됩니다</div>
+              <div class="agree-item-sub">시연 화면으로 연결되지 않습니다. 긴급 상황은 119에 직접 연락하세요.</div>
             </div>
             <div class="agree-item-arrow">›</div>
           </div>
@@ -2160,7 +2160,7 @@
             <div class="agree-item-check" style="color:var(--coral)">⚠️</div>
             <div class="agree-item-body">
               <div class="agree-item-title">매니저 관련 문제를 신고할게요</div>
-              <div class="agree-item-sub">부적절한 행동, 사고 등 — 매니저를 거치지 않고 고객센터로 바로 연결됩니다</div>
+              <div class="agree-item-sub">실제 신고는 접수되지 않습니다. 긴급 상황은 112 또는 119에 연락하세요.</div>
             </div>
             <div class="agree-item-arrow">›</div>
           </div>
@@ -2171,15 +2171,15 @@
     <div class="overlay" id="modal-sos-a" onclick="closeModal('modal-sos-a')">
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-handle"></div>
-        <div class="modal-title">부모님께 이상이 생겼어요</div>
-        <div class="modal-sub">건강 이상, 응급 상황 등 — 모시고 고객센터로 즉시 연결됩니다.</div>
-        <button class="btn primary" onclick="callSafetyTeam()">📞 안전지원팀 전화 연결</button>
+        <div class="modal-title">부모님께 이상이 생겼어요</div><p class="mosigo-safety-notice" role="alert">시연용 화면입니다. 실제 긴급 신고·전화 연결이 되지 않습니다. 긴급 상황은 119에 직접 연락해 주세요.</p>
+        <div class="modal-sub">시연 화면으로 연결되지 않습니다. 긴급 상황은 119에 직접 연락하세요..</div>
+        <button class="btn primary" onclick="callSafetyTeam()">긴급 연락 안내 보기 (시연)</button>
         <div class="label" style="margin-top:14px">상황 설명 (선택)</div>
         <textarea class="input filled" id="sos-a-text" style="min-height:56px;resize:none;cursor:text" placeholder="상황을 간단히 알려주시면 상담에 도움이 됩니다"></textarea>
         <div style="font-size:11px;color:var(--g600);margin:2px 0 12px">사진이나 음성을 남기시면 상담에 도움이 됩니다 (선택)</div>
         <div class="btn-row" style="padding:0">
           <button class="btn ghost" style="flex:1" onclick="showToast('사진/음성 첨부 기능은 준비 중입니다')">📎 첨부하기</button>
-          <button class="btn primary" style="flex:2" onclick="submitSos('A')">접수 완료</button>
+          <button class="btn primary" style="flex:2" onclick="submitSos('A')">시연 신고 상태 보기</button>
         </div>
       </div>
     </div>
@@ -2187,14 +2187,14 @@
     <div class="overlay" id="modal-sos-b" onclick="closeModal('modal-sos-b')">
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-handle"></div>
-        <div class="modal-title">매니저 관련 문제를 신고할게요</div>
-        <div class="modal-sub" style="color:var(--coral)">이 신고는 매니저에게 통지되지 않습니다. 안심하고 상황을 알려주세요.</div>
+        <div class="modal-title">매니저 관련 문제를 신고할게요</div><p class="mosigo-safety-notice" role="alert">실제 접수·매니저 통지·상담 전화는 발생하지 않습니다. 긴급 상황은 112 또는 119에 직접 연락하세요.</p>
+        <div class="modal-sub" style="color:var(--coral)">시연용 화면으로 실제 신고·매니저 통지·고객센터 전송은 발생하지 않습니다.</div>
         <div class="label">상황 설명 <span class="agree-req">필수</span></div>
         <textarea class="input filled" id="sos-b-text" style="min-height:70px;resize:none;cursor:text" placeholder="어떤 일이 있었는지 알려주세요"></textarea>
         <div style="font-size:11px;color:var(--g600);margin:2px 0 12px">사진이나 음성을 남기시면 상담에 도움이 됩니다 (선택)</div>
         <div class="btn-row" style="padding:0">
           <button class="btn ghost" style="flex:1" onclick="showToast('사진/음성 첨부 기능은 준비 중입니다')">📎 첨부하기</button>
-          <button class="btn primary" style="flex:2" onclick="submitSos('B')">신고 접수하기</button>
+          <button class="btn primary" style="flex:2" onclick="submitSos('B')">시연 신고 상태 보기</button>
         </div>
       </div>
     </div>
