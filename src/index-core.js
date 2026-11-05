@@ -548,9 +548,11 @@ function syncCkuState(){
   CKU_ALL.forEach(id=>{
     const row=document.getElementById(id);
     row.querySelector('.agree-item-check').textContent=row.classList.contains('checked')?'✓':'';
+    row.setAttribute('aria-checked',String(row.classList.contains('checked')));
   });
   const allChecked=CKU_ALL.every(id=>document.getElementById(id).classList.contains('checked'));
   document.getElementById('cku-all').classList.toggle('checked',allChecked);
+  document.getElementById('cku-all').setAttribute('aria-checked',String(allChecked));
   document.getElementById('cku-chk-all').textContent=allChecked?'✓':'';
 }
 CKU_ALL.forEach(id=>document.getElementById(id)?.classList.remove('checked'));
