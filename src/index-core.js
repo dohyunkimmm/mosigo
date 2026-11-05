@@ -169,11 +169,11 @@ function suVerifyCode(){
   clearInterval(suCodeTimer);
   suVerified=true;
   const btn=document.getElementById('su-verify-btn');
-  btn.textContent='인증완료'; btn.classList.add('done'); btn.disabled=true;
+  btn.textContent='체험 확인'; btn.classList.add('done'); btn.disabled=true;
   document.getElementById('su-code').disabled=true;
   const timer=document.getElementById('su-timer'); if(timer) timer.style.display='none';
   const hint=document.getElementById('su-code-hint');
-  hint.textContent='✓ 본인인증이 완료됐어요'; hint.classList.add('ok');
+  hint.textContent='✓ 시연용 코드 확인 · 실제 본인인증은 수행되지 않았습니다'; hint.classList.add('ok');
   document.getElementById('su-step-code').classList.add('done');
   suShow('su-step-agree');
   syncSuSubmit();
@@ -217,10 +217,10 @@ function completeSignup(){
   const birth=document.getElementById('su-birth').value.trim();
   if(!name || !birth){ showToast('이름과 생년월일을 입력해주세요'); return; }
   if(!suCarrier){ showToast('통신사를 선택해주세요'); return; }
-  if(!suVerified){ showToast('휴대폰 본인인증을 완료해주세요'); return; }
+  if(!suVerified){ showToast('시연용 코드 확인을 완료해 주세요'); return; }
   const reqOk=SU_REQUIRED.every(id=>document.getElementById(id).classList.contains('checked'));
   if(!reqOk){ showToast('⚠ 필수 약관에 동의해주세요'); return; }
-  showToast('가입이 완료됐습니다');
+  showToast('체험용 회원 화면으로 이동합니다. 실제 계정은 생성되지 않습니다.');
   // 가입 직후 건강검진결과 연동 단계는 건너뛰고 바로 홈으로 보낸다.
   // (연동 화면 s-checkup은 리포트 탭에서 따로 진입한다)
   skipCheckup();
@@ -528,7 +528,7 @@ function completeReturn(){
   activeIncidentReport=null;
   updateHomeState();
   updateLiveState();
-  showToast('귀가가 완료되었습니다. 오늘 동행이 종료됐어요 🏠');
+  showToast('시연 동행을 완료 상태로 바꿨어요. 실제 동행 기록은 생성되지 않습니다.');
   setTimeout(()=>tabTo('s-home'),900);
 }
 
@@ -671,6 +671,18 @@ document.addEventListener('keydown',event=>{
   const visible=[...document.querySelectorAll('.overlay.show')];
   const top=visible[visible.length-1];
   if(top?.id){event.preventDefault();closeModal(top.id);}
+});
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Tab'||event.defaultPrevented) return;
+  const modals=[...document.querySelectorAll('.overlay.show[aria-modal="true"]')];
+  const dialog=modals[modals.length-1];
+  if(!dialog) return;
+  const focusables=[...dialog.querySelectorAll('button:not(:disabled),input:not(:disabled),textarea:not(:disabled),select:not(:disabled),a[href],[tabindex]:not([tabindex="-1"])')].filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');
+  if(!focusables.length){event.preventDefault();dialog.focus();return;}
+  const first=focusables[0],last=focusables[focusables.length-1];
+  if(!dialog.contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first).focus();return;}
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
 });
 
 // 칩 토글 (복수)
