@@ -213,7 +213,8 @@ function enhanceNonNativeButtons(root=document){
   root.querySelectorAll?.(selector).forEach(el=>{
     if(!el.hasAttribute('role')) el.setAttribute('role','button');
     if(!el.hasAttribute('tabindex')) el.tabIndex=0;
-    if(el.dataset.kbReady==='1') return;
+    // Inline handlers already handle Enter/Space; adding a synthetic click would toggle twice.
+    if(el.hasAttribute('onkeydown') || el.dataset.kbReady==='1') return;
     el.dataset.kbReady='1';
     el.addEventListener('keydown',e=>{
       if(e.key==='Enter' || e.key===' '){ e.preventDefault(); el.click(); }
