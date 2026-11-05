@@ -52,7 +52,7 @@ test('demo bookings never claim real manager notification or stale August bookin
 });
 
 test('mock identity checks never assert that SMS or account creation occurred', () => {
-  assert.match(html, /실제 문자는 보내지 않습니다/);
+  assert.match(html, /실제 인증 문자는 보내지 않습니다/);
   assert.match(app, /실제 문자는 발송되지 않습니다/);
   assert.match(app, /실제 계정은 생성되지 않습니다/);
   assert.match(app, /실제 본인인증은 수행되지 않았습니다/);
