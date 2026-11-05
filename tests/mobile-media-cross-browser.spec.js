@@ -143,3 +143,29 @@ test('BFCache pagehide/pageshow does not skip an unfinished video', async ({page
   await expect(page.locator('#g-bg2')).not.toHaveAttribute('src', /.+/);
   await expect(page.locator('#g-result')).toBeHidden();
 });
+
+
+test('P1 mobile-device emulation keeps demo booking, comparison and consent usable',async({page})=>{
+  // Runs under Pixel 5 Chromium and iPhone 13 WebKit emulation, NOT physical hardware.
+  await page.goto('/');
+  await page.evaluate(()=>tabTo('s-home'));
+  await expect(page.getByRole('button',{name:/병원동행 신청 시작/})).toBeVisible();
+  await page.evaluate(()=>{renderMgrProfile(0);tabTo('s-mgr')});
+  await page.locator('.mosigo-compare-trigger').click();
+  const comparison=page.locator('#mosigo-manager-compare');
+  await expect(comparison).toBeVisible();
+  await expect(comparison.locator('.mosigo-compare-card')).toHaveCount(3);
+  await page.getByRole('button',{name:'비교 닫기'}).click();
+  await expect(comparison).toBeHidden();
+  await page.evaluate(()=>{tabTo('s-checkup');openCheckupTerms()});
+  const firstConsent=page.locator('#cku1');
+  await expect(firstConsent).toHaveAttribute('role','checkbox');
+  await firstConsent.focus();
+  await firstConsent.press('Space');
+  await expect(firstConsent).toHaveAttribute('aria-checked','true');
+  const widths=await page.evaluate(()=>({
+    available:document.documentElement.clientWidth,
+    used:document.documentElement.scrollWidth
+  }));
+  expect(widths.used).toBeLessThanOrEqual(widths.available+1);
+});
