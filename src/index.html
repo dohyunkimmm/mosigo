@@ -160,10 +160,10 @@
         <div class="cku-intro">
           <div class="cku-intro-ic"><i class="fi fi-rr-calendar-clock"></i><i class="fi fi-rr-shield-check"></i></div>
           <div class="cku-intro-title">건강검진결과 연동<br>문진 기록부터 결과 확인까지<br>모시고에서 편하게 관리하세요.</div>
-          <div class="cku-intro-sub">국민건강보험공단에서 조회된 정보 기준으로<br>다음 검진 일정까지<br>모시고에서 모두 확인 가능해요.</div>
+          <div class="cku-intro-sub">건강검진 결과 조회 절차를 예시 데이터로 체험합니다.<br>실제 공단 조회·민감정보 수집·저장은 하지 않습니다.</div>
         </div>
       </div>
-      <div class="ob-foot"><button class="ob-btn" onclick="openCheckupTerms()">검진결과 연동 시작하기</button></div>
+      <div class="ob-foot"><button class="ob-btn" onclick="openCheckupTerms()">예시 검진연동 체험하기</button></div>
 
       <!-- 약관동의 -->
       <div class="overlay" id="modal-checkup-terms" onclick="closeModal('modal-checkup-terms')">
@@ -209,7 +209,7 @@
       <div class="overlay" id="modal-checkup-auth" onclick="closeModal('modal-checkup-auth')">
         <div class="modal-sheet" onclick="event.stopPropagation()">
           <div class="modal-handle"></div>
-          <div class="modal-title">인증수단을 선택해주세요.</div>
+          <div class="modal-title">예시 인증수단을 선택해주세요.</div><p class="mosigo-checkup-demo-note">시연용 화면입니다. 외부 인증 서비스에 연결하지 않습니다.</p>
           <div class="auth-list">
             <div class="auth-row" onclick="pickAuthMethod('kakao')"><span class="auth-mark" style="background:#FEE500;color:#391B1B">talk</span> 카카오톡</div>
             <div class="auth-row" onclick="pickAuthMethod('naver')"><span class="auth-mark" style="background:#03C75A">N</span> 네이버</div>
@@ -236,8 +236,8 @@
       <div class="ob-ov" id="ov-pass-wait" style="background:#fff;flex-direction:column;justify-content:flex-start;align-items:stretch">
         <button class="back-btn" onclick="closePassWait()" style="position:absolute;top:14px;left:14px;z-index:2"><i class="fi fi-rr-cross-small"></i></button>
         <div style="flex:1;padding:56px 24px 0">
-          <div class="pass-pill"><span class="auth-mark" style="background:#FA5B5B">PASS</span> 알림을 눌러 인증해주세요.</div>
-          <div class="pass-wait-title">PASS 앱에서 간편 인증 완료 후<br>확인 버튼을 선택해 주세요.</div>
+          <div class="pass-pill"><span class="auth-mark" style="background:#FA5B5B">PASS</span> 인증 과정 시연 · 실제 알림 없음</div>
+          <div class="pass-wait-title">인증 화면의 흐름을 체험합니다.<br>실제 PASS 앱 인증은 진행하지 않습니다.</div>
         </div>
         <div style="text-align:center;padding-bottom:6px"><span class="ob-link" style="display:inline-block;width:auto;padding:8px;text-decoration:underline" onclick="openModal('modal-pass-resend')">인증 알림이 오지 않나요?</span></div>
         <div class="ob-foot"><button class="ob-btn" onclick="confirmPassAuth()">확인</button></div>
@@ -248,7 +248,7 @@
         <div class="modal-sheet" onclick="event.stopPropagation()">
           <div class="modal-handle"></div>
           <div class="modal-title">인증 알림이 오지 않나요?</div>
-          <div class="modal-sub">등록된 정보가 다르면 알림이 가지 않아요. 이름 또는 전화번호를 변경하셨다면 다시 인증해 주세요.</div>
+          <div class="modal-sub">시연 화면이므로 실제 알림을 발송하지 않습니다. 개인정보를 입력하지 마세요.</div>
           <div style="display:flex;gap:8px">
             <button class="btn secondary" style="flex:1" onclick="closeModal('modal-pass-resend')">취소</button>
             <button class="btn primary" style="flex:1" onclick="resendPassAuth()">다시 인증하기</button>
@@ -262,8 +262,8 @@
           <div class="top">
             <div class="ai" style="color:var(--coral)"><i class="fi fi-rr-triangle-warning"></i></div>
             <div class="msg" style="text-align:left;font-size:13.5px;font-weight:500;line-height:1.6">
-              <b style="display:block;font-size:15px;margin-bottom:8px">부모님 정보가 조회되지 않아요.</b>
-              👉 건강보험공단 홈페이지 &gt; 건강모아 &gt; 가족 건강 &gt; 건강검진 &gt; 건강검진대상 조회 메뉴에서 가족과 보호자 관계 확인 신청을 해주세요.
+              <b style="display:block;font-size:15px;margin-bottom:8px">시연 조회 오류 화면입니다.</b>
+              가족정보 조회 실패 상태를 체험하는 예시 화면입니다. 실제 공단 조회는 발생하지 않습니다.
             </div>
           </div>
           <div class="b" onclick="retryPassAuth()">다시 시도하기</div>
@@ -276,7 +276,7 @@
         <div class="ob-alert">
           <div class="top">
             <div class="ai"><i class="fi fi-rr-shield-check"></i></div>
-            <div class="msg">건강보험공단에서 검진결과를<br>불러오는 중이에요…</div>
+            <div class="msg">시연용 건강검진 예시 데이터를<br>표시하고 있어요…</div>
           </div>
         </div>
       </div>
@@ -285,7 +285,7 @@
         <div class="ob-alert">
           <div class="top">
             <div class="ai" style="color:var(--teal)"><i class="fi fi-rr-check"></i></div>
-            <div class="msg">최근 3회 검진결과를 불러왔어요</div>
+            <div class="msg">최근 3회 검진 예시를 표시했어요. 실제 자료는 연동되지 않았습니다.</div>
           </div>
           <div class="b" onclick="finishCheckup()">확인</div>
         </div>
@@ -295,7 +295,7 @@
     <!-- ══ O3: 랜딩 ══ -->
     <div class="screen" id="s-landing">
       <div class="land-wrap">
-        <h1>모시고로 가입하고<br>간편하게 로그인하세요.</h1>
+        <h1>모시고의 가입·로그인 과정을<br>예시 화면으로 체험하세요.</h1>
         <div class="land-sub">우리 부모님 병원동행은 모시고 하나로</div>
         <div class="land-art"></div>
         <div style="padding:0 0 8px">
@@ -306,7 +306,7 @@
           </div>
           <div class="land-divider">이메일 로그인</div>
           <input class="input" id="land-email" style="cursor:text;margin-bottom:10px" placeholder="이메일을 입력해 주세요.">
-          <button class="ob-btn" onclick="goTo('s-signup')">10초안에 가입하기</button>
+          <button class="ob-btn" onclick="goTo('s-signup')">시연 가입 화면 보기</button>
         </div>
       </div>
     </div>
