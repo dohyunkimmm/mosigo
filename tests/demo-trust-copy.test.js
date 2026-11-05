@@ -50,3 +50,37 @@ test('demo bookings never claim real manager notification or stale August bookin
   assert.match(html, /id="confirm-date-sub"/);
   assert.doesNotMatch(html, /<div class="app-bar-sub">8월 13일 오전 10시/);
 });
+
+test('mock identity checks never assert that SMS or account creation occurred', () => {
+  assert.match(html, /실제 문자는 보내지 않습니다/);
+  assert.match(app, /실제 문자는 발송되지 않습니다/);
+  assert.match(app, /실제 계정은 생성되지 않습니다/);
+  assert.match(app, /실제 본인인증은 수행되지 않았습니다/);
+  assert.doesNotMatch(app, /showToast\('인증되었습니다/);
+});
+
+test('P0: emergency and manager controls do not claim real contact', () => {
+  assert.match(html, /실제 긴급 신고·전화 연결이 되지 않습니다/);
+  assert.match(html, /실제 접수·매니저 통지·상담 전화는 발생하지 않습니다/);
+  assert.match(app, /실제 접수·상담 연락은 없습니다/);
+  assert.match(html, /긴급 상황은 119에 직접 연락/);
+  assert.doesNotMatch(html, /showToast\('매니저에게 연결합니다'/);
+});
+
+test('P0: cancelled prototype booking cannot auto-transition to live', () => {
+  assert.match(html, /onclick="cancelDemoBooking\(\)"/);
+  assert.match(app, /function cancelDemoBooking\(\)/);
+  assert.match(app, /if\(transition!==demoOrderTransition\|\|!hasActiveBooking\) return;/);
+  assert.match(app, /실제 환불·결제는 발생하지 않습니다/);
+  assert.doesNotMatch(html, /재예약 확정<\/button>/);
+});
+
+test('P1: modal keyboard navigation and mobile styles remain available', () => {
+  assert.match(app, /event\.key!=='Escape'/);
+  assert.match(app, /event\.key!=='Tab'/);
+  assert.match(app, /first\.focus\(\)/);
+  assert.match(css, /\.mosigo-safety-notice\{/);
+  assert.match(css, /\.overlay\.show \.modal-sheet\{max-height:/);
+  assert.match(css, /@media\(max-width:375px\)/);
+  assert.match(css, /background-color:#147d3f;color:#fff/);
+});
