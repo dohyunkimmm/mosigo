@@ -44,3 +44,20 @@
 
 /* Keep the demo source note flush without an inline style. */
 #modal-demo-guide .demo-guide-note{margin-bottom:0}
+
+/* P0: a simulated emergency action must be visibly distinct from real dispatch. */
+.mosigo-safety-notice{margin:9px 0 15px;padding:12px 13px;border:1px solid #f3b7b1;border-radius:10px;background:#fff1ef;color:#86291f;font-size:13px;line-height:1.55;font-weight:700;word-break:keep-all}
+
+/* P1: readable body text on soft green surfaces; green brand accents remain unchanged. */
+.btn.secondary,.badge.teal,.ai-chip,.dr-tag,.dr-chip,.dr-flow .tot,.dr-call.ghost,.bk-time-lb,.bk-countdown,.rp-prob-v,.rp-goal-labels div.on b,.hl-cnt b.ok,.mp-grade-sub b,.map-badge,.mosigo-demo-mark{color:var(--mosigo-green-ink)}
+/* White copy must not be placed on the bright green brand shade at small sizes. */
+.btn.primary,.chip-single .chip.on,.sf-btn.primary,.cal-time.on,.cal-d.on span,.dr-call:not(.ghost),.qr-foot-btn,.su-side-btn:not(.done),.map-mgr-merge{background-color:#147d3f;color:#fff}
+.mosigo-compare-close{min-width:44px;min-height:44px}
+.overlay.show .modal-sheet{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+.icon-right,.back-btn{min-width:44px;min-height:44px}
+@media(max-width:375px){
+  .mosigo-compare-dialog{padding:14px}
+  .mosigo-home-task{margin-inline:12px}
+  .mosigo-safety-notice{padding:10px 11px}
+}
+@media(prefers-reduced-motion:reduce){.overlay,.overlay.show .modal-sheet{transition:none}}
