@@ -48,10 +48,11 @@ function maskPhone(v){
 }
 function goPhoneOtp(){
   const val=document.getElementById('phone-input').value.trim();
-  if(!val){ showToast('전화번호를 입력해주세요'); return; }
+  const digits=val.replace(/\D/g,'');
+  if(!/^01\d{8,9}$/.test(digits)){ showToast('체험용 휴대폰 형식(10~11자리)을 입력해 주세요'); return; }
   signupPhone=val;
   const sub=document.getElementById('otp-sub');
-  if(sub) sub.textContent=maskPhone(val)+'로 6자리 번호를 보냈어요';
+  if(sub) sub.textContent=maskPhone(val)+' · 문자 발송 없이 임의의 6자리 코드를 입력해 주세요';
   goTo('s-otp');
   startOtpTimer();
 }
@@ -69,28 +70,28 @@ function updateOtpTimerText(){
   const el=document.getElementById('otp-resend');
   if(!el) return;
   if(otpSeconds>0){
-    el.textContent='인증번호 재전송 (0:'+(otpSeconds<10?'0':'')+otpSeconds+')';
+    el.textContent='시연 코드 다시 입력 (0:'+(otpSeconds<10?'0':'')+otpSeconds+')';
     el.style.color='var(--g400)';
   }else{
-    el.textContent='인증번호 재전송';
+    el.textContent='시연 코드 다시 입력';
     el.style.color='var(--teal)';
   }
 }
 function resendOtp(){
   if(otpSeconds>0) return;
-  showToast('인증번호를 다시 보냈어요');
+  showToast('시연용 인증입니다. 실제 문자는 발송되지 않습니다.');
   startOtpTimer();
 }
 function verifyOtp(){
   const code=document.getElementById('otp-input').value.trim();
-  if(code.length<6){ showToast('6자리 인증번호를 입력해주세요'); return; }
+  if(!/^\d{6}$/.test(code)){ showToast('임의의 숫자 6자리를 입력해 주세요'); return; }
   clearInterval(otpTimer);
   const digits=signupPhone.replace(/\D/g,'');
   if(digits===EXISTING_PHONE_DIGITS){
-    showToast('인증되었습니다. 기존 계정으로 로그인합니다');
+    showToast('시연용 기존 회원 화면으로 이동합니다. 실제 본인인증은 없습니다.');
     enterApp();
   }else{
-    showToast('인증되었습니다');
+    showToast('시연용 회원가입 화면으로 이동합니다. 실제 본인인증은 없습니다.');
     goTo('s-signup');
   }
 }
@@ -142,7 +143,7 @@ function suSendCode(){
   const btn=document.getElementById('su-send-btn');
   btn.textContent='재전송'; btn.classList.add('done');
   suShow('su-step-code');
-  showToast(suCarrier+'로 인증번호를 보냈어요');
+  showToast('시연용 인증 단계입니다. 실제 문자는 발송되지 않습니다.');
   startSuCodeTimer();
   setTimeout(()=>document.getElementById('su-code')?.focus(),420);
 }
@@ -168,11 +169,11 @@ function suVerifyCode(){
   clearInterval(suCodeTimer);
   suVerified=true;
   const btn=document.getElementById('su-verify-btn');
-  btn.textContent='인증완료'; btn.classList.add('done'); btn.disabled=true;
+  btn.textContent='체험 확인'; btn.classList.add('done'); btn.disabled=true;
   document.getElementById('su-code').disabled=true;
   const timer=document.getElementById('su-timer'); if(timer) timer.style.display='none';
   const hint=document.getElementById('su-code-hint');
-  hint.textContent='✓ 본인인증이 완료됐어요'; hint.classList.add('ok');
+  hint.textContent='✓ 시연용 코드 확인 · 실제 본인인증은 수행되지 않았습니다'; hint.classList.add('ok');
   document.getElementById('su-step-code').classList.add('done');
   suShow('su-step-agree');
   syncSuSubmit();
@@ -216,10 +217,10 @@ function completeSignup(){
   const birth=document.getElementById('su-birth').value.trim();
   if(!name || !birth){ showToast('이름과 생년월일을 입력해주세요'); return; }
   if(!suCarrier){ showToast('통신사를 선택해주세요'); return; }
-  if(!suVerified){ showToast('휴대폰 본인인증을 완료해주세요'); return; }
+  if(!suVerified){ showToast('시연용 코드 확인을 완료해 주세요'); return; }
   const reqOk=SU_REQUIRED.every(id=>document.getElementById(id).classList.contains('checked'));
   if(!reqOk){ showToast('⚠ 필수 약관에 동의해주세요'); return; }
-  showToast('가입이 완료됐습니다');
+  showToast('체험용 회원 화면으로 이동합니다. 실제 계정은 생성되지 않습니다.');
   // 가입 직후 건강검진결과 연동 단계는 건너뛰고 바로 홈으로 보낸다.
   // (연동 화면 s-checkup은 리포트 탭에서 따로 진입한다)
   skipCheckup();
@@ -446,7 +447,7 @@ function confirmBkCancel(){
   updateLiveState();
   closeModal('modal-bk-cancel');
   renderBookings();
-  showToast('예약이 취소됐습니다. 환불은 즉시 처리됩니다');
+  showToast('시연용 예약 상태만 취소했습니다. 실제 환불·결제는 발생하지 않습니다.');
 }
 
 // ── 예약 상세 (영수증형) ──
@@ -470,6 +471,8 @@ function openBkDetail(idx){
 function updateHomeState(){
   const active=document.getElementById('home-active-card');
   if(active) active.style.display = hasActiveBooking ? '' : 'none';
+  const date=document.getElementById('home-active-date');
+  if(date && hasActiveBooking) date.textContent=dsSelectedDate+' · '+dsSelectedTime+' · '+(selectedHospital?.name||'똑똑연세내과의원');
 }
 
 // ── s-live: 동행 있음/없음 상태 분기 ──
@@ -505,7 +508,7 @@ function openSosOption(type){
   openModal(type==='A' ? 'modal-sos-a' : 'modal-sos-b');
 }
 function callSafetyTeam(){
-  showToast('모시고 고객센터 안전지원팀에 연결합니다 📞');
+  showToast('시연용 화면으로 전화는 연결되지 않습니다. 긴급 상황은 119에 연락해 주세요.');
 }
 function submitSos(type){
   if(type==='B'){
@@ -515,7 +518,7 @@ function submitSos(type){
   const id=Math.floor(10000+Math.random()*90000);
   activeIncidentReport={ id, type, time:new Date() };
   closeModal(type==='A' ? 'modal-sos-a' : 'modal-sos-b');
-  showToast('신고가 접수되었습니다 (접수번호 #'+id+'). 상담사가 10분 내 연락드립니다.');
+  showToast('시연용 신고 기록 #'+id+'입니다. 실제 접수·상담 연락은 없습니다. 긴급 시 119에 연락해 주세요.');
   updateIncidentBadge();
 }
 
@@ -525,7 +528,7 @@ function completeReturn(){
   activeIncidentReport=null;
   updateHomeState();
   updateLiveState();
-  showToast('귀가가 완료되었습니다. 오늘 동행이 종료됐어요 🏠');
+  showToast('시연 동행을 완료 상태로 바꿨어요. 실제 동행 기록은 생성되지 않습니다.');
   setTimeout(()=>tabTo('s-home'),900);
 }
 
@@ -545,9 +548,11 @@ function syncCkuState(){
   CKU_ALL.forEach(id=>{
     const row=document.getElementById(id);
     row.querySelector('.agree-item-check').textContent=row.classList.contains('checked')?'✓':'';
+    row.setAttribute('aria-checked',String(row.classList.contains('checked')));
   });
   const allChecked=CKU_ALL.every(id=>document.getElementById(id).classList.contains('checked'));
   document.getElementById('cku-all').classList.toggle('checked',allChecked);
+  document.getElementById('cku-all').setAttribute('aria-checked',String(allChecked));
   document.getElementById('cku-chk-all').textContent=allChecked?'✓':'';
 }
 CKU_ALL.forEach(id=>document.getElementById(id)?.classList.remove('checked'));
@@ -588,7 +593,7 @@ function retryPassAuth(){
 }
 function resendPassAuth(){
   closeModal('modal-pass-resend');
-  showToast('인증 알림을 다시 보냈어요');
+  showToast('시연 단계입니다. 실제 PASS 인증 알림은 전송되지 않습니다.');
 }
 function startCheckupLoading(){
   document.getElementById('cku-loading').classList.add('show');
@@ -641,8 +646,46 @@ function showToast(msg){
 }
 
 // 모달
-function openModal(id){document.getElementById(id)?.classList.add('show');}
-function closeModal(id){document.getElementById(id)?.classList.remove('show');}
+const demoModalFocusOrigins=new Map();
+function openModal(id){
+  const node=document.getElementById(id);
+  if(!node) return;
+  demoModalFocusOrigins.set(id,document.activeElement);
+  node.setAttribute('role','dialog');
+  node.setAttribute('aria-modal','true');
+  node.setAttribute('tabindex','-1');
+  node.classList.add('show');
+  queueMicrotask(()=>{
+    if(!node.classList.contains('show')) return;
+    (node.querySelector('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[role="button"][tabindex],[href]')||node).focus({preventScroll:true});
+  });
+}
+function closeModal(id){
+  const node=document.getElementById(id);
+  if(!node) return;
+  node.classList.remove('show');
+  const origin=demoModalFocusOrigins.get(id);
+  demoModalFocusOrigins.delete(id);
+  if(origin?.isConnected) queueMicrotask(()=>origin.focus({preventScroll:true}));
+}
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape'||event.defaultPrevented) return;
+  const visible=[...document.querySelectorAll('.overlay.show')];
+  const top=visible[visible.length-1];
+  if(top?.id){event.preventDefault();closeModal(top.id);}
+});
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Tab'||event.defaultPrevented) return;
+  const modals=[...document.querySelectorAll('.overlay.show[aria-modal="true"]')];
+  const dialog=modals[modals.length-1];
+  if(!dialog) return;
+  const focusables=[...dialog.querySelectorAll('button:not(:disabled),input:not(:disabled),textarea:not(:disabled),select:not(:disabled),a[href],[tabindex]:not([tabindex="-1"])')].filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');
+  if(!focusables.length){event.preventDefault();dialog.focus();return;}
+  const first=focusables[0],last=focusables[focusables.length-1];
+  if(!dialog.contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first).focus();return;}
+  if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+});
 
 // 칩 토글 (복수)
 function toggleChip(el){el.classList.toggle('on');}
@@ -1641,6 +1684,12 @@ function updateConfirmRouteMeta(){
   if(dxEl) dxEl.textContent = confirmDx.trim() || '진단명 없음';
   const durEl=document.getElementById('confirm-duration');
   if(durEl) durEl.textContent = dsSelectedDuration+'시간';
+  const selectedSlot=dsSelectedDate+' · '+dsSelectedTime;
+  const selectedName=selectedHospital?.name||'똑똑연세내과의원';
+  const managerSub=document.getElementById('manager-date-sub');
+  if(managerSub) managerSub.textContent=selectedSlot+' · 화성 향남';
+  const confirmSub=document.getElementById('confirm-date-sub');
+  if(confirmSub) confirmSub.textContent=selectedName+' · '+selectedSlot;
 }
 
 // 진료 내용 전달 방식 — 배민 "수저·포크 안 받기" 체크박스 쌍과 같은 자리·같은 디자인
@@ -2050,7 +2099,7 @@ function saveAddrDetail(){
   if(btn) btn.innerHTML = esc(label)+' <span class="caret">▾</span>';
   renderStopList();
   tabTo('s-home');
-  showToast('간병 장소를 등록했어요');
+  showToast('동행 출발지를 저장했어요');
 }
 
 // 검색바 = 경로. 출발지·경유지·도착지가 한 줄씩 쌓이고, 각 줄 오른쪽 +/− 로 경유지를 조작한다.
@@ -2163,21 +2212,33 @@ function toggleSearchSheet(){
 }
 
 // 결제
+let demoOrderTransition=0;
+function cancelDemoBooking(){
+  ++demoOrderTransition;
+  hasActiveBooking=false;
+  activeIncidentReport=null;
+  updateHomeState();
+  updateLiveState();
+  showToast('시연 예약 상태를 취소했어요. 실제 결제·매니저 알림은 없습니다.');
+  tabTo('s-home');
+}
 function doPay(){
+  const transition=++demoOrderTransition;
   hasActiveBooking=true;
   updateHomeState();
-  showToast('예약이 접수됐습니다! 매니저에게 알림을 보냈어요 🎉');
+  showToast('시연 예약을 만들었어요. 실제 매니저에게 알림은 전송되지 않습니다.');
   renderOrder();
   goTo('s-order');
   setTimeout(()=>{
+    if(transition!==demoOrderTransition||!hasActiveBooking) return;
     const title=document.getElementById('order-status-title');
     const sub=document.getElementById('order-status-sub');
     const cancelBtn=document.getElementById('order-cancel-btn');
-    if(title) title.textContent='매니저가 예약을 수락했어요!';
-    if(sub) sub.textContent='곧 동행이 시작돼요.';
+    if(title) title.textContent='시연용 매니저 배정 완료';
+    if(sub) sub.textContent='예시 동행 화면으로 이동합니다.';
     if(cancelBtn) cancelBtn.style.display='none';
   },1600);
-  setTimeout(()=>{ updateLiveState(); goTo('s-live'); },3200);
+  setTimeout(()=>{ if(transition!==demoOrderTransition||!hasActiveBooking) return; updateLiveState(); goTo('s-live'); },3200);
 }
 // 결제하고 접수하기 직후 보여줄 예약현황(배민 주문현황 참고) 데이터 채우기
 function renderOrder(){
@@ -2313,7 +2374,7 @@ function tapBanner(i){
 
 // 재예약
 function confirmRebook(){
-  showToast('8월 13일 재예약이 확정됐습니다!');
+  showToast('재예약 화면 체험을 마쳤어요. 실제 예약은 생성되지 않습니다.');
   setTimeout(()=>tabTo('s-home'),900);
 }
 

@@ -160,43 +160,43 @@
         <div class="cku-intro">
           <div class="cku-intro-ic"><i class="fi fi-rr-calendar-clock"></i><i class="fi fi-rr-shield-check"></i></div>
           <div class="cku-intro-title">건강검진결과 연동<br>문진 기록부터 결과 확인까지<br>모시고에서 편하게 관리하세요.</div>
-          <div class="cku-intro-sub">국민건강보험공단에서 조회된 정보 기준으로<br>다음 검진 일정까지<br>모시고에서 모두 확인 가능해요.</div>
+          <div class="cku-intro-sub">건강검진 결과 조회 절차를 예시 데이터로 체험합니다.<br>실제 공단 조회·민감정보 수집·저장은 하지 않습니다.</div>
         </div>
       </div>
-      <div class="ob-foot"><button class="ob-btn" onclick="openCheckupTerms()">검진결과 연동 시작하기</button></div>
+      <div class="ob-foot"><button class="ob-btn" onclick="openCheckupTerms()">예시 검진연동 체험하기</button></div>
 
       <!-- 약관동의 -->
       <div class="overlay" id="modal-checkup-terms" onclick="closeModal('modal-checkup-terms')">
         <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:78vh;display:flex;flex-direction:column;padding-bottom:0">
           <div class="modal-handle"></div>
-          <div class="agree-all" id="cku-all" onclick="toggleCkuAll()">
+          <div class="agree-all" id="cku-all" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCkuAll()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCkuAll()}">
             <div class="agree-all-check" id="cku-chk-all">✓</div>
             <div class="agree-all-text">약관에 모두 동의합니다.</div>
           </div>
           <div class="agree-list" style="overflow-y:auto">
             <div class="cku-grp-label">모시고</div>
-            <div class="agree-item" id="cku1" onclick="toggleCku('cku1')">
+            <div class="agree-item" id="cku1" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku1')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku1')}">
               <div class="agree-item-check" id="cku-chk1">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">개인정보 수집 및 이용 동의 <span class="badge-req">필수</span></div></div>
             </div>
-            <div class="agree-item" id="cku2" onclick="toggleCku('cku2')">
+            <div class="agree-item" id="cku2" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku2')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku2')}">
               <div class="agree-item-check" id="cku-chk2">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">민감정보 수집 및 이용 동의 <span class="badge-req">필수</span></div></div>
             </div>
             <div class="cku-grp-label">국민건강보험공단</div>
-            <div class="agree-item" id="cku3" onclick="toggleCku('cku3')">
+            <div class="agree-item" id="cku3" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku3')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku3')}">
               <div class="agree-item-check" id="cku-chk3">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">서비스 이용약관 동의 <span class="badge-req">필수</span></div></div>
             </div>
-            <div class="agree-item" id="cku4" onclick="toggleCku('cku4')">
+            <div class="agree-item" id="cku4" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku4')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku4')}">
               <div class="agree-item-check" id="cku-chk4">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">개인정보처리방침 동의 <span class="badge-req">필수</span></div></div>
             </div>
-            <div class="agree-item" id="cku5" onclick="toggleCku('cku5')">
+            <div class="agree-item" id="cku5" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku5')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku5')}">
               <div class="agree-item-check" id="cku-chk5">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">건강검진결과 조회 서비스 신청 동의 <span class="badge-req">필수</span></div></div>
             </div>
-            <div class="agree-item" id="cku6" onclick="toggleCku('cku6')" style="border-bottom:none">
+            <div class="agree-item" id="cku6" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku6')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku6')}" style="border-bottom:none">
               <div class="agree-item-check" id="cku-chk6">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">가족(보호자) 대리조회 서비스 신청 동의 <span class="badge-opt">선택</span></div></div>
             </div>
@@ -209,12 +209,12 @@
       <div class="overlay" id="modal-checkup-auth" onclick="closeModal('modal-checkup-auth')">
         <div class="modal-sheet" onclick="event.stopPropagation()">
           <div class="modal-handle"></div>
-          <div class="modal-title">인증수단을 선택해주세요.</div>
+          <div class="modal-title">예시 인증수단을 선택해주세요.</div><p class="mosigo-checkup-demo-note">시연용 화면입니다. 외부 인증 서비스에 연결하지 않습니다.</p>
           <div class="auth-list">
-            <div class="auth-row" onclick="pickAuthMethod('kakao')"><span class="auth-mark" style="background:#FEE500;color:#391B1B">talk</span> 카카오톡</div>
-            <div class="auth-row" onclick="pickAuthMethod('naver')"><span class="auth-mark" style="background:#03C75A">N</span> 네이버</div>
-            <div class="auth-row" onclick="pickAuthMethod('toss')"><span class="auth-mark" style="background:#1B64DA">toss</span> 토스</div>
-            <div class="auth-row" onclick="pickAuthMethod('pass')"><span class="auth-mark" style="background:#FA5B5B">PASS</span> PASS</div>
+            <div class="auth-row" role="button" tabindex="0" aria-label="카카오톡 인증 시연" onclick="pickAuthMethod('kakao')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickAuthMethod('kakao')}"><span class="auth-mark" style="background:#FEE500;color:#391B1B">talk</span> 카카오톡</div>
+            <div class="auth-row" role="button" tabindex="0" aria-label="네이버 인증 시연" onclick="pickAuthMethod('naver')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickAuthMethod('naver')}"><span class="auth-mark" style="background:#03C75A">N</span> 네이버</div>
+            <div class="auth-row" role="button" tabindex="0" aria-label="토스 인증 시연" onclick="pickAuthMethod('toss')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickAuthMethod('toss')}"><span class="auth-mark" style="background:#1B64DA">toss</span> 토스</div>
+            <div class="auth-row" role="button" tabindex="0" aria-label="PASS 인증 시연" onclick="pickAuthMethod('pass')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickAuthMethod('pass')}"><span class="auth-mark" style="background:#FA5B5B">PASS</span> PASS</div>
           </div>
         </div>
       </div>
@@ -225,9 +225,9 @@
           <div class="modal-handle"></div>
           <div class="modal-title">통신사를 선택해주세요.</div>
           <div class="auth-list">
-            <div class="auth-row" onclick="pickCarrier()">SKT</div>
-            <div class="auth-row" onclick="pickCarrier()">KT</div>
-            <div class="auth-row" onclick="pickCarrier()">LGU</div>
+            <div class="auth-row" role="button" tabindex="0" onclick="pickCarrier()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickCarrier()}">SKT</div>
+            <div class="auth-row" role="button" tabindex="0" onclick="pickCarrier()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickCarrier()}">KT</div>
+            <div class="auth-row" role="button" tabindex="0" onclick="pickCarrier()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickCarrier()}">LGU</div>
           </div>
         </div>
       </div>
@@ -236,8 +236,8 @@
       <div class="ob-ov" id="ov-pass-wait" style="background:#fff;flex-direction:column;justify-content:flex-start;align-items:stretch">
         <button class="back-btn" onclick="closePassWait()" style="position:absolute;top:14px;left:14px;z-index:2"><i class="fi fi-rr-cross-small"></i></button>
         <div style="flex:1;padding:56px 24px 0">
-          <div class="pass-pill"><span class="auth-mark" style="background:#FA5B5B">PASS</span> 알림을 눌러 인증해주세요.</div>
-          <div class="pass-wait-title">PASS 앱에서 간편 인증 완료 후<br>확인 버튼을 선택해 주세요.</div>
+          <div class="pass-pill"><span class="auth-mark" style="background:#FA5B5B">PASS</span> 인증 과정 시연 · 실제 알림 없음</div>
+          <div class="pass-wait-title">인증 화면의 흐름을 체험합니다.<br>실제 PASS 앱 인증은 진행하지 않습니다.</div>
         </div>
         <div style="text-align:center;padding-bottom:6px"><span class="ob-link" style="display:inline-block;width:auto;padding:8px;text-decoration:underline" onclick="openModal('modal-pass-resend')">인증 알림이 오지 않나요?</span></div>
         <div class="ob-foot"><button class="ob-btn" onclick="confirmPassAuth()">확인</button></div>
@@ -248,7 +248,7 @@
         <div class="modal-sheet" onclick="event.stopPropagation()">
           <div class="modal-handle"></div>
           <div class="modal-title">인증 알림이 오지 않나요?</div>
-          <div class="modal-sub">등록된 정보가 다르면 알림이 가지 않아요. 이름 또는 전화번호를 변경하셨다면 다시 인증해 주세요.</div>
+          <div class="modal-sub">시연 화면이므로 실제 알림을 발송하지 않습니다. 개인정보를 입력하지 마세요.</div>
           <div style="display:flex;gap:8px">
             <button class="btn secondary" style="flex:1" onclick="closeModal('modal-pass-resend')">취소</button>
             <button class="btn primary" style="flex:1" onclick="resendPassAuth()">다시 인증하기</button>
@@ -262,8 +262,8 @@
           <div class="top">
             <div class="ai" style="color:var(--coral)"><i class="fi fi-rr-triangle-warning"></i></div>
             <div class="msg" style="text-align:left;font-size:13.5px;font-weight:500;line-height:1.6">
-              <b style="display:block;font-size:15px;margin-bottom:8px">부모님 정보가 조회되지 않아요.</b>
-              👉 건강보험공단 홈페이지 &gt; 건강모아 &gt; 가족 건강 &gt; 건강검진 &gt; 건강검진대상 조회 메뉴에서 가족과 보호자 관계 확인 신청을 해주세요.
+              <b style="display:block;font-size:15px;margin-bottom:8px">시연 조회 오류 화면입니다.</b>
+              가족정보 조회 실패 상태를 체험하는 예시 화면입니다. 실제 공단 조회는 발생하지 않습니다.
             </div>
           </div>
           <div class="b" onclick="retryPassAuth()">다시 시도하기</div>
@@ -276,7 +276,7 @@
         <div class="ob-alert">
           <div class="top">
             <div class="ai"><i class="fi fi-rr-shield-check"></i></div>
-            <div class="msg">건강보험공단에서 검진결과를<br>불러오는 중이에요…</div>
+            <div class="msg">시연용 건강검진 예시 데이터를<br>표시하고 있어요…</div>
           </div>
         </div>
       </div>
@@ -285,7 +285,7 @@
         <div class="ob-alert">
           <div class="top">
             <div class="ai" style="color:var(--teal)"><i class="fi fi-rr-check"></i></div>
-            <div class="msg">최근 3회 검진결과를 불러왔어요</div>
+            <div class="msg">최근 3회 검진 예시를 표시했어요. 실제 자료는 연동되지 않았습니다.</div>
           </div>
           <div class="b" onclick="finishCheckup()">확인</div>
         </div>
@@ -295,7 +295,7 @@
     <!-- ══ O3: 랜딩 ══ -->
     <div class="screen" id="s-landing">
       <div class="land-wrap">
-        <h1>모시고로 가입하고<br>간편하게 로그인하세요.</h1>
+        <h1>모시고의 가입·로그인 과정을<br>예시 화면으로 체험하세요.</h1>
         <div class="land-sub">우리 부모님 병원동행은 모시고 하나로</div>
         <div class="land-art"></div>
         <div style="padding:0 0 8px">
@@ -306,7 +306,7 @@
           </div>
           <div class="land-divider">이메일 로그인</div>
           <input class="input" id="land-email" style="cursor:text;margin-bottom:10px" placeholder="이메일을 입력해 주세요.">
-          <button class="ob-btn" onclick="goTo('s-signup')">10초안에 가입하기</button>
+          <button class="ob-btn" onclick="goTo('s-signup')">시연 가입 화면 보기</button>
         </div>
       </div>
     </div>
@@ -319,12 +319,12 @@
         <div style="width:32px"></div>
       </div>
       <div class="ob-body" style="padding:22px 20px 0">
-        <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:18px">휴대폰 번호로 본인인증하면 모시고 서비스를 바로 이용할 수 있어요.</div>
+        <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:18px">휴대폰 인증 과정을 체험합니다. 실제 본인확인·문자 발송·계정 생성은 하지 않습니다.</div>
         <div class="label">전화번호</div>
         <input class="input filled" id="phone-input" type="tel" placeholder="010-0000-0000" style="cursor:text">
-        <div style="font-size:11px;color:var(--g400);margin-top:8px">체험용 번호: 010-1111-2222 입력 시 기존 회원으로 처리됩니다</div>
+        <div style="font-size:11px;color:var(--g400);margin-top:8px">개인 번호 대신 체험용 번호 010-1111-2222를 사용하세요. 실제 인증 문자는 보내지 않습니다.</div>
       </div>
-      <div class="ob-foot"><button class="ob-btn" onclick="goPhoneOtp()">인증번호 받기</button></div>
+      <div class="ob-foot"><button class="ob-btn" onclick="goPhoneOtp()">인증 화면 체험하기</button></div>
     </div>
 
     <!-- ══ O5: 인증번호 입력 ══ -->
@@ -335,10 +335,10 @@
         <div style="width:32px"></div>
       </div>
       <div class="ob-body" style="padding:22px 20px 0">
-        <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:6px" id="otp-sub">010-****-1234로 6자리 번호를 보냈어요</div>
+        <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:6px" id="otp-sub">시연용 6자리 숫자를 입력하세요. 실제 문자는 발송되지 않습니다.</div>
         <div class="label" style="margin-top:16px">인증번호</div>
         <input class="input filled" id="otp-input" type="tel" maxlength="6" placeholder="6자리 숫자 입력" style="letter-spacing:6px;text-align:center;cursor:text">
-        <div class="ob-link" id="otp-resend" onclick="resendOtp()" style="text-align:left;padding:12px 0;text-decoration:none;color:var(--teal);font-weight:600;font-size:13px">인증번호 재전송 (0:59)</div>
+        <div class="ob-link" id="otp-resend" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();resendOtp()}" onclick="resendOtp()" style="text-align:left;padding:12px 0;text-decoration:none;color:var(--teal);font-weight:600;font-size:13px">시연 코드 다시 입력 (0:59)</div>
       </div>
       <div class="ob-foot"><button class="ob-btn" onclick="verifyOtp()">인증하기</button></div>
     </div>
@@ -352,7 +352,7 @@
       </div>
       <div class="body-scroll">
         <div class="sec">
-          <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:16px">모시고에서 사용할 정보를 입력해주세요</div>
+          <div class="card-sub" style="font-size:13px;line-height:1.6;margin-bottom:16px">시연용 회원가입 화면입니다. 실제 이름·생년월일·전화번호를 입력하지 말고 가상 정보를 사용하세요. 실제 계정은 생성되지 않습니다.</div>
 
           <!-- 토스처럼 한 단계씩 아래로 열리는 입력 폼.
                각 단계는 su-step(기본 숨김) → .show가 붙으면 슬라이드업 애니메이션으로 나타난다. -->
@@ -369,10 +369,10 @@
           <div class="su-step" id="su-step-carrier">
             <div class="label">통신사</div>
             <div class="chip-group chip-single" id="su-carriers">
-              <div class="chip" onclick="suPickCarrier(this,'SKT')">SKT</div>
-              <div class="chip" onclick="suPickCarrier(this,'KT')">KT</div>
-              <div class="chip" onclick="suPickCarrier(this,'LG U+')">LG U+</div>
-              <div class="chip" onclick="suPickCarrier(this,'알뜰폰')">알뜰폰</div>
+              <div class="chip" role="button" tabindex="0" aria-label="SKT 선택" onclick="suPickCarrier(this,'SKT')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();suPickCarrier(this,'SKT')}">SKT</div>
+              <div class="chip" role="button" tabindex="0" aria-label="KT 선택" onclick="suPickCarrier(this,'KT')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();suPickCarrier(this,'KT')}">KT</div>
+              <div class="chip" role="button" tabindex="0" aria-label="LG U+ 선택" onclick="suPickCarrier(this,'LG U+')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();suPickCarrier(this,'LG U+')}">LG U+</div>
+              <div class="chip" role="button" tabindex="0" aria-label="알뜰폰 선택" onclick="suPickCarrier(this,'알뜰폰')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();suPickCarrier(this,'알뜰폰')}">알뜰폰</div>
             </div>
           </div>
 
@@ -393,7 +393,7 @@
               </div>
               <button class="su-side-btn" id="su-verify-btn" disabled onclick="suVerifyCode()">확인</button>
             </div>
-            <div class="su-hint" id="su-code-hint">문자로 받은 인증번호를 입력해주세요 · 체험에서는 임의의 6자리 숫자를 입력할 수 있어요</div>
+            <div class="su-hint" id="su-code-hint">실제 문자 발송 없이 임의의 숫자 6자리를 입력해 주세요. 개인정보는 입력하지 마세요.</div>
           </div>
 
           <div class="su-step" id="su-step-agree">
@@ -432,7 +432,7 @@
     <div class="screen" id="s-home">
       <!-- 상단바 -->
       <div class="home-top">
-        <button class="home-name" id="home-place" onclick="pickHomePlace()">간병 장소 입력 <span class="caret">▾</span></button>
+        <button class="home-name" id="home-place" onclick="pickHomePlace()">동행 출발지 입력 <span class="caret">▾</span></button>
         <div class="home-top-spacer"></div>
         <div class="big-toggle" role="button" tabindex="0" aria-pressed="false" onclick="toggleLargeText()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleLargeText();}">큰글 <span class="knob"></span></div>
         <button class="home-ic" onclick="showToast('알림 3건')"><i class="fi fi-rr-bell"></i><span class="dot"></span></button>
@@ -442,9 +442,9 @@
         <!-- 오늘 동행 카드 (hasActiveBooking===true) -->
         <div class="sec" id="home-active-card" style="padding-top:10px;display:none">
           <div class="card teal" style="cursor:pointer" onclick="tabTo('s-live',2)">
-            <span class="badge teal" style="margin-bottom:6px">오늘 동행</span>
-            <div class="card-title" style="margin-top:6px">오늘 아버지 병원동행이 있어요</div>
-            <div class="card-sub">8월 13일 오전 10:00 · 똑똑연세내과의원</div>
+            <span class="badge teal" style="margin-bottom:6px">예시 동행</span>
+            <div class="card-title" style="margin-top:6px">선택한 동행 일정을 확인해요</div>
+            <div class="card-sub" id="home-active-date">선택한 일정 · 똑똑연세내과의원</div>
             <div class="mgr-card on" style="margin:10px 0 8px;background:var(--white);cursor:default" onclick="event.stopPropagation()">
               <div class="mgr-avatar">🧑‍⚕️</div>
               <div style="flex:1">
@@ -588,7 +588,7 @@
           <i class="fi fi-rr-angle-small-right"></i>
         </div>
 
-        <div class="mp-banner yellow" onclick="showToast('카카오 계정을 연결합니다')">
+        <div class="mp-banner yellow" onclick="showPrototypeNotice('카카오 계정 연결')">
           <span><i class="fi fi-rr-comment"></i> 3초 연결하고 <b>맞춤형 혜택</b> 받기</span>
           <i class="fi fi-rr-cross-small" onclick="event.stopPropagation();this.parentElement.remove()"></i>
         </div>
@@ -620,7 +620,7 @@
         </div>
 
         <!-- 프로모 배너 -->
-        <div class="mp-promo" onclick="showToast('이벤트 페이지로 이동합니다')">
+        <div class="mp-promo" onclick="showPrototypeNotice('적립 이벤트')">
           <div class="mp-promo-t">1일부터 7일 더블 혜택<br>선착순 적립 이벤트</div>
           <div class="mp-promo-s">2배 적립 &amp; 10% 사용</div>
           <div class="mp-promo-e">🎁</div>
@@ -630,22 +630,22 @@
         <div class="mp-sec">
           <div class="mp-sec-h">놓칠 수 없는 오늘의 혜택 <span onclick="showToast('전체보기')">더보기 ›</span></div>
           <div class="mp-benefits">
-            <div class="mp-benefit" onclick="showToast('미션 페이지로 이동합니다')"><em>매일 미션하고</em><b>5,000원 쿠폰받기</b></div>
-            <div class="mp-benefit" onclick="showToast('건강 팁을 확인하세요')"><em>어르신 건강</em><b>이번주 체크리스트</b></div>
+            <div class="mp-benefit" onclick="showPrototypeNotice('미션·쿠폰')"><em>매일 미션하고</em><b>5,000원 쿠폰받기</b></div>
+            <div class="mp-benefit" onclick="showPrototypeNotice('건강 체크리스트')"><em>어르신 건강</em><b>이번주 체크리스트</b></div>
           </div>
         </div>
 
         <!-- 메뉴 목록 -->
         <div class="mp-menu">
           <div class="mp-menu-lb">고객센터</div>
-          <div class="mp-menu-i" onclick="showToast('1:1 문의를 접수합니다')">1:1 문의</div>
+          <div class="mp-menu-i" onclick="showPrototypeNotice('1:1 문의 접수')">1:1 문의</div>
           <div class="mp-menu-i" onclick="showToast('공지사항')">공지사항 <span class="nd"></span></div>
           <div class="mp-menu-i" onclick="showToast('자주 묻는 질문')">자주 묻는 질문</div>
         </div>
         <div class="mp-menu">
           <div class="mp-menu-lb">돌봄 · 참여</div>
           <div class="mp-menu-i" onclick="showToast('가족 구성원 관리')">가족 구성원 관리</div>
-          <div class="mp-menu-i" onclick="openAddrSearch()">간병 장소 관리</div>
+          <div class="mp-menu-i" onclick="openAddrSearch()">동행 출발지 관리</div>
           <div class="mp-menu-i" onclick="showToast('찜한 매니저')">찜한 매니저</div>
           <div class="mp-menu-i" onclick="showToast('친구 초대 리워드')">친구 초대 리워드</div>
         </div>
@@ -658,7 +658,7 @@
 
         <!-- 사업자 정보 -->
         <div class="mp-foot">
-          <b>(주)모시고 사업자 정보</b>
+          <b>가상 사업자 정보 · 시연용</b>
           <div>대표이사　김현수</div>
           <div>주소　경기도 화성시 향남읍 행정중앙로 27</div>
           <div>문의전화　1670-0000</div>
@@ -666,7 +666,7 @@
           <div>사업자등록번호　000-00-00000</div>
           <div class="mp-foot-links"><span>이용약관</span> · <span>개인정보 처리방침</span></div>
           <p>(주)모시고는 병원동행 매칭 중개자로서 의료행위의 당사자가 아니며, 진료 결과에 대한 책임을 지지 않습니다.</p>
-          <div class="mosigo-prototype-note"><b>포트폴리오 프로토타입</b> · 병원 상세, 매니저 프로필, 건강 데이터 일부는 서비스 흐름 검증을 위한 예시 정보입니다.</div>
+          <div class="mosigo-prototype-note"><b>포트폴리오 프로토타입</b> · 병원 상세, 매니저 프로필, 건강 데이터 일부와 위 사업자명·연락처·등록번호는 모두 시연용 예시입니다. 실제 사업자 정보가 아닙니다.</div>
         </div>
       </div>
       <div class="tab-bar">
@@ -737,7 +737,7 @@
       </div>
       <div class="body-scroll">
         <div class="sec" style="padding-top:20px">
-          <div class="addr-hero">간병 장소를<br>입력해 주세요</div>
+          <div class="addr-hero">동행 출발지를<br>입력해 주세요</div>
           <div class="srch-field" style="margin-top:18px">
             <i class="fi fi-rr-search"></i>
             <input id="addr-input" placeholder="도로명, 건물명, 지번으로 검색" onkeyup="if(event.key==='Enter')searchAddrByText()">
@@ -1136,7 +1136,7 @@
         </div>
       </div>
       <div style="padding:8px 18px 12px;display:flex;gap:8px">
-        <button class="btn ghost" style="width:auto;padding:14px 18px" onclick="showToast('이 매니저를 차단했습니다')">차단하기</button>
+        <button class="btn ghost" style="width:auto;padding:14px 18px" onclick="showPrototypeNotice('매니저 차단')">차단하기</button>
         <button class="btn primary" id="mgr-p-btn" style="flex:1" onclick="startBooking()">김민준 매니저로 접수하기</button>
       </div>
 
@@ -1144,10 +1144,10 @@
         <div class="modal-sheet" onclick="event.stopPropagation()">
           <div class="modal-handle"></div>
           <div class="modal-title">매니저에게 문의</div>
-          <div class="modal-sub">접수 전 궁금한 점을 매니저와 직접 연락하거나 채팅으로 물어볼 수 있습니다.</div>
+          <div class="modal-sub">시연용 문의 화면입니다. 실제 매니저와 채팅하거나 전화가 연결되지는 않습니다.</div>
           <div class="btn-row" style="padding:0">
-            <button class="btn ghost" style="flex:1" onclick="showToast('채팅을 시작합니다');closeModal('modal-call3')">💬 채팅 문의</button>
-            <button class="btn primary" style="flex:2" onclick="showToast('매니저에게 연결합니다');closeModal('modal-call3')">📞 전화 연결</button>
+            <button class="btn ghost" style="flex:1" onclick="showPrototypeNotice('매니저 채팅');closeModal('modal-call3')">💬 채팅 문의</button>
+            <button class="btn primary" style="flex:2" onclick="showPrototypeNotice('매니저 전화');closeModal('modal-call3')">📞 전화 연결</button>
           </div>
         </div>
       </div>
@@ -1201,7 +1201,7 @@
             </div>
             <div class="rc-actions">
               <button class="rc-act primary" onclick="closeModal('modal-bk-detail');startBooking()">재예약</button>
-              <button class="rc-act" onclick="showToast('매니저에게 연결합니다')">전화하기</button>
+              <button class="rc-act" onclick="showPrototypeNotice('매니저 전화')">전화하기</button>
             </div>
             <div class="rc-line"></div>
             <div class="rc-row head"><span><i class="fi fi-rr-route"></i> 병원동행</span><b id="bkd-state">동행완료</b></div>
@@ -1234,7 +1234,7 @@
         <button class="back-btn" onclick="goBack()"><i class="fi fi-rr-angle-left"></i></button>
         <div class="app-bar-center">
           <div class="app-bar-title">매니저 선택</div>
-          <div class="app-bar-sub">8월 13일 오전 10시 · 화성 향남</div>
+          <div class="app-bar-sub" id="manager-date-sub">선택한 방문 일정 · 화성 향남</div>
         </div>
         <div style="width:32px"></div>
       </div>
@@ -1312,7 +1312,7 @@
             <div class="item-thumb" id="confirm-mgr-thumb"></div>
             <div class="item-body">
               <div class="item-title" id="confirm-mgr">김민준 매니저 · ★4.9</div>
-              <div class="item-sub">똑똑연세내과의원 · 8월 13일 오전 10:00</div>
+              <div class="item-sub" id="confirm-date-sub">선택한 방문 일정 · 똑똑연세내과의원</div>
             </div>
             <button class="item-edit" onclick="openModal('modal-target')">수정</button>
           </div>
@@ -1324,7 +1324,7 @@
             <div id="confirm-stops"></div>
             <div class="addr-row"><span class="addr-tag end">도착</span><span class="addr-txt">똑똑연세내과의원</span></div>
             <div class="addr-row"><span class="addr-tag">대상</span><span class="addr-txt" id="confirm-target">아버지 (이순자, 74세)</span></div>
-            <div class="addr-row"><span class="addr-tag">간병시간</span><span class="addr-txt" id="confirm-duration">2시간</span></div>
+            <div class="addr-row"><span class="addr-tag">동행 시간</span><span class="addr-txt" id="confirm-duration">2시간</span></div>
             <div class="addr-row"><span class="addr-tag">진단명</span><span class="addr-txt" id="confirm-dx-display">진단명 없음</span></div>
           </div>
 
@@ -1364,7 +1364,7 @@
           <div id="mode-list"></div>
 
           <!-- 결제수단 — 동행 종료 후 이 수단으로 자동 청구된다 -->
-          <div class="label">결제수단 <span class="label-opt">동행 종료 후 자동 청구</span></div>
+          <div class="label">결제 방식 <span class="label-opt">시연용 · 실제 청구 없음</span></div>
           <div id="pay-list"></div>
 
           <!-- 예상 금액 (후불 결제) -->
@@ -1374,14 +1374,14 @@
             <div class="cost-total"><span>예상 합계</span><span id="cost-total">45,000원</span></div>
           </div>
           <div class="postpay-note">
-            <div class="postpay-h"><i class="fi fi-rr-info"></i> 후불 결제로 진행됩니다</div>
-            <p>정확한 시간 계산이 불가능한 병원 진료 특성상, 서비스 요금의 투명성을 위해 후불 결제를 진행하고 있습니다.</p>
-            <p>서비스 시간은 <b>초 단위로 자동 계산</b>되니, 안심하고 서비스를 받으세요.</p>
+            <div class="postpay-h"><i class="fi fi-rr-info"></i> 후불 결제 방식 안내 · 시연</div>
+            <p>병원 진료 시간에 따라 이용 시간이 달라질 수 있어, 종료 후 이용 시간을 기준으로 요금을 산정하는 방식을 화면으로 보여줍니다.</p>
+            <p>표시된 시간과 금액은 예시입니다. 이 데모에서는 <b>실제 결제·자동 청구가 발생하지 않습니다.</b></p>
           </div>
         </div>
       </div>
       <div class="pay-bar">
-        <div class="pay-bar-amt"><span id="pay-bar-total">45,000원</span><em>예상 금액 · 후불 결제</em></div>
+        <div class="pay-bar-amt"><span id="pay-bar-total">45,000원</span><em>예시 금액 · 실제 결제 없음</em></div>
         <button class="btn primary" id="pay-btn" onclick="openAgreeSheet()">동행 신청하기</button>
       </div>
 
@@ -1572,7 +1572,7 @@
         <div class="order-hero">
           <div class="order-hero-title" id="order-status-title">예약을 확인하고 있어요</div>
           <div class="order-hero-sub" id="order-status-sub">매니저 배정 전까지 취소가 가능해요.</div>
-          <button class="btn ghost" id="order-cancel-btn" style="margin-top:14px" onclick="showToast('예약을 취소했습니다');tabTo('s-home')">예약취소</button>
+          <button class="btn ghost" id="order-cancel-btn" style="margin-top:14px" onclick="cancelDemoBooking()">예약취소</button>
           <div class="order-hero-mascot" id="order-hero-mascot">🧑‍⚕️</div>
         </div>
         <div class="sec">
@@ -1580,16 +1580,16 @@
             <div class="item-thumb" id="order-mgr-thumb"></div>
             <div class="item-body">
               <div class="item-title" id="order-mgr">김민준 매니저 · ★4.9</div>
-              <div class="item-sub" id="order-sub">똑똑연세내과의원 · 8월 13일 오전 10:00</div>
+              <div class="item-sub" id="order-sub">선택한 동행 일정 · 시연용</div>
             </div>
           </div>
-          <div class="order-info-row"><span>예약번호</span><b id="order-no">M26H13-KTQAS</b></div>
-          <div class="order-info-row"><span>간병 장소</span><b id="order-addr">화성 향남읍 자택</b></div>
+          <div class="order-info-row"><span>예시 예약번호</span><b id="order-no">시연 신청</b></div>
+          <div class="order-info-row"><span>동행 출발지</span><b id="order-addr">화성 향남읍 자택</b></div>
           <div class="order-info-note"><span>매니저에게</span><p id="order-note">-</p></div>
         </div>
         <div class="order-cs">
-          <div>고객센터 <b>1661-5489</b></div>
-          <div class="order-cs-time">운영시간 : 평일/주말 오전 9시 ~ 밤 12시</div>
+          <div>예시 연락처(실제 연결 불가) <b>1661-5489</b></div>
+          <div class="order-cs-time">운영시간 표기도 시연용 예시이며 실제 상담을 제공하지 않습니다.</div>
         </div>
       </div>
     </div>
@@ -1647,7 +1647,7 @@
 
               <div class="label" style="margin-top:0">동행 정보</div>
               <div class="live-info-box">
-                <div class="live-info-line"><span>간병 장소</span><b id="live-info-addr">화성 향남읍 자택</b></div>
+                <div class="live-info-line"><span>동행 출발지</span><b id="live-info-addr">화성 향남읍 자택</b></div>
                 <div class="live-info-line"><span>병원</span><b id="live-info-hosp">똑똑연세내과의원</b></div>
               </div>
 
@@ -1674,7 +1674,7 @@
           <div class="modal-sub">매니저와 직접 연락하거나 고객센터를 통해 현황을 안내받을 수 있습니다.</div>
           <div class="btn-row" style="padding:0">
             <button class="btn ghost" style="flex:1" onclick="closeModal('modal-call')">닫기</button>
-            <button class="btn primary" style="flex:2" onclick="showToast('매니저에게 연결합니다');closeModal('modal-call')">📞 전화 연결</button>
+            <button class="btn primary" style="flex:2" onclick="showPrototypeNotice('매니저 전화');closeModal('modal-call')">📞 전화 연결</button>
           </div>
         </div>
       </div>
@@ -1727,7 +1727,7 @@
         <div class="sec">
           <div class="card teal">
             <div class="ai-chip">✦ AI 진료요약 준비 중</div>
-            <div style="font-size:12px;color:var(--g600)">진료 완료 후 자동으로 리포트를 전송합니다</div>
+            <div style="font-size:12px;color:var(--g600)">시연용 리포트 화면입니다. 실제 의료정보 전송은 발생하지 않습니다.</div>
           </div>
         </div>
       </div>
@@ -1738,7 +1738,7 @@
           <div class="modal-sub">매니저와 직접 연락하거나 고객센터를 통해 현황을 안내받을 수 있습니다.</div>
           <div class="btn-row" style="padding:0">
             <button class="btn ghost" style="flex:1" onclick="closeModal('modal-call2')">닫기</button>
-            <button class="btn primary" style="flex:2" onclick="showToast('매니저에게 연결합니다');closeModal('modal-call2')">📞 전화 연결</button>
+            <button class="btn primary" style="flex:2" onclick="showPrototypeNotice('매니저 전화');closeModal('modal-call2')">📞 전화 연결</button>
           </div>
         </div>
       </div>
@@ -1936,7 +1936,7 @@
             <div style="font-size:13px;line-height:1.9">
               <div style="margin-bottom:4px">✅ 혈당 수치 개선 — 이전 방문 대비 호전</div>
               <div style="margin-bottom:4px">💊 메트포르민 1000mg 30일 처방</div>
-              <div>📅 다음 방문: 8월 13일 권고</div>
+              <div>📅 방문 권고일: 2026년 8월 13일 (과거 예시)</div>
             </div>
           </div>
           <div class="report-item">
@@ -1947,7 +1947,7 @@
           </div>
           <div class="report-item">
             <div class="report-label">다음 예약</div>
-            <div class="report-val" style="color:var(--teal)">8월 13일 오전 · 똑똑연세내과의원<br>
+            <div class="report-val" style="color:var(--teal)">2026년 8월 13일 오전 · 똑똑연세내과의원 (예시)<br>
               <span style="font-size:11px;color:var(--g600)">동일 매니저(김민준)로 재예약 권장</span>
             </div>
           </div>
@@ -2001,7 +2001,7 @@
             <div class="dr-row"><span class="k">다음 내원일</span><span class="v">08월 13일 (목) 10:00</span></div>
             <div class="dr-btns">
               <button class="dr-call ghost" onclick="openModal('modal-review')">후기 남기기 ★</button>
-              <button class="dr-call" onclick="goTo('s-rebook')">8월 13일 재예약</button>
+              <button class="dr-call" onclick="goTo('s-rebook')">재예약 화면 미리 보기</button>
             </div>
           </div>
 
@@ -2116,8 +2116,8 @@
               <div class="mgr-star">★★★★★ 4.9</div>
             </div>
           </div>
-          <div class="label">다음 예약일 (의사 권고)</div>
-          <input class="input filled" value="8월 13일 (목) 📅" readonly>
+          <div class="label">과거 권고일 (시연용 기록)</div>
+          <input class="input filled" value="2026년 8월 13일 · 과거 예시" readonly>
           <div class="label">진료 시간</div>
           <input class="input filled" value="오전 10:00 ⏰" readonly>
           <div class="label">병원</div>
@@ -2127,7 +2127,7 @@
             <div class="cost-row"><span>차량 이동 옵션</span><span class="val">10,000원</span></div>
             <div class="cost-total"><span>예상 합계</span><span>40,000원</span></div>
           </div>
-          <div class="sub-banner" onclick="showToast('구독 플랜을 안내해 드릴게요')">
+          <div class="sub-banner" onclick="showPrototypeNotice('구독 플랜')">
             <div style="font-size:22px">💡</div>
             <div style="flex:1">
               <div style="font-size:12px;font-weight:600;color:var(--amber)">단골 구독하면 더 저렴해요</div>
@@ -2138,7 +2138,7 @@
         </div>
       </div>
       <div style="padding:8px 18px 12px">
-        <button class="btn primary" onclick="confirmRebook()">재예약 확정</button>
+        <button class="btn primary" onclick="confirmRebook()">재예약 화면 체험 마치기</button>
       </div>
     </div>
 
@@ -2148,19 +2148,19 @@
         <div class="modal-handle"></div>
         <div class="modal-title">무슨 일이 있으신가요?</div>
         <div class="agree-list">
-          <div class="agree-item" onclick="openSosOption('A')">
+          <div class="agree-item mosigo-sos-choice" role="button" tabindex="0" aria-label="부모님께 이상이 생겼어요 · 시연용 안내" onclick="openSosOption('A')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSosOption('A')}">
             <div class="agree-item-check" style="color:var(--coral)">🚨</div>
             <div class="agree-item-body">
               <div class="agree-item-title">부모님께 이상이 생겼어요</div>
-              <div class="agree-item-sub">건강 이상, 응급 상황 등 — 모시고 고객센터로 즉시 연결됩니다</div>
+              <div class="agree-item-sub">시연 화면으로 연결되지 않습니다. 긴급 상황은 119에 직접 연락하세요.</div>
             </div>
             <div class="agree-item-arrow">›</div>
           </div>
-          <div class="agree-item" onclick="openSosOption('B')">
+          <div class="agree-item mosigo-sos-choice" role="button" tabindex="0" aria-label="매니저 관련 문제를 신고할게요 · 시연용 안내" onclick="openSosOption('B')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSosOption('B')}">
             <div class="agree-item-check" style="color:var(--coral)">⚠️</div>
             <div class="agree-item-body">
               <div class="agree-item-title">매니저 관련 문제를 신고할게요</div>
-              <div class="agree-item-sub">부적절한 행동, 사고 등 — 매니저를 거치지 않고 고객센터로 바로 연결됩니다</div>
+              <div class="agree-item-sub">실제 신고는 접수되지 않습니다. 긴급 상황은 112 또는 119에 연락하세요.</div>
             </div>
             <div class="agree-item-arrow">›</div>
           </div>
@@ -2171,15 +2171,15 @@
     <div class="overlay" id="modal-sos-a" onclick="closeModal('modal-sos-a')">
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-handle"></div>
-        <div class="modal-title">부모님께 이상이 생겼어요</div>
-        <div class="modal-sub">건강 이상, 응급 상황 등 — 모시고 고객센터로 즉시 연결됩니다.</div>
-        <button class="btn primary" onclick="callSafetyTeam()">📞 안전지원팀 전화 연결</button>
+        <div class="modal-title">부모님께 이상이 생겼어요</div><p class="mosigo-safety-notice" role="alert">시연용 화면입니다. 실제 긴급 신고·전화 연결이 되지 않습니다. 긴급 상황은 119에 직접 연락해 주세요.</p>
+        <div class="modal-sub">시연 화면으로 연결되지 않습니다. 긴급 상황은 119에 직접 연락하세요.</div>
+        <button class="btn primary" onclick="callSafetyTeam()">긴급 연락 안내 보기 (시연)</button>
         <div class="label" style="margin-top:14px">상황 설명 (선택)</div>
         <textarea class="input filled" id="sos-a-text" style="min-height:56px;resize:none;cursor:text" placeholder="상황을 간단히 알려주시면 상담에 도움이 됩니다"></textarea>
         <div style="font-size:11px;color:var(--g600);margin:2px 0 12px">사진이나 음성을 남기시면 상담에 도움이 됩니다 (선택)</div>
         <div class="btn-row" style="padding:0">
           <button class="btn ghost" style="flex:1" onclick="showToast('사진/음성 첨부 기능은 준비 중입니다')">📎 첨부하기</button>
-          <button class="btn primary" style="flex:2" onclick="submitSos('A')">접수 완료</button>
+          <button class="btn primary" style="flex:2" onclick="submitSos('A')">시연 신고 상태 보기</button>
         </div>
       </div>
     </div>
@@ -2187,14 +2187,14 @@
     <div class="overlay" id="modal-sos-b" onclick="closeModal('modal-sos-b')">
       <div class="modal-sheet" onclick="event.stopPropagation()">
         <div class="modal-handle"></div>
-        <div class="modal-title">매니저 관련 문제를 신고할게요</div>
-        <div class="modal-sub" style="color:var(--coral)">이 신고는 매니저에게 통지되지 않습니다. 안심하고 상황을 알려주세요.</div>
+        <div class="modal-title">매니저 관련 문제를 신고할게요</div><p class="mosigo-safety-notice" role="alert">실제 접수·매니저 통지·상담 전화는 발생하지 않습니다. 긴급 상황은 112 또는 119에 직접 연락하세요.</p>
+        <div class="modal-sub" style="color:var(--coral)">시연용 화면으로 실제 신고·매니저 통지·고객센터 전송은 발생하지 않습니다.</div>
         <div class="label">상황 설명 <span class="agree-req">필수</span></div>
         <textarea class="input filled" id="sos-b-text" style="min-height:70px;resize:none;cursor:text" placeholder="어떤 일이 있었는지 알려주세요"></textarea>
         <div style="font-size:11px;color:var(--g600);margin:2px 0 12px">사진이나 음성을 남기시면 상담에 도움이 됩니다 (선택)</div>
         <div class="btn-row" style="padding:0">
           <button class="btn ghost" style="flex:1" onclick="showToast('사진/음성 첨부 기능은 준비 중입니다')">📎 첨부하기</button>
-          <button class="btn primary" style="flex:2" onclick="submitSos('B')">신고 접수하기</button>
+          <button class="btn primary" style="flex:2" onclick="submitSos('B')">시연 신고 상태 보기</button>
         </div>
       </div>
     </div>
