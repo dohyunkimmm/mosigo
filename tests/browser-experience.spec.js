@@ -340,3 +340,26 @@ test('missing Leaflet CDN shows readable fallback rather than a silent empty map
   await expect(page.locator('#map-search .mosigo-map-unavailable')).toContainText('배경지도를 불러오지 못했습니다');
   await expect(page.locator('#map-hosp .mosigo-map-unavailable')).toHaveCount(1);
 });
+
+
+test('P1 200%-effective desktop reflow keeps demo task and comparison accessible',async({page})=>{
+  // 1440 physical pixels at 200% browser zoom correspond to about 720 layout pixels.
+  // This tests responsive reflow, not a physical device or native browser zoom.
+  await page.setViewportSize({width:720,height:800});
+  await page.goto('/');
+  await page.evaluate(()=>tabTo('s-home'));
+  await expect(page.locator('#s-home .mosigo-home-task')).toBeVisible();
+  await expect(page.getByRole('button',{name:/병원동행 신청 시작/})).toBeVisible();
+  await page.evaluate(()=>{renderMgrProfile(0);tabTo('s-mgr')});
+  await page.locator('.mosigo-compare-trigger').click();
+  const modal=page.locator('#mosigo-manager-compare');
+  await expect(modal).toBeVisible();
+  await expect(modal.locator('.mosigo-compare-card')).toHaveCount(3);
+  await page.getByRole('button',{name:'비교 닫기'}).click();
+  await expect(modal).toBeHidden();
+  const widths=await page.evaluate(()=>({
+    available:document.documentElement.clientWidth,
+    used:document.documentElement.scrollWidth
+  }));
+  expect(widths.used).toBeLessThanOrEqual(widths.available+1);
+});

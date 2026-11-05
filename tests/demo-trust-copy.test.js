@@ -6,6 +6,7 @@ const path = require('node:path');
 const html = readFileSync(path.join(__dirname, '..', 'src', 'index.html'), 'utf8');
 const app = readFileSync(path.join(__dirname, '..', 'src', 'index-core.js'), 'utf8');
 const css = readFileSync(path.join(__dirname, '..', 'src', 'ux-enhancements.css'), 'utf8');
+const postUi = readFileSync(path.join(__dirname, '..', 'src', 'runtime', 'post-ui.js'), 'utf8');
 
 test('payment UI identifies charges as prototype-only', () => {
   assert.match(html, /시연용 · 실제 청구 없음/);
@@ -101,4 +102,10 @@ test('P1: example health consent and auth choices have keyboard affordances', ()
   assert.match(html, /class="auth-row" role="button" tabindex="0"/);
   assert.match(app, /setAttribute\('aria-checked',String\(allChecked\)\)/);
   assert.match(css, /\.mosigo-checkup-demo-note\{/);
+});
+
+
+test('P1: keyboard helper does not double-activate controls with inline handlers', () => {
+  assert.match(postUi, /el\.hasAttribute\('onkeydown'\)/);
+  assert.match(postUi, /el\.addEventListener\('keydown'/);
 });
