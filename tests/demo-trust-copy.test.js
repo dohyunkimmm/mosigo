@@ -84,3 +84,21 @@ test('P1: modal keyboard navigation and mobile styles remain available', () => {
   assert.match(css, /@media\(max-width:375px\)/);
   assert.match(css, /background-color:#147d3f;color:#fff/);
 });
+
+test('P0: example health data must not be presented as live insurance lookup', () => {
+  assert.match(html, /실제 공단 조회·민감정보 수집·저장은 하지 않습니다/);
+  assert.match(html, /외부 인증 서비스에 연결하지 않습니다/);
+  assert.match(html, /실제 PASS 앱 인증은 진행하지 않습니다/);
+  assert.match(html, /최근 3회 검진 예시를 표시했어요/);
+  assert.doesNotMatch(html, /건강보험공단에서 검진결과를<br>불러오는 중이에요/);
+});
+
+test('P1: example health consent and auth choices have keyboard affordances', () => {
+  assert.match(html, /id="cku-all" role="checkbox" tabindex="0"/);
+  for (const id of ['cku1','cku2','cku3','cku4','cku5','cku6']) {
+    assert.ok(html.includes('id="' + id + '" role="checkbox" tabindex="0"'), id);
+  }
+  assert.match(html, /class="auth-row" role="button" tabindex="0"/);
+  assert.match(app, /setAttribute\('aria-checked',String\(allChecked\)\)/);
+  assert.match(css, /\.mosigo-checkup-demo-note\{/);
+});
