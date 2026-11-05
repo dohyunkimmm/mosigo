@@ -70,10 +70,10 @@ function updateOtpTimerText(){
   const el=document.getElementById('otp-resend');
   if(!el) return;
   if(otpSeconds>0){
-    el.textContent='인증번호 재전송 (0:'+(otpSeconds<10?'0':'')+otpSeconds+')';
+    el.textContent='시연 코드 다시 입력 (0:'+(otpSeconds<10?'0':'')+otpSeconds+')';
     el.style.color='var(--g400)';
   }else{
-    el.textContent='인증번호 재전송';
+    el.textContent='시연 코드 다시 입력';
     el.style.color='var(--teal)';
   }
 }
@@ -655,7 +655,7 @@ function openModal(id){
   node.classList.add('show');
   queueMicrotask(()=>{
     if(!node.classList.contains('show')) return;
-    (node.querySelector('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[href]')||node).focus({preventScroll:true});
+    (node.querySelector('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[role="button"][tabindex],[href]')||node).focus({preventScroll:true});
   });
 }
 function closeModal(id){
