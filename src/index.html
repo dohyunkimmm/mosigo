@@ -169,34 +169,34 @@
       <div class="overlay" id="modal-checkup-terms" onclick="closeModal('modal-checkup-terms')">
         <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:78vh;display:flex;flex-direction:column;padding-bottom:0">
           <div class="modal-handle"></div>
-          <div class="agree-all" id="cku-all" onclick="toggleCkuAll()">
+          <div class="agree-all" id="cku-all" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCkuAll()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCkuAll()}">
             <div class="agree-all-check" id="cku-chk-all">✓</div>
             <div class="agree-all-text">약관에 모두 동의합니다.</div>
           </div>
           <div class="agree-list" style="overflow-y:auto">
             <div class="cku-grp-label">모시고</div>
-            <div class="agree-item" id="cku1" onclick="toggleCku('cku1')">
+            <div class="agree-item" id="cku1" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku1')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku1')}">
               <div class="agree-item-check" id="cku-chk1">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">개인정보 수집 및 이용 동의 <span class="badge-req">필수</span></div></div>
             </div>
-            <div class="agree-item" id="cku2" onclick="toggleCku('cku2')">
+            <div class="agree-item" id="cku2" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku2')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku2')}">
               <div class="agree-item-check" id="cku-chk2">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">민감정보 수집 및 이용 동의 <span class="badge-req">필수</span></div></div>
             </div>
             <div class="cku-grp-label">국민건강보험공단</div>
-            <div class="agree-item" id="cku3" onclick="toggleCku('cku3')">
+            <div class="agree-item" id="cku3" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku3')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku3')}">
               <div class="agree-item-check" id="cku-chk3">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">서비스 이용약관 동의 <span class="badge-req">필수</span></div></div>
             </div>
-            <div class="agree-item" id="cku4" onclick="toggleCku('cku4')">
+            <div class="agree-item" id="cku4" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku4')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku4')}">
               <div class="agree-item-check" id="cku-chk4">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">개인정보처리방침 동의 <span class="badge-req">필수</span></div></div>
             </div>
-            <div class="agree-item" id="cku5" onclick="toggleCku('cku5')">
+            <div class="agree-item" id="cku5" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku5')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku5')}">
               <div class="agree-item-check" id="cku-chk5">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">건강검진결과 조회 서비스 신청 동의 <span class="badge-req">필수</span></div></div>
             </div>
-            <div class="agree-item" id="cku6" onclick="toggleCku('cku6')" style="border-bottom:none">
+            <div class="agree-item" id="cku6" role="checkbox" tabindex="0" aria-checked="false" onclick="toggleCku('cku6')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCku('cku6')}" style="border-bottom:none">
               <div class="agree-item-check" id="cku-chk6">✓</div>
               <div class="agree-item-body"><div class="agree-item-title">가족(보호자) 대리조회 서비스 신청 동의 <span class="badge-opt">선택</span></div></div>
             </div>
@@ -211,10 +211,10 @@
           <div class="modal-handle"></div>
           <div class="modal-title">예시 인증수단을 선택해주세요.</div><p class="mosigo-checkup-demo-note">시연용 화면입니다. 외부 인증 서비스에 연결하지 않습니다.</p>
           <div class="auth-list">
-            <div class="auth-row" onclick="pickAuthMethod('kakao')"><span class="auth-mark" style="background:#FEE500;color:#391B1B">talk</span> 카카오톡</div>
-            <div class="auth-row" onclick="pickAuthMethod('naver')"><span class="auth-mark" style="background:#03C75A">N</span> 네이버</div>
-            <div class="auth-row" onclick="pickAuthMethod('toss')"><span class="auth-mark" style="background:#1B64DA">toss</span> 토스</div>
-            <div class="auth-row" onclick="pickAuthMethod('pass')"><span class="auth-mark" style="background:#FA5B5B">PASS</span> PASS</div>
+            <div class="auth-row" role="button" tabindex="0" aria-label="카카오톡 인증 시연" onclick="pickAuthMethod('kakao')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickAuthMethod('kakao')}"><span class="auth-mark" style="background:#FEE500;color:#391B1B">talk</span> 카카오톡</div>
+            <div class="auth-row" role="button" tabindex="0" aria-label="네이버 인증 시연" onclick="pickAuthMethod('naver')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickAuthMethod('naver')}"><span class="auth-mark" style="background:#03C75A">N</span> 네이버</div>
+            <div class="auth-row" role="button" tabindex="0" aria-label="토스 인증 시연" onclick="pickAuthMethod('toss')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickAuthMethod('toss')}"><span class="auth-mark" style="background:#1B64DA">toss</span> 토스</div>
+            <div class="auth-row" role="button" tabindex="0" aria-label="PASS 인증 시연" onclick="pickAuthMethod('pass')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickAuthMethod('pass')}"><span class="auth-mark" style="background:#FA5B5B">PASS</span> PASS</div>
           </div>
         </div>
       </div>
@@ -225,9 +225,9 @@
           <div class="modal-handle"></div>
           <div class="modal-title">통신사를 선택해주세요.</div>
           <div class="auth-list">
-            <div class="auth-row" onclick="pickCarrier()">SKT</div>
-            <div class="auth-row" onclick="pickCarrier()">KT</div>
-            <div class="auth-row" onclick="pickCarrier()">LGU</div>
+            <div class="auth-row" role="button" tabindex="0" onclick="pickCarrier()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickCarrier()}">SKT</div>
+            <div class="auth-row" role="button" tabindex="0" onclick="pickCarrier()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickCarrier()}">KT</div>
+            <div class="auth-row" role="button" tabindex="0" onclick="pickCarrier()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();pickCarrier()}">LGU</div>
           </div>
         </div>
       </div>
