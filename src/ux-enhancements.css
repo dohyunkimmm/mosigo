@@ -61,3 +61,9 @@
   .mosigo-safety-notice{padding:10px 11px}
 }
 @media(prefers-reduced-motion:reduce){.overlay,.overlay.show .modal-sheet{transition:none}}
+
+/* P1: the mock identity and safety choices are real keyboard targets. */
+#su-carriers .chip[role="button"]{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+#otp-resend[role="button"]{min-height:44px;cursor:pointer}
+.mosigo-sos-choice{min-height:56px;cursor:pointer}
+.phone-shell :is(.mosigo-sos-choice,#su-carriers .chip[role="button"],#otp-resend):focus-visible{outline:3px solid #126b35;outline-offset:3px}
