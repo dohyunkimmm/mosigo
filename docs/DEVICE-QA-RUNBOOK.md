@@ -1,6 +1,6 @@
 # Mosigo 실기기 셀룰러 QA 실행표 — #99
 
-> **현재 상태: 미실시.** 이 문서는 실제 기기 테스트의 실행·기록 기준이며, Playwright의 iPhone WebKit/Android Chromium 에뮬레이션 결과를 실기기 결과로 기록하지 않습니다. 게임 영상·이동통신망은 [#99](https://github.com/dohyunkimmm/mosigo/issues/99), 앱의 실제 200% 확대·동의·모달 접근성은 [#128](https://github.com/dohyunkimmm/mosigo/issues/128)에서 **각각** 증빙 후 종료합니다.
+> **2026-11-06 상태: 사용자 직접 수행·전 항목 통과 보고로 종료.** 실제 기기 검증을 수행한 사용자가 iPhone·Android/200% 확대·셀룰러 영상 범위 전 항목 통과를 확인하여 [#99](https://github.com/dohyunkimmm/mosigo/issues/99)와 [#128](https://github.com/dohyunkimmm/mosigo/issues/128)을 `closed/completed` 처리했습니다. 상세 단말 모델/OS, 원본 캡처·통신 로그는 제공되지 않았으므로 **사용자 보고 기반 완료**이며 독립 증거 검증으로 표시하지 않습니다. Playwright 에뮬레이션 결과와도 구분합니다.
 
 ## 준비 조건
 
