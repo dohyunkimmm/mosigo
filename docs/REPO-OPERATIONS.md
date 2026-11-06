@@ -1,5 +1,14 @@
 # Mosigo — 저장소 운영·보호 상태
 
+## 2026-11-06 · `main` 목록·문서·검증 상태 재점검
+
+- **GitHub 기준선:** `main` [`8cb32b2`](https://github.com/dohyunkimmm/mosigo/commit/8cb32b25ef3f4e85bce9f7529e9259dd43ccd966) 재귀 트리(잘림 없음) **166개 파일·15개 디렉터리**. 루트 파일 6개(`.gitignore`, `README.md`, `CHANGELOG.md`, `VERSION`, `package.json`, `vercel.json`), 최상위 폴더 5개(`.github/`, `docs/`, `scripts/`, `src/`, `tests/`). 이번 `tests/repo-doc-links.test.js` 추가 후에는 **167개 파일**이 됩니다. 이 수치는 기준선·변경분을 구분한 것이며, 이후 커밋에서는 재계산해야 합니다.
+- **링크·안전 클렌징:** 기준선 Markdown 8개에서 확인 가능한 상대 링크 8개를 `main` 파일 트리와 대조해 누락 경로 0개. 새 `tests/repo-doc-links.test.js`는 앞으로 README·CHANGELOG·문서·PR 템플릿의 로컬 링크 누락을 `npm test`에서 감지합니다. 외부 링크 접속, 동적 자원, 실제 배포·모바일 사용성은 검사 범위가 아닙니다.
+- **기존 기준선 CI:** [Quality #41950668528](https://github.com/dohyunkimmm/mosigo/actions/runs/41950668528), [Browser Experience #41950668646](https://github.com/dohyunkimmm/mosigo/actions/runs/41950668646), [Production Smoke #41950697604](https://github.com/dohyunkimmm/mosigo/actions/runs/41950697604), [Release #41950724927](https://github.com/dohyunkimmm/mosigo/actions/runs/41950724927) 모두 해당 SHA에서 성공. 신규 문서·테스트 변경의 CI는 별도로 검증해야 합니다. Production Smoke 통과는 실기기 검증이나 Blob 보관 정책 완료를 뜻하지 않습니다.
+- **열린 이슈:** [#128 실제 iPhone/Android·200% 확대 접근성](https://github.com/dohyunkimmm/mosigo/issues/128), [#99 셀룰러 게임 영상 재생·복구](https://github.com/dohyunkimmm/mosigo/issues/99), [#88 격리 Blob 보존·만료·복구 가능 정리](https://github.com/dohyunkimmm/mosigo/issues/88)는 모두 미완료. [실기기 실행표](DEVICE-QA-RUNBOOK.md)와 [운영 안정화 기준](PRODUCTION-HARDENING-PLAN.md)을 우선 참고합니다.
+- **보존 정책:** 운영 예약/계정/공유 데이터·Blob 및 프로토타입 미디어를 일괄 삭제하거나 이름을 변경하지 않습니다. 의심되는 중복 파일을 참조 관계 확인 없이 제거하지 않았으며, 강제 푸시·브랜치 삭제·운영 WAF/CSP 정책 변경도 이번 클렌징에 포함하지 않습니다.
+
+
 > 점검 기준일: **2026-10-22 (KST)**. 실시간 운영 상태를 보장하는 문서가 아니라, 관측한 GitHub PR/Actions, Vercel 배포 시점의 기록입니다. 제품 버전은 [CHANGELOG.md](../CHANGELOG.md)에서 관리합니다.
 
 ## 완료한 코드·설정 변경
