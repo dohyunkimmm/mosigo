@@ -2,7 +2,7 @@
 
 > 2026-10-30 문서 동기화 · 제품은 실병원 예약·실결제 없는 프로토타입입니다. 날짜가 명시된 아래 검증 기록은 당시의 사실을 보존하며, 최신 확인 상태는 상단 2026-10-28 검증 결과와 후속 정정에 따릅니다. 확인되지 않은 운영 설정은 완료로 표시하지 않습니다.
 >
-> 관련 이슈: [#88](https://github.com/dohyunkimmm/mosigo/issues/88), [#90](https://github.com/dohyunkimmm/mosigo/issues/90).
+> 관련 이슈: [#88](https://github.com/dohyunkimmm/mosigo/issues/88), [#90](https://github.com/dohyunkimmm/mosigo/issues/90). **2026-11-06 기준** #88은 여전히 열려 있고 자동 만료·복구 가능한 정리가 확인되지 않았습니다. 현재 `main` 목록·CI 확인은 [저장소 운영 기록](REPO-OPERATIONS.md), 실제 단말 검증은 [#99](https://github.com/dohyunkimmm/mosigo/issues/99)·[#128](https://github.com/dohyunkimmm/mosigo/issues/128) 및 [실기기 실행표](DEVICE-QA-RUNBOOK.md)를 참조합니다.
 
 ### #88 마커 바이트 지문과 검토용 독립 기록 (2026-10-28)
 
