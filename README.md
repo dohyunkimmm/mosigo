@@ -56,15 +56,18 @@ npm run quality
 
 ## 저장소 구성
 
+**2026-11-06 `main` 점검 기준:** HEAD `8cb32b2`에서 **166개 파일·15개 디렉터리**(루트 파일 6개·최상위 폴더 5개)를 확인했습니다. 이 수치는 아래 문서 링크 검사 추가 *전*의 스냅샷이며, 해당 테스트 파일이 반영되면 파일은 167개입니다. [최신 운영·정리 기록](docs/REPO-OPERATIONS.md)에서 검증 범위와 미완료 작업을 확인할 수 있습니다.
+
 - `src/` — 배포되는 서비스 화면·정적 자료·API·런타임
 - `tests/` — 자동 테스트와 `tests/config/`의 Playwright 설정
 - `scripts/` — 소스 검사·운영 점검·미디어 최적화 스크립트
 - `docs/` — 운영 기록과 점검 절차
 - `.github/` — CI 및 저장소 운영 설정
-- 최상위 `package.json`, `vercel.json`, `VERSION`, `CHANGELOG.md` — 각각 테스트, 배포, 버전, 변경 이력 기준 파일
+- 최상위 `README.md`, `CHANGELOG.md`, `VERSION`, `package.json`, `vercel.json`, `.gitignore` — 현행 안내·변경 이력·버전·테스트·배포·추적 제외 설정
 
 ## 참고 자료
 
-- [저장소 운영·브랜치 보호·WAF 후속/Production Smoke 재검증](docs/REPO-OPERATIONS.md) — 2026-10-22 검증 기록
+- [저장소 운영·`main` 목록·QA 상태](docs/REPO-OPERATIONS.md) — 2026-11-06 현행 점검과 과거 스냅샷 구분
+- [운영 안정화 미완료 기준](docs/PRODUCTION-HARDENING-PLAN.md) · [실기기 셀룰러 QA 실행표](docs/DEVICE-QA-RUNBOOK.md)
 - [릴리스 이력](CHANGELOG.md) · [현재 버전](VERSION)
-- [런타임 코드](src/runtime/) · [Production 검증 스크립트](scripts/production-smoke.js)
+- [런타임 코드](src/runtime/) · [Production 검증 스크립트](scripts/production-smoke.js) · [문서 링크 회귀 검사](tests/repo-doc-links.test.js)
