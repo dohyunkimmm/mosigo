@@ -45,7 +45,7 @@
 - **소스 기준:** 과거 v4~v13 기능을 `src/runtime/`에 통합했으며, 기존 공개 경로의 호환성은 유지합니다.
 - **검증:** Node.js 24, 자동 테스트·소스 감사·Chromium/WebKit 브라우저 경험 QA·읽기 전용 Production Smoke
 - **보안 범위:** 메인 예약 화면은 CSP 관찰 모드이며 Operations·이벤트·게임 페이지에는 경로별 스크립트 CSP를 강제 적용합니다.
-- **검증 미완료:** 실제 iPhone/Android LTE·5G QA, 격리 Blob의 만료 후 자동 정리와 장기 RW 토큰 제거는 별도 후속 작업입니다.
+- **실기기 QA 결과:** 실제 iPhone/Android·200% 확대 및 LTE/5G 영상 테스트는 사용자가 전 항목 통과를 직접 확인해 [#128](https://github.com/dohyunkimmm/mosigo/issues/128)·[#99](https://github.com/dohyunkimmm/mosigo/issues/99)를 2026-11-06 `closed/completed`로 종료했습니다. 기종/OS·캡처·통신 로그는 제출되지 않아 독립 검증 결과로 표현하지 않습니다. 격리 Blob 만료·장기 RW 토큰 검증 [#88](https://github.com/dohyunkimmm/mosigo/issues/88)은 미완료입니다.
 - **검증 경계:** CI 통과와 실제 Production 배포 확인은 별도로 판단합니다.
 
 ```bash
