@@ -1,5 +1,11 @@
 # Mosigo — 저장소 운영·보호 상태
 
+## 2026-11-06 · 실제 운영 조회와 검증 한계
+
+- [`main` `4c6a66c`](https://github.com/dohyunkimmm/mosigo/commit/4c6a66c0e3432103fce07202c3eacfce3709b4eb)의 Quality·Browser Experience QA·Production Smoke·Release **전부 성공**. 이 자동화 검증은 실제 iPhone/Android의 LTE/5G·네이티브 200% 확대를 증명하지 않습니다([#99](https://github.com/dohyunkimmm/mosigo/issues/99), [#128](https://github.com/dohyunkimmm/mosigo/issues/128)).
+- 현재 연결된 Vercel 팀의 프로젝트 목록·직접 조회에서 과거 격리 Blob 테스트용 **`mosigo-isolated-smoke-lab` 프로젝트를 찾지 못했습니다(404)**. 조회된 운영 `mosigo` 프로젝트는 정상 존재합니다. 이는 **해당 팀/현재 권한의 조회 결과**이지 다른 팀 또는 실제 Blob 스토어/마커 전체의 삭제 증빙이 아닙니다. 기존 10월 테스트 랩 검증은 당시 스냅샷으로만 보존합니다.
+- 따라서 [#88](https://github.com/dohyunkimmm/mosigo/issues/88)의 독립 소유권·실제 Blob 존재/만료 여부, 별도 백업·복원, 이전 RW 토큰 폐기와 정리 잡의 완료 여부는 확인되지 않았습니다. **운영 Blob·예약·계정/공유·스토어를 삭제하거나 변경하지 않았습니다.** 메타데이터 TTL 도달은 자동 객체 삭제가 아닙니다.
+
 ## 2026-11-06 · `main` 목록·문서·검증 상태 재점검
 
 - **GitHub 기준선:** `main` [`8cb32b2`](https://github.com/dohyunkimmm/mosigo/commit/8cb32b25ef3f4e85bce9f7529e9259dd43ccd966) 재귀 트리(잘림 없음) **166개 파일·15개 디렉터리**. 루트 파일 6개(`.gitignore`, `README.md`, `CHANGELOG.md`, `VERSION`, `package.json`, `vercel.json`), 최상위 폴더 5개(`.github/`, `docs/`, `scripts/`, `src/`, `tests/`). 이번 `tests/repo-doc-links.test.js` 추가 후에는 **167개 파일**이 됩니다. 이 수치는 기준선·변경분을 구분한 것이며, 이후 커밋에서는 재계산해야 합니다.

@@ -1,5 +1,7 @@
 # Mosigo 운영 안정화 — 미완료 항목 및 검증 기준
 
+> **2026-11-06 직접 조회 보완:** 기존 기록의 `mosigo-isolated-smoke-lab` 프로젝트는 현재 연결된 Vercel 팀에서 목록/직접 조회 모두 확인되지 않았습니다(404). 이 사실로 마커가 삭제되었다거나 다른 팀·스토어가 존재하지 않는다고 단정하지 않습니다. 격리 스토어의 독립 확인 및 복구 가능한 만료 정리와 장기 RW 토큰 폐기 여부는 여전히 **미검증**입니다. 운영 프로젝트의 Blob/예약 데이터에는 읽기·쓰기·삭제 작업을 하지 않았습니다. [현행 조회 기록](REPO-OPERATIONS.md) 및 [#88](https://github.com/dohyunkimmm/mosigo/issues/88) 참조.
+
 > 2026-10-30 문서 동기화 · 제품은 실병원 예약·실결제 없는 프로토타입입니다. 날짜가 명시된 아래 검증 기록은 당시의 사실을 보존하며, 최신 확인 상태는 상단 2026-10-28 검증 결과와 후속 정정에 따릅니다. 확인되지 않은 운영 설정은 완료로 표시하지 않습니다.
 >
 > 관련 이슈: [#88](https://github.com/dohyunkimmm/mosigo/issues/88), [#90](https://github.com/dohyunkimmm/mosigo/issues/90). **2026-11-06 기준** #88은 여전히 열려 있고 자동 만료·복구 가능한 정리가 확인되지 않았습니다. 현재 `main` 목록·CI 확인은 [저장소 운영 기록](REPO-OPERATIONS.md), 실제 단말 검증은 [#99](https://github.com/dohyunkimmm/mosigo/issues/99)·[#128](https://github.com/dohyunkimmm/mosigo/issues/128) 및 [실기기 실행표](DEVICE-QA-RUNBOOK.md)를 참조합니다.
