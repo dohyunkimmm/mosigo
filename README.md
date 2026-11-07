@@ -68,6 +68,6 @@ npm run quality
 ## 참고 자료
 
 - [저장소 운영·`main` 목록·QA 상태](docs/REPO-OPERATIONS.md) — 2026-11-06 현행 점검과 과거 스냅샷 구분
-- [운영 안정화 미완료 기준](docs/PRODUCTION-HARDENING-PLAN.md) · [실기기 셀룰러 QA 실행표](docs/DEVICE-QA-RUNBOOK.md)
+- [#88 Blob 보존·만료 재검증 (2026-11-07)](docs/BLOB-RETENTION-RECONCILIATION-20261107.md) · [운영 안정화 미완료 기준](docs/PRODUCTION-HARDENING-PLAN.md) · [실기기 셀룰러 QA 실행표](docs/DEVICE-QA-RUNBOOK.md)
 - [릴리스 이력](CHANGELOG.md) · [현재 버전](VERSION)
 - [런타임 코드](src/runtime/) · [Production 검증 스크립트](scripts/production-smoke.js) · [문서 링크 회귀 검사](tests/repo-doc-links.test.js)
