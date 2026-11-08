@@ -4,7 +4,7 @@
 
 경쟁 앱 7종과 사용자 리뷰 118건을 분석해 병원 탐색, 매니저 정보, 가족 대리 신청의 불편을 사용자 흐름에 반영했습니다.
 
-[사용자 체험](https://mosigo-nine.vercel.app/) · [Operations 로그인](https://mosigo-nine.vercel.app/ops.html) · [읽기 전용 Operations 샘플](https://mosigo-nine.vercel.app/ops-preview.html) · [변경 이력](CHANGELOG.md)
+[사용자 체험](https://mosigo-nine.vercel.app/) · [서비스기획·PRD Case Study](https://github.com/dohyunkimmm/mosigo-case-study) · [Operations 로그인](https://mosigo-nine.vercel.app/ops.html) · [읽기 전용 Operations 샘플](https://mosigo-nine.vercel.app/ops-preview.html) · [변경 이력](CHANGELOG.md)
 
 **Current stable version:** `v14.0.0`
 
@@ -46,6 +46,7 @@
 - **검증:** Node.js 24, 자동 테스트·소스 감사·Chromium/WebKit 브라우저 경험 QA·읽기 전용 Production Smoke
 - **보안 범위:** 메인 예약 화면은 CSP 관찰 모드이며 Operations·이벤트·게임 페이지에는 경로별 스크립트 CSP를 강제 적용합니다.
 - **실기기 QA 결과:** 실제 iPhone/Android·200% 확대 및 LTE/5G 영상 테스트는 사용자가 전 항목 통과를 직접 확인해 [#128](https://github.com/dohyunkimmm/mosigo/issues/128)·[#99](https://github.com/dohyunkimmm/mosigo/issues/99)를 2026-11-06 `closed/completed`로 종료했습니다. 기종/OS·캡처·통신 로그는 제출되지 않아 독립 검증 결과로 표현하지 않습니다. 격리 Blob 만료·장기 RW 토큰 검증 [#88](https://github.com/dohyunkimmm/mosigo/issues/88)은 미완료입니다.
+- **브랜치 보호:** `main` Ruleset은 활성화되어 PR 기반 병합, `quality-checks`·`browser-journey` 필수 통과, 강제 푸시·브랜치 삭제 차단을 적용합니다. 자동 QA는 실기기 검증을 대신하지 않습니다.
 - **검증 경계:** CI 통과와 실제 Production 배포 확인은 별도로 판단합니다.
 
 ```bash
@@ -56,12 +57,12 @@ npm run quality
 
 ## 저장소 구성
 
-**2026-11-06 `main` 점검 기준:** HEAD `8cb32b2`에서 **166개 파일·15개 디렉터리**(루트 파일 6개·최상위 폴더 5개)를 확인했습니다. 이 수치는 아래 문서 링크 검사 추가 *전*의 스냅샷이며, 해당 테스트 파일이 반영되면 파일은 167개입니다. [최신 운영·정리 기록](docs/REPO-OPERATIONS.md)에서 검증 범위와 미완료 작업을 확인할 수 있습니다.
+**2026-11-08 `main` 클렌징 기준:** **168개 파일·16개 디렉터리**(루트 파일 6개·최상위 폴더 5개)입니다. 과거 점검 문서 2개는 `docs/history/`로 이동하고, 검증에 사용하는 격리 마커 증빙은 `docs/evidence/`에 유지했습니다. 파일 수는 이 정리 작업의 스냅샷이며 이후 커밋에서 달라질 수 있습니다. [운영·정리 기록](docs/REPO-OPERATIONS.md)에서 검증 범위와 미완료 작업을 확인할 수 있습니다.
 
 - `src/` — 배포되는 서비스 화면·정적 자료·API·런타임
 - `tests/` — 자동 테스트와 `tests/config/`의 Playwright 설정
 - `scripts/` — 소스 검사·운영 점검·미디어 최적화 스크립트
-- `docs/` — 운영 기록과 점검 절차
+- `docs/` — 현행 운영 기록·점검 절차, `docs/history/` 과거 기록, `docs/evidence/` 회귀 검증 증빙
 - `.github/` — CI 및 저장소 운영 설정
 - 최상위 `README.md`, `CHANGELOG.md`, `VERSION`, `package.json`, `vercel.json`, `.gitignore` — 현행 안내·변경 이력·버전·테스트·배포·추적 제외 설정
 
@@ -69,5 +70,6 @@ npm run quality
 
 - [저장소 운영·`main` 목록·QA 상태](docs/REPO-OPERATIONS.md) — 2026-11-06 현행 점검과 과거 스냅샷 구분
 - [#88 Blob 보존·만료 재검증 (2026-11-07)](docs/BLOB-RETENTION-RECONCILIATION-20261107.md) · [운영 안정화 미완료 기준](docs/PRODUCTION-HARDENING-PLAN.md) · [실기기 셀룰러 QA 실행표](docs/DEVICE-QA-RUNBOOK.md)
+- [과거 브랜치 정리 기록](docs/history/BRANCH-RETIREMENT-20261031.md) · [과거 채용 검토 QA](docs/history/DEMO-RECRUITER-QA-2026-11-04.md)
 - [릴리스 이력](CHANGELOG.md) · [현재 버전](VERSION)
 - [런타임 코드](src/runtime/) · [Production 검증 스크립트](scripts/production-smoke.js) · [문서 링크 회귀 검사](tests/repo-doc-links.test.js)

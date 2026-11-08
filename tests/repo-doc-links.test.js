@@ -6,13 +6,19 @@ const path = require('node:path');
 const test = require('node:test');
 
 const root = path.resolve(__dirname, '..');
+function markdownFiles(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) return markdownFiles(file);
+    return entry.isFile() && entry.name.endsWith('.md') ? [path.relative(root, file)] : [];
+  });
+}
+
 const documents = [
   'README.md',
   'CHANGELOG.md',
   '.github/pull_request_template.md',
-  ...fs.readdirSync(path.join(root, 'docs'))
-    .filter((name) => name.endsWith('.md'))
-    .map((name) => path.join('docs', name))
+  ...markdownFiles(path.join(root, 'docs'))
 ];
 
 test('repository-local Markdown links point to existing files or directories', () => {
