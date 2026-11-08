@@ -1,5 +1,12 @@
 # Mosigo — 저장소 운영·보호 상태
 
+## 2026-11-08 · `main` 목록 클렌징·Case Study 문서 동기화
+
+- 정리 전 `main` `978ef8bc`의 재귀 트리는 **168개 파일·15개 디렉터리**(잘림 없음)였습니다. 과거 점검 문서 2개를 `docs/history/`로 이동해 **파일 168개·디렉터리 16개**로 정리했습니다. `src/`·`scripts/`·`tests/`의 기능 파일, 정적 미디어, 원본 영속 데이터 및 API는 삭제하지 않았습니다.
+- [브랜치 보존 기록](history/BRANCH-RETIREMENT-20261031.md)과 [채용 데모 QA 기록](history/DEMO-RECRUITER-QA-2026-11-04.md)은 당시 스냅샷으로 보존합니다. `docs/evidence/isolated-smoke-marker-20261028.json`은 `tests/smoke-evidence-receipt.test.js`의 회귀 검증 입력이므로 이동·삭제하지 않습니다.
+- `main`의 [Ruleset #22982738](https://github.com/dohyunkimmm/mosigo/settings/rules/22982738)은 **active**이며, PR 병합·필수 상태 검사(`quality-checks`와 `browser-journey`, strict)·브랜치 삭제 및 강제 푸시 차단을 적용합니다. 정리 전 `978ef8bc`에 연결된 Quality·Browser Experience QA·Production Smoke·Release는 성공했습니다. 정리 후 PR 및 `main`의 CI 결과는 별도로 확인해야 합니다.
+- 제품 시연 소스는 이 저장소, 서비스 기획·PRD·사업성 문서는 [별도 Case Study 저장소](https://github.com/dohyunkimmm/mosigo-case-study)가 관리합니다. 두 저장소의 제품명·데모 URL·분석 근거를 교차 확인하되, **설계 가정은 운영 실적이 아니며** 실제 기기 검증 및 [#88 격리 Blob 보존 검증](https://github.com/dohyunkimmm/mosigo/issues/88)은 별개입니다.
+
 ## 2026-11-06 · 실제 운영 조회와 검증 한계
 
 - [`main` `4c6a66c`](https://github.com/dohyunkimmm/mosigo/commit/4c6a66c0e3432103fce07202c3eacfce3709b4eb)의 Quality·Browser Experience QA·Production Smoke·Release **전부 성공**. 이 자동화 검증은 실제 iPhone/Android의 LTE/5G·네이티브 200% 확대를 증명하지 않습니다([#99](https://github.com/dohyunkimmm/mosigo/issues/99), [#128](https://github.com/dohyunkimmm/mosigo/issues/128)).
