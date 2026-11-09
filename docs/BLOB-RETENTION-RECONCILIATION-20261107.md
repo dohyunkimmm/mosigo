@@ -1,5 +1,13 @@
 # MOSIGO #88 — 운영·격리 Blob 재확인 및 보존형 정리 게이트 (2026-11-07)
 
+## 2026-11-09 추가 재확인 — 운영 저장소 정상, 과거 격리 자원 미확인
+
+- Vercel 연결 팀 `dohyunkimm`의 프로젝트 인벤토리는 `mosigo`, `mosigo-case-study`, `toolflow` **3개**입니다. 과거 `mosigo-isolated-smoke-lab` 프로젝트는 현재 팀 프로젝트 목록에서 확인되지 않습니다. 다른 팀·삭제된 프로젝트나 별도 Blob 저장소의 실제 존재 여부는 이 결과로 판단하지 않습니다.
+- 운영 프로젝트의 **일반(비밀 아님) 설정** `BLOB_STORE_ID`를 통해 대상 Blob 메타데이터를 관리 API로 **읽기 전용** 재조회했습니다. 이름 **`mosigo-bookings`**, `type=blob`, `access=private`, `status=available`, `billingState=active`, 연결 프로젝트 **1개**, `usageQuotaExceeded=false`, `isTokenExpired=false`입니다. 마지막 두 값은 **운영 저장소의 관리 메타데이터**이며 과거 테스트용 장기 RW 토큰의 폐기/유효성을 의미하지 않습니다. 운영 객체 목록·경로·원문·사용자 예약 기록은 조회하지 않았습니다.
+- 과거 테스트 Blob `mosigo-smoke-lab-linked-20261028`의 **정확한 Store ID와 소유권을 현 연결에서 검증하지 못했습니다.** 현재 제공되는 관리 조회는 Store ID가 있어야 하므로 저장소 **이름만으로 확인한 척하지 않습니다**. 기존 2026-11-03 만료시각은 JSON 메타데이터 TTL일 뿐, 마커 삭제·백업·복원·권한 폐기 근거가 아닙니다.
+- [#88](https://github.com/dohyunkimmm/mosigo/issues/88) **OPEN 유지**: 관리자 측 과거 테스트 Store ID·연결 프로젝트 확인 → 운영 저장소와 물리 분리 → 이전 RW 자격 폐기 증빙 → 승인된 별도 로컬 환경에서만 [읽기 전용 인벤토리](../scripts/audit-isolated-retention.js) → 실제 과거 테스트 마커 출처·바이트 비교와 격리 백업/복원 검증 → 별도 삭제 승인 순서를 그대로 적용합니다. 미검증 자원을 같은 이름으로 새로 만들지 않습니다.
+- **이번 조회의 변경 0건:** Vercel 저장소·환경변수·프로젝트 구성, OIDC/RW 자격, 운영/테스트 Blob의 `list/get/put/del`, 데이터·백업·복원·배포·과금에 손대지 않았습니다. 현행 `safeToDelete=false`, `deletionAuthorized=false` 및 `candidateDeletions=0` 보존 원칙을 유지합니다.
+
 > **상태: 미완료.** 이 문서는 현재 접근 가능한 GitHub/Vercel 제어 영역을 **읽기 전용** 조회한 결과와 다음 검증 조건을 기록합니다. 운영 데이터 또는 과거 격리 마커가 삭제·복구됐다는 뜻이 아닙니다. 토큰·개별 Blob 경로·비공개 URL은 수집하거나 기록하지 않았습니다.
 
 ## 직접 확인한 범위
