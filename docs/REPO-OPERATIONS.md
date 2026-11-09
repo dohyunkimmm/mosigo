@@ -1,5 +1,12 @@
 # Mosigo — 저장소 운영·보호 상태
 
+## 2026-11-09 · `main` 및 연계 문서 재확인
+
+- GitHub 최신 [`main` `b0992f5`](https://github.com/dohyunkimmm/mosigo/commit/b0992f5bdaa76c9b502c506f203f6a9bf7687cf0) 재귀 트리(잘림 없음)는 **168개 파일·16개 디렉터리**(루트 6개 파일·최상위 5개 폴더)이며 동일 Git blob SHA 중복이 없습니다. 과거 점검 자료는 `docs/history/`, 보존용 Blob 지문은 `docs/evidence/`에 유지됩니다. 일괄 삭제할 미사용 파일을 이번 검사에서 입증하지 못했습니다.
+- 열린 PR **0건**, 열린 이슈는 [#88](https://github.com/dohyunkimmm/mosigo/issues/88) **1건**입니다. 해당 `main`의 최근 Quality·Browser Experience QA·Production Smoke·Release 실행은 모두 성공했지만, 실제 과거 격리 테스트 스토어의 목록·백업·복구·자격 폐기나 운영 데이터 삭제를 증명하지 않습니다. [보존/복구 검증 순서](BLOB-RETENTION-RECONCILIATION-20261107.md)를 그대로 적용하고 이슈를 닫지 않습니다.
+- 연계 문서 저장소 [mosigo-case-study](https://github.com/dohyunkimmm/mosigo-case-study)의 자동 PDF [#72](https://github.com/dohyunkimmm/mosigo-case-study/pull/72)·PPT/PDF [#73](https://github.com/dohyunkimmm/mosigo-case-study/pull/73)은 생성된 미병합 PR이며, 관측 시점 필수 검사 기록이 없어 보호된 `main`에 미반영입니다. 제품 앱과 보고서 산출물의 반영 상태를 혼동하지 않습니다.
+- 이 항목은 GitHub 코드·검사 기록에 관한 2026-11-09 스냅샷입니다. Vercel 실물 스토어·장기 RW 토큰·운영 예약 데이터의 최신 상태를 새로 확인한 것은 아닙니다. 기존 실행 경로, 영속 데이터, 배포 설정, 브랜치와 이력은 변경하지 않습니다.
+
 ## 2026-11-08 · `main` 목록 클렌징·Case Study 문서 동기화
 
 - 정리 전 `main` `978ef8bc`의 재귀 트리는 **168개 파일·15개 디렉터리**(잘림 없음)였습니다. 과거 점검 문서 2개를 `docs/history/`로 이동해 **파일 168개·디렉터리 16개**로 정리했습니다. `src/`·`scripts/`·`tests/`의 기능 파일, 정적 미디어, 원본 영속 데이터 및 API는 삭제하지 않았습니다.
