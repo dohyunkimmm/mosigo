@@ -57,6 +57,8 @@ npm run quality
 
 ## 저장소 구성
 
+**2026-11-09 GitHub 최신 확인:** [`main` `b0992f5`](https://github.com/dohyunkimmm/mosigo/commit/b0992f5bdaa76c9b502c506f203f6a9bf7687cf0)에서 **168개 파일·16개 디렉터리**(루트 6개 파일·최상위 5개 폴더), 파일 해시가 같은 중복 항목 0개를 확인했습니다. 열린 PR은 **0건**, 열린 이슈는 [#88 격리 Blob 소유권·자격 폐기·만료 후 보존형 정리](https://github.com/dohyunkimmm/mosigo/issues/88) **1건**입니다. 운영 데이터·과거 격리 스토어의 실제 보관/백업·삭제 상태는 이번 GitHub 점검으로 검증하지 않았습니다. 연계 [MOSIGO Case Study](https://github.com/dohyunkimmm/mosigo-case-study)의 PDF/PPT 자동 생성 PR [#72](https://github.com/dohyunkimmm/mosigo-case-study/pull/72)·[#73](https://github.com/dohyunkimmm/mosigo-case-study/pull/73)은 필수 검사 기록이 없어 미병합 상태입니다.
+
 **2026-11-08 `main` 클렌징 기준:** **168개 파일·16개 디렉터리**(루트 파일 6개·최상위 폴더 5개)입니다. 과거 점검 문서 2개는 `docs/history/`로 이동하고, 검증에 사용하는 격리 마커 증빙은 `docs/evidence/`에 유지했습니다. 파일 수는 이 정리 작업의 스냅샷이며 이후 커밋에서 달라질 수 있습니다. [운영·정리 기록](docs/REPO-OPERATIONS.md)에서 검증 범위와 미완료 작업을 확인할 수 있습니다.
 
 - `src/` — 배포되는 서비스 화면·정적 자료·API·런타임
